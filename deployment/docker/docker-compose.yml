@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ../../
+      dockerfile: deployment/docker/Dockerfile
+    container_name: numismatic-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/numismatic?sslmode=disable
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - APP_ENV=production
+    depends_on:
+      - db
+    volumes:
+      - ../../storage:/app/storage
+
+  db:
+    image: postgres:16-alpine
+    container_name: numismatic-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=numismatic
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
