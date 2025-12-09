@@ -12,7 +12,7 @@ NumismaticApp is a web application designed to manage a numismatic coin collecti
 - **Image Processing:** libvips (via `h2non/bimg`).
 - **AI:** Google Gemini API (Vision model).
 - **Frontend:** Vue 3 (Composition API) + Vite.
-- **Styling:** Tailwind CSS + DaisyUI.
+- **Styling:** Tailwind CSS + DaisyUI. **MUST be responsive and mobile-first.**
 - **Deployment:** Docker & Docker Compose (Multi-stage builds).
 
 ## Directory Map

@@ -1,4 +1,4 @@
-package infrastructure
+package gemini
 
 import (
 	"context"
@@ -30,6 +30,10 @@ func NewGeminiService(ctx context.Context, apiKey string) (*GeminiService, error
 		client: client,
 		model:  model,
 	}, nil
+}
+
+func (s *GeminiService) Close() error {
+	return s.client.Close()
 }
 
 func (s *GeminiService) AnalyzeCoin(ctx context.Context, frontImagePath, backImagePath string) (*domain.CoinAnalysisResult, error) {

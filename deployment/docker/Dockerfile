@@ -55,7 +55,8 @@ COPY --from=builder /app/bin/server /app/server
 COPY --from=frontend-builder /app/dist /app/web/dist
 
 # Copy migrations
-COPY --from=builder /app/migrations /app/migrations
+# Copy migrations (Embedded in binary now, but keeping folder structure if needed for other tools)
+# COPY --from=builder /app/migrations /app/migrations
 
 # Expose port
 EXPOSE 8080

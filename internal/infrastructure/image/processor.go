@@ -1,4 +1,4 @@
-package infrastructure
+package image
 
 import (
 	"fmt"
@@ -114,4 +114,27 @@ func (s *VipsImageService) Rotate(imagePath string, angle float64) (string, erro
 	}
 
 	return imagePath, nil
+}
+
+func (s *VipsImageService) GetMetadata(imagePath string) (width, height int, size int64, mimeType string, err error) {
+	buffer, err := bimg.Read(imagePath)
+	if err != nil {
+		return 0, 0, 0, "", fmt.Errorf("failed to read image: %w", err)
+	}
+
+	img := bimg.NewImage(buffer)
+	dims, err := img.Size()
+	if err != nil {
+		return 0, 0, 0, "", fmt.Errorf("failed to get image size: %w", err)
+	}
+
+	// Get file size
+	size = int64(len(buffer))
+
+	// Determine mime type (basic check based on type)
+	// bimg can give us the type
+	typeName := img.Type()
+	mimeType = "image/" + typeName
+
+	return dims.Width, dims.Height, size, mimeType, nil
 }

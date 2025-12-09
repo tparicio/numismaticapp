@@ -1,0 +1,23 @@
+ALTER TABLE coins ALTER COLUMN country DROP NOT NULL;
+ALTER TABLE coins ALTER COLUMN year DROP NOT NULL;
+ALTER TABLE coins ALTER COLUMN face_value DROP NOT NULL;
+ALTER TABLE coins ALTER COLUMN currency DROP NOT NULL;
+ALTER TABLE coins ALTER COLUMN material DROP NOT NULL;
+
+COMMENT ON COLUMN coins.id IS 'Unique identifier for the coin';
+COMMENT ON COLUMN coins.country IS 'Country of origin';
+COMMENT ON COLUMN coins.year IS 'Year of minting';
+COMMENT ON COLUMN coins.face_value IS 'Face value (e.g., "1 Dollar")';
+COMMENT ON COLUMN coins.currency IS 'Currency unit';
+COMMENT ON COLUMN coins.material IS 'Material composition';
+COMMENT ON COLUMN coins.description IS 'Detailed description';
+COMMENT ON COLUMN coins.km_code IS 'Krause-Mishler catalog code';
+COMMENT ON COLUMN coins.min_value IS 'Estimated minimum value';
+COMMENT ON COLUMN coins.max_value IS 'Estimated maximum value';
+COMMENT ON COLUMN coins.grade IS 'Condition grade';
+COMMENT ON COLUMN coins.sample_image_url_front IS 'URL/Path to the front sample image';
+COMMENT ON COLUMN coins.sample_image_url_back IS 'URL/Path to the back sample image';
+COMMENT ON COLUMN coins.notes IS 'User notes';
+COMMENT ON COLUMN coins.gemini_details IS 'Raw JSON data from Gemini analysis';
+COMMENT ON COLUMN coins.created_at IS 'Creation timestamp';
+COMMENT ON COLUMN coins.updated_at IS 'Last update timestamp';

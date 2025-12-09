@@ -28,7 +28,9 @@
         <div class="flex gap-2 mb-6">
             <div class="badge badge-lg badge-primary">{{ coin.year }}</div>
             <div class="badge badge-lg badge-secondary">{{ coin.currency }}</div>
-            <div class="badge badge-lg badge-accent">{{ coin.grade || 'Un-graded' }}</div>
+            <div class="tooltip" :data-tip="getGradeDescription(coin.grade)">
+                <div class="badge badge-lg badge-accent cursor-help">{{ coin.grade || 'Un-graded' }}</div>
+            </div>
         </div>
 
         <div class="divider">Details</div>
@@ -73,6 +75,7 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { useRoute } from 'vue-router'
+import { GRADES } from '../constants/grades'
 
 const route = useRoute()
 const coin = ref(null)
@@ -85,6 +88,12 @@ const getImageUrl = (path) => {
         return `${STORAGE_URL}/storage/${path.split('storage/')[1]}`
     }
     return path
+}
+
+const getGradeDescription = (code) => {
+    if (!code) return 'No grade assigned'
+    const g = GRADES.find(g => g.code === code)
+    return g ? g.description : 'Unknown grade'
 }
 
 onMounted(async () => {

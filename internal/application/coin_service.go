@@ -26,6 +26,7 @@ type StorageService interface {
 
 type CoinService struct {
 	repo         domain.CoinRepository
+	groupRepo    domain.GroupRepository
 	imageService domain.ImageService
 	aiService    domain.AIService
 	storage      StorageService
@@ -33,19 +34,21 @@ type CoinService struct {
 
 func NewCoinService(
 	repo domain.CoinRepository,
+	groupRepo domain.GroupRepository,
 	imageService domain.ImageService,
 	aiService domain.AIService,
 	storage StorageService,
 ) *CoinService {
 	return &CoinService{
 		repo:         repo,
+		groupRepo:    groupRepo,
 		imageService: imageService,
 		aiService:    aiService,
 		storage:      storage,
 	}
 }
 
-func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipart.FileHeader) (*domain.Coin, error) {
+func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipart.FileHeader, groupName, userNotes string) (*domain.Coin, error) {
 	// 1. Generate ID
 	coinID := uuid.New()
 
@@ -90,9 +93,27 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 	}
 
 	// b. Send CROPPED images to Gemini
-	analysis, err := s.aiService.AnalyzeCoin(ctx, croppedFrontPath, croppedBackPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to analyze coin: %w", err)
+	// analysis, err := s.aiService.AnalyzeCoin(ctx, croppedFrontPath, croppedBackPath)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to analyze coin: %w", err)
+	// }
+
+	// TEMPORARY: Disable Gemini API
+	fmt.Println("⚠️ Gemini API disabled. Using dummy analysis.")
+	analysis := &domain.CoinAnalysisResult{
+		Country:                 "Unknown",
+		Year:                    0,
+		FaceValue:               "Unknown",
+		Currency:                "Unknown",
+		Material:                "Unknown",
+		Description:             "Gemini analysis disabled",
+		KMCode:                  "Unknown",
+		MinValue:                0,
+		MaxValue:                0,
+		Grade:                   "SC", // Default grade
+		Notes:                   "",
+		VerticalCorrectionAngle: 0,
+		RawDetails:              map[string]any{"info": "Gemini disabled"},
 	}
 
 	// 4. Post-Processing: Rotate based on Gemini's suggestion
@@ -108,6 +129,21 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 		return nil, fmt.Errorf("failed to rotate back: %w", err)
 	}
 
+	// Handle Group
+	var groupID *int
+	if groupName != "" {
+		group, err := s.groupRepo.GetByName(ctx, groupName)
+		if err != nil {
+			// If not found (or other error), try to create
+			// Ideally check specific error, but for MVP assuming not found
+			group, err = s.groupRepo.Create(ctx, groupName, "")
+			if err != nil {
+				return nil, fmt.Errorf("failed to create group: %w", err)
+			}
+		}
+		groupID = &group.ID
+	}
+
 	// 5. Create Coin Entity
 	coin := &domain.Coin{
 		ID:                  coinID,
@@ -121,13 +157,48 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 		MinValue:            analysis.MinValue,
 		MaxValue:            analysis.MaxValue,
 		Grade:               analysis.Grade,
-		SampleImageURLFront: finalFrontPath, // Store path or URL? For now path relative to storage or absolute?
-		// Ideally we store a relative path or URL. Let's store the filename relative to storage root if possible,
-		// but here we have full paths. Let's store full path for now or clean it up.
-		// The frontend will need to serve this. We'll handle serving in API.
-		SampleImageURLBack: finalBackPath,
-		Notes:              analysis.Notes,
-		GeminiDetails:      analysis.RawDetails,
+		SampleImageURLFront: finalFrontPath,
+		SampleImageURLBack:  finalBackPath,
+		Notes:               analysis.Notes,
+		GeminiDetails:       analysis.RawDetails,
+		Images:              []domain.CoinImage{},
+		GroupID:             groupID,
+		UserNotes:           userNotes,
+	}
+
+	// Helper to add image
+	addImage := func(path, imgType, side string) error {
+		w, h, size, mime, err := s.imageService.GetMetadata(path)
+		if err != nil {
+			return fmt.Errorf("failed to get metadata for %s: %w", imgType, err)
+		}
+		coin.Images = append(coin.Images, domain.CoinImage{
+			ID:        uuid.New(),
+			CoinID:    coinID,
+			ImageType: imgType,
+			Side:      side,
+			Path:      path,
+			Extension: "jpg", // Assuming jpg for now as we save as jpg
+			Size:      size,
+			Width:     w,
+			Height:    h,
+			MimeType:  mime,
+		})
+		return nil
+	}
+
+	// Add all images
+	if err := addImage(originalFrontPath, "original", "front"); err != nil {
+		return nil, err
+	}
+	if err := addImage(originalBackPath, "original", "back"); err != nil {
+		return nil, err
+	}
+	if err := addImage(finalFrontPath, "crop", "front"); err != nil {
+		return nil, err
+	}
+	if err := addImage(finalBackPath, "crop", "back"); err != nil {
+		return nil, err
 	}
 
 	// 6. Persist
@@ -144,4 +215,8 @@ func (s *CoinService) ListCoins(ctx context.Context, limit, offset int) ([]*doma
 
 func (s *CoinService) GetCoin(ctx context.Context, id uuid.UUID) (*domain.Coin, error) {
 	return s.repo.GetByID(ctx, id)
+}
+
+func (s *CoinService) ListGroups(ctx context.Context) ([]*domain.Group, error) {
+	return s.groupRepo.List(ctx)
 }

@@ -8,11 +8,16 @@ import (
 	"github.com/antonioparicio/numismaticapp/internal/api"
 	"github.com/antonioparicio/numismaticapp/internal/application"
 	"github.com/antonioparicio/numismaticapp/internal/infrastructure"
+	"github.com/antonioparicio/numismaticapp/internal/infrastructure/gemini"
+	"github.com/antonioparicio/numismaticapp/internal/infrastructure/image"
+	"github.com/antonioparicio/numismaticapp/internal/infrastructure/storage"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func main() {
+	ctx := context.Background()
+
 	// 1. Config
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
@@ -24,30 +29,41 @@ func main() {
 	}
 
 	// 2. Database
-	dbPool, err := pgxpool.New(context.Background(), dbURL)
+	dbPool, err := pgxpool.New(ctx, dbURL)
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v", err)
 	}
 	defer dbPool.Close()
 
-	// 3. Infrastructure
+	// Initialize Infrastructure
+	// Initialize Infrastructure
 	coinRepo := infrastructure.NewPostgresCoinRepository(dbPool)
-	geminiService, err := infrastructure.NewGeminiService(context.Background(), geminiKey)
+	groupRepo := infrastructure.NewPostgresGroupRepository(dbPool)
+	geminiClient, err := gemini.NewGeminiService(ctx, os.Getenv("GEMINI_API_KEY"))
 	if err != nil {
-		log.Fatalf("Failed to create Gemini service: %v", err)
+		log.Fatalf("Failed to create Gemini client: %v", err)
 	}
-	imageService := infrastructure.NewVipsImageService()
-	storageService := infrastructure.NewLocalFileStorage("./storage")
+	defer geminiClient.Close()
 
-	// 4. Application
-	coinService := application.NewCoinService(coinRepo, imageService, geminiService, storageService)
+	imageService := image.NewVipsImageService()
+	storageService := storage.NewLocalFileStorage("storage")
+
+	// Run Migrations
+	migrator := infrastructure.NewMigrationService(dbPool)
+	if err := migrator.RunMigrations(ctx); err != nil {
+		log.Fatalf("Failed to run migrations: %v", err)
+	}
+
+	// Initialize Application Services
+	coinService := application.NewCoinService(coinRepo, groupRepo, imageService, geminiClient, storageService)
 
 	// 5. API
 	app := fiber.New(fiber.Config{
 		BodyLimit: 20 * 1024 * 1024, // 20MB limit for images
 	})
 	coinHandler := api.NewCoinHandler(coinService)
-	api.SetupRouter(app, coinHandler)
+	healthHandler := api.NewHealthHandler(dbPool)
+	api.SetupRouter(app, coinHandler, healthHandler)
 
 	// 6. Start
 	port := os.Getenv("PORT")

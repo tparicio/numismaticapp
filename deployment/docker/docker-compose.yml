@@ -9,9 +9,11 @@ services:
     restart: unless-stopped
     ports:
       - "8080:8080"
+    env_file:
+      - ../../.env
+      - ../../.env.local
     environment:
       - DATABASE_URL=postgres://postgres:postgres@db:5432/numismatic?sslmode=disable
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
       - APP_ENV=production
     depends_on:
       - db

@@ -28,13 +28,24 @@ func (h *CoinHandler) AddCoin(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "back_image is required"})
 	}
 
+	groupName := c.FormValue("group_name")
+	userNotes := c.FormValue("user_notes")
+
 	// Call service
-	coin, err := h.service.AddCoin(c.Context(), frontFile, backFile)
+	coin, err := h.service.AddCoin(c.Context(), frontFile, backFile, groupName, userNotes)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(coin)
+}
+
+func (h *CoinHandler) ListGroups(c *fiber.Ctx) error {
+	groups, err := h.service.ListGroups(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(groups)
 }
 
 func (h *CoinHandler) ListCoins(c *fiber.Ctx) error {
