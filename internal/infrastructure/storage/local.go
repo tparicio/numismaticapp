@@ -18,7 +18,7 @@ func NewLocalFileStorage(baseDir string) *LocalFileStorage {
 }
 
 func (s *LocalFileStorage) EnsureDir(coinID uuid.UUID) (string, error) {
-	path := filepath.Join(s.BaseDir, coinID.String())
+	path := filepath.Join(s.BaseDir, "coins", coinID.String())
 	if err := os.MkdirAll(path, 0755); err != nil {
 		return "", fmt.Errorf("failed to create directory: %w", err)
 	}

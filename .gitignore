@@ -50,6 +50,7 @@ Thumbs.db
 
 # var
 var/
+storage/
 
 #.env
 .env.local

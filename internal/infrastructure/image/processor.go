@@ -61,31 +61,43 @@ func (s *VipsImageService) CropToCircle(imagePath string) (string, error) {
 		return "", err
 	}
 
-	// Simple "smart" crop - assuming coin is centered-ish.
-	// Real "detect circle" is hard with just bimg (needs OpenCV).
-	// For MVP, we'll do a center square crop which is often good enough if user centers the coin.
-	// Or we can use bimg.SmartCrop.
-
+	// 1. Determine smallest dimension for square crop
 	dimension := size.Width
 	if size.Height < size.Width {
 		dimension = size.Height
 	}
 
-	// Crop to square first
+	// 2. Crop to square centered
 	cropped, err := img.Crop(dimension, dimension, bimg.GravityCentre)
 	if err != nil {
 		return "", err
 	}
 
-	// Create a new image from cropped buffer
-	// Note: bimg doesn't have a direct "mask to circle" easily without SVG overlay or similar.
-	// For now, we will just return the square cropped image.
-	// CSS radius: 50% will handle the visual circle.
-	// If we strictly need to make pixels transparent outside circle, it requires more complex vips operations.
-	// Let's stick to Square Crop for MVP backend processing.
+	// 3. Save as PNG to support transparency (if we added mask, which bimg doesn't support easily yet)
+	// Even without mask, saving as PNG is requested.
+	// We change extension to .png
+	// bimg.Write automatically determines format from extension? No, we need to convert.
+	// bimg.NewImage(cropped).Convert(bimg.PNG)
 
-	outputPath := imagePath + "_processed.jpg"
-	if err := bimg.Write(outputPath, cropped); err != nil {
+	newImg := bimg.NewImage(cropped)
+	pngBuf, err := newImg.Convert(bimg.PNG)
+	if err != nil {
+		return "", fmt.Errorf("failed to convert to png: %w", err)
+	}
+
+	// Construct new path with .png extension
+	// We strip original extension and append _crop.png
+	// Actually CoinService expects a new file.
+	// Let's replace extension.
+
+	// Simple string manipulation for now
+	basePath := imagePath
+	if len(basePath) > 4 {
+		basePath = basePath[:len(basePath)-4] // strip .jpg or similar assuming 3 chars
+	}
+	outputPath := basePath + "_crop.png"
+
+	if err := bimg.Write(outputPath, pngBuf); err != nil {
 		return "", err
 	}
 
@@ -108,9 +120,23 @@ func (s *VipsImageService) Rotate(imagePath string, angle float64) (string, erro
 		return "", err
 	}
 
-	// Overwrite or new file? Let's overwrite the processed file
-	if err := bimg.Write(imagePath, rotated); err != nil {
-		return "", err
+	// Check if input was PNG to preserve format
+	// bimg.Read reads bytes, we can check signature or just assume based on extension
+	// If extension is .png, save as png.
+	if len(imagePath) > 4 && imagePath[len(imagePath)-4:] == ".png" {
+		// Rotate might return default format buffer? No, it returns buffer.
+		// We should ensure it's saved as PNG if it was PNG.
+		// bimg operations usually preserve type if possible or return raw buffer.
+		// But let's be safe and convert if needed or just Write.
+		// bimg.Write uses vips_image_write_to_file which detects type from extension.
+		if err := bimg.Write(imagePath, rotated); err != nil {
+			return "", err
+		}
+	} else {
+		// Default behavior (likely jpg)
+		if err := bimg.Write(imagePath, rotated); err != nil {
+			return "", err
+		}
 	}
 
 	return imagePath, nil

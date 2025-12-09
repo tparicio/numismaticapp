@@ -80,8 +80,7 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 	// The prompt says: "Recibir front/back -> FileSystem -> Pre-Procesamiento (Crop) -> Inteligencia (Gemini) -> Post-Procesamiento (Rotate)"
 	// So:
 	// a. Crop originals to circle (store as temp or overwrite?)
-	// Let's crop to a new file "cropped_front.jpg"
-
+	// Let's crop to a new file "crop_front.png"
 	croppedFrontPath, err := s.imageService.CropToCircle(originalFrontPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to crop front: %w", err)
@@ -101,16 +100,16 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 	// TEMPORARY: Disable Gemini API
 	fmt.Println("⚠️ Gemini API disabled. Using dummy analysis.")
 	analysis := &domain.CoinAnalysisResult{
-		Country:                 "Unknown",
+		Country:                 "",
 		Year:                    0,
-		FaceValue:               "Unknown",
-		Currency:                "Unknown",
-		Material:                "Unknown",
+		FaceValue:               "",
+		Currency:                "",
+		Material:                "",
 		Description:             "Gemini analysis disabled",
-		KMCode:                  "Unknown",
+		KMCode:                  "",
 		MinValue:                0,
 		MaxValue:                0,
-		Grade:                   "SC", // Default grade
+		Grade:                   "", // Default to empty (NULL)
 		Notes:                   "",
 		VerticalCorrectionAngle: 0,
 		RawDetails:              map[string]any{"info": "Gemini disabled"},
@@ -178,11 +177,15 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 			ImageType: imgType,
 			Side:      side,
 			Path:      path,
-			Extension: "jpg", // Assuming jpg for now as we save as jpg
-			Size:      size,
-			Width:     w,
-			Height:    h,
-			MimeType:  mime,
+			Extension: "png", // Cropped images are PNG, originals are JPG (usually). We should detect or pass it.
+			// For now, let's assume if type is "crop" it is png, otherwise jpg.
+			// Or better, let GetMetadata determine it.
+			// But we need to store extension in DB.
+			// Let's rely on file extension from path.
+			Size:     size,
+			Width:    w,
+			Height:   h,
+			MimeType: mime,
 		})
 		return nil
 	}

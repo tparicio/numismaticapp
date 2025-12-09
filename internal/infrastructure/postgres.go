@@ -260,6 +260,9 @@ func toNullString(s string) pgtype.Text {
 }
 
 func toNumeric(f float64) pgtype.Numeric {
+	if f == 0 {
+		return pgtype.Numeric{Valid: false}
+	}
 	var n pgtype.Numeric
 	n.Scan(fmt.Sprintf("%f", f))
 	return n
