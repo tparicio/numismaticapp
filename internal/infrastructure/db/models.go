@@ -168,18 +168,19 @@ type Coin struct {
 }
 
 type CoinImage struct {
-	ID        pgtype.UUID        `json:"id"`
-	CoinID    pgtype.UUID        `json:"coin_id"`
-	ImageType ImageType          `json:"image_type"`
-	Side      CoinSide           `json:"side"`
-	Path      string             `json:"path"`
-	Extension string             `json:"extension"`
-	Size      int64              `json:"size"`
-	Width     int32              `json:"width"`
-	Height    int32              `json:"height"`
-	MimeType  string             `json:"mime_type"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	ID               pgtype.UUID        `json:"id"`
+	CoinID           pgtype.UUID        `json:"coin_id"`
+	ImageType        ImageType          `json:"image_type"`
+	Side             CoinSide           `json:"side"`
+	Path             string             `json:"path"`
+	Extension        string             `json:"extension"`
+	Size             int64              `json:"size"`
+	Width            int32              `json:"width"`
+	Height           int32              `json:"height"`
+	MimeType         string             `json:"mime_type"`
+	OriginalFilename pgtype.Text        `json:"original_filename"`
+	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Group struct {

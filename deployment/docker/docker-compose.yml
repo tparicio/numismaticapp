@@ -33,5 +33,27 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  rembg:
+    image: danielgatis/rembg:latest
+    container_name: numismatic-rembg
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    command: s -p 5000
+
+  img-test:
+    build:
+      context: ../../
+      dockerfile: deployment/docker/Dockerfile.test
+    container_name: numismatic-img-test
+    ports:
+      - "3000:3000"
+    environment:
+      - REMBG_URL=http://rembg:5000/api/remove
+    depends_on:
+      - rembg
+    volumes:
+      - ../../storage:/app/storage
+
 volumes:
   postgres_data:

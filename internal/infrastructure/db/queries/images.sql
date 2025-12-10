@@ -8,9 +8,10 @@ INSERT INTO coin_images (
     size,
     width,
     height,
-    mime_type
+    mime_type,
+    original_filename
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
 ) RETURNING *;
 
 -- name: ListCoinImagesByCoinID :many

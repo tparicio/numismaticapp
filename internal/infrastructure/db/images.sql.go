@@ -21,22 +21,24 @@ INSERT INTO coin_images (
     size,
     width,
     height,
-    mime_type
+    mime_type,
+    original_filename
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9
-) RETURNING id, coin_id, image_type, side, path, extension, size, width, height, mime_type, created_at, updated_at
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+) RETURNING id, coin_id, image_type, side, path, extension, size, width, height, mime_type, original_filename, created_at, updated_at
 `
 
 type CreateCoinImageParams struct {
-	CoinID    pgtype.UUID `json:"coin_id"`
-	ImageType ImageType   `json:"image_type"`
-	Side      CoinSide    `json:"side"`
-	Path      string      `json:"path"`
-	Extension string      `json:"extension"`
-	Size      int64       `json:"size"`
-	Width     int32       `json:"width"`
-	Height    int32       `json:"height"`
-	MimeType  string      `json:"mime_type"`
+	CoinID           pgtype.UUID `json:"coin_id"`
+	ImageType        ImageType   `json:"image_type"`
+	Side             CoinSide    `json:"side"`
+	Path             string      `json:"path"`
+	Extension        string      `json:"extension"`
+	Size             int64       `json:"size"`
+	Width            int32       `json:"width"`
+	Height           int32       `json:"height"`
+	MimeType         string      `json:"mime_type"`
+	OriginalFilename pgtype.Text `json:"original_filename"`
 }
 
 func (q *Queries) CreateCoinImage(ctx context.Context, arg CreateCoinImageParams) (CoinImage, error) {
@@ -50,6 +52,7 @@ func (q *Queries) CreateCoinImage(ctx context.Context, arg CreateCoinImageParams
 		arg.Width,
 		arg.Height,
 		arg.MimeType,
+		arg.OriginalFilename,
 	)
 	var i CoinImage
 	err := row.Scan(
@@ -63,6 +66,7 @@ func (q *Queries) CreateCoinImage(ctx context.Context, arg CreateCoinImageParams
 		&i.Width,
 		&i.Height,
 		&i.MimeType,
+		&i.OriginalFilename,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -70,7 +74,7 @@ func (q *Queries) CreateCoinImage(ctx context.Context, arg CreateCoinImageParams
 }
 
 const listCoinImagesByCoinID = `-- name: ListCoinImagesByCoinID :many
-SELECT id, coin_id, image_type, side, path, extension, size, width, height, mime_type, created_at, updated_at FROM coin_images
+SELECT id, coin_id, image_type, side, path, extension, size, width, height, mime_type, original_filename, created_at, updated_at FROM coin_images
 WHERE coin_id = $1
 ORDER BY created_at ASC
 `
@@ -95,6 +99,7 @@ func (q *Queries) ListCoinImagesByCoinID(ctx context.Context, coinID pgtype.UUID
 			&i.Width,
 			&i.Height,
 			&i.MimeType,
+			&i.OriginalFilename,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {

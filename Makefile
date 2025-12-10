@@ -31,6 +31,11 @@ stop: ## 🛑 Stop the application
 	$(DOCKER_COMPOSE) down
 	@echo "$(COLOR_GREEN)✅ Application stopped.$(COLOR_RESET)"
 
+restart: ## 🔄 Restart the application (rebuilds app to apply migrations)
+	@echo "$(COLOR_BLUE)🔄 Restarting application...$(COLOR_RESET)"
+	$(DOCKER_COMPOSE) up -d --build app
+	@echo "$(COLOR_GREEN)✅ Application restarted.$(COLOR_RESET)"
+
 logs: ## 📋 View container logs (follow mode)
 	@echo "$(COLOR_BLUE)📋 Tailing logs... (Ctrl+C to exit)$(COLOR_RESET)"
 	$(DOCKER_COMPOSE) logs -f

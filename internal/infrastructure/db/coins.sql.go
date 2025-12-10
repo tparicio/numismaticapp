@@ -24,15 +24,17 @@ func (q *Queries) CountCoins(ctx context.Context) (int64, error) {
 
 const createCoin = `-- name: CreateCoin :one
 INSERT INTO coins (
-    country, year, face_value, currency, material, description, km_code,
+    id, country, year, face_value, currency, material, description, km_code,
     min_value, max_value, grade, sample_image_url_front, sample_image_url_back,
     notes, gemini_details, group_id, user_notes
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
+    $1, $2, $3, $4, $5, $6, $7, $8,
+    $9, $10, $11, $12, $13, $14, $15, $16, $17
 ) RETURNING id, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, sample_image_url_front, sample_image_url_back, notes, gemini_details, group_id, user_notes, created_at, updated_at
 `
 
 type CreateCoinParams struct {
+	ID                  pgtype.UUID    `json:"id"`
 	Country             pgtype.Text    `json:"country"`
 	Year                pgtype.Int4    `json:"year"`
 	FaceValue           pgtype.Text    `json:"face_value"`
@@ -53,6 +55,7 @@ type CreateCoinParams struct {
 
 func (q *Queries) CreateCoin(ctx context.Context, arg CreateCoinParams) (Coin, error) {
 	row := q.db.QueryRow(ctx, createCoin,
+		arg.ID,
 		arg.Country,
 		arg.Year,
 		arg.FaceValue,

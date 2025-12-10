@@ -32,6 +32,7 @@ func (r *PostgresCoinRepository) Save(ctx context.Context, coin *domain.Coin) er
 	}
 
 	params := db.CreateCoinParams{
+		ID:                  pgtype.UUID{Bytes: coin.ID, Valid: true},
 		Country:             toNullString(coin.Country),
 		Year:                toNullInt4(coin.Year),
 		FaceValue:           toNullString(coin.FaceValue),
@@ -55,22 +56,24 @@ func (r *PostgresCoinRepository) Save(ctx context.Context, coin *domain.Coin) er
 		return fmt.Errorf("failed to save coin: %w", err)
 	}
 
-	coin.ID = uuid.UUID(result.ID.Bytes)
+	// coin.ID is already set correctly by service, and we forced it in DB.
+	// But let's update metadata just in case.
 	coin.CreatedAt = result.CreatedAt.Time
 	coin.UpdatedAt = result.UpdatedAt.Time
 
 	// Save Images
 	for _, img := range coin.Images {
 		imgParams := db.CreateCoinImageParams{
-			CoinID:    pgtype.UUID{Bytes: coin.ID, Valid: true},
-			ImageType: db.ImageType(img.ImageType),
-			Side:      db.CoinSide(img.Side),
-			Path:      img.Path,
-			Extension: img.Extension,
-			Size:      img.Size,
-			Width:     int32(img.Width),
-			Height:    int32(img.Height),
-			MimeType:  img.MimeType,
+			CoinID:           pgtype.UUID{Bytes: coin.ID, Valid: true},
+			ImageType:        db.ImageType(img.ImageType),
+			Side:             db.CoinSide(img.Side),
+			Path:             img.Path,
+			Extension:        img.Extension,
+			Size:             img.Size,
+			Width:            int32(img.Width),
+			Height:           int32(img.Height),
+			MimeType:         img.MimeType,
+			OriginalFilename: toNullString(img.OriginalFilename),
 		}
 		if _, err := r.q.CreateCoinImage(ctx, imgParams); err != nil {
 			return fmt.Errorf("failed to save coin image: %w", err)
@@ -226,18 +229,19 @@ func toDomainImages(rows []db.CoinImage) []domain.CoinImage {
 	images := make([]domain.CoinImage, len(rows))
 	for i, row := range rows {
 		images[i] = domain.CoinImage{
-			ID:        uuid.UUID(row.ID.Bytes),
-			CoinID:    uuid.UUID(row.CoinID.Bytes),
-			ImageType: string(row.ImageType),
-			Side:      string(row.Side),
-			Path:      row.Path,
-			Extension: row.Extension,
-			Size:      row.Size,
-			Width:     int(row.Width),
-			Height:    int(row.Height),
-			MimeType:  row.MimeType,
-			CreatedAt: row.CreatedAt.Time,
-			UpdatedAt: row.UpdatedAt.Time,
+			ID:               uuid.UUID(row.ID.Bytes),
+			CoinID:           uuid.UUID(row.CoinID.Bytes),
+			ImageType:        string(row.ImageType),
+			Side:             string(row.Side),
+			Path:             row.Path,
+			Extension:        row.Extension,
+			Size:             row.Size,
+			Width:            int(row.Width),
+			Height:           int(row.Height),
+			MimeType:         row.MimeType,
+			OriginalFilename: row.OriginalFilename.String,
+			CreatedAt:        row.CreatedAt.Time,
+			UpdatedAt:        row.UpdatedAt.Time,
 		}
 	}
 	return images

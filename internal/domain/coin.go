@@ -39,18 +39,19 @@ type Group struct {
 }
 
 type CoinImage struct {
-	ID        uuid.UUID `json:"id"`
-	CoinID    uuid.UUID `json:"coin_id"`
-	ImageType string    `json:"image_type"` // original, crop, thumbnail, sample
-	Side      string    `json:"side"`       // front, back
-	Path      string    `json:"path"`
-	Extension string    `json:"extension"`
-	Size      int64     `json:"size"`
-	Width     int       `json:"width"`
-	Height    int       `json:"height"`
-	MimeType  string    `json:"mime_type"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID               uuid.UUID `json:"id"`
+	CoinID           uuid.UUID `json:"coin_id"`
+	ImageType        string    `json:"image_type"` // original, crop, thumbnail, sample
+	Side             string    `json:"side"`       // front, back
+	Path             string    `json:"path"`
+	Extension        string    `json:"extension"`
+	Size             int64     `json:"size"`
+	Width            int       `json:"width"`
+	Height           int       `json:"height"`
+	MimeType         string    `json:"mime_type"`
+	OriginalFilename string    `json:"original_filename"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
 }
 
 // CoinRepository defines the interface for persisting coins.

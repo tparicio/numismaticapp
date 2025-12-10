@@ -109,7 +109,7 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 		KMCode:                  "",
 		MinValue:                0,
 		MaxValue:                0,
-		Grade:                   "", // Default to empty (NULL)
+		Grade:                   "",
 		Notes:                   "",
 		VerticalCorrectionAngle: 0,
 		RawDetails:              map[string]any{"info": "Gemini disabled"},
@@ -166,41 +166,38 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 	}
 
 	// Helper to add image
-	addImage := func(path, imgType, side string) error {
+	addImage := func(path, imgType, side, originalFilename string) error {
 		w, h, size, mime, err := s.imageService.GetMetadata(path)
 		if err != nil {
 			return fmt.Errorf("failed to get metadata for %s: %w", imgType, err)
 		}
 		coin.Images = append(coin.Images, domain.CoinImage{
-			ID:        uuid.New(),
-			CoinID:    coinID,
-			ImageType: imgType,
-			Side:      side,
-			Path:      path,
-			Extension: "png", // Cropped images are PNG, originals are JPG (usually). We should detect or pass it.
-			// For now, let's assume if type is "crop" it is png, otherwise jpg.
-			// Or better, let GetMetadata determine it.
-			// But we need to store extension in DB.
-			// Let's rely on file extension from path.
-			Size:     size,
-			Width:    w,
-			Height:   h,
-			MimeType: mime,
+			ID:               uuid.New(),
+			CoinID:           coinID,
+			ImageType:        imgType,
+			Side:             side,
+			Path:             path,
+			Extension:        "png", // TODO: Detect extension
+			Size:             size,
+			Width:            w,
+			Height:           h,
+			MimeType:         mime,
+			OriginalFilename: originalFilename,
 		})
 		return nil
 	}
 
 	// Add all images
-	if err := addImage(originalFrontPath, "original", "front"); err != nil {
+	if err := addImage(originalFrontPath, "original", "front", frontFile.Filename); err != nil {
 		return nil, err
 	}
-	if err := addImage(originalBackPath, "original", "back"); err != nil {
+	if err := addImage(originalBackPath, "original", "back", backFile.Filename); err != nil {
 		return nil, err
 	}
-	if err := addImage(finalFrontPath, "crop", "front"); err != nil {
+	if err := addImage(finalFrontPath, "crop", "front", frontFile.Filename); err != nil {
 		return nil, err
 	}
-	if err := addImage(finalBackPath, "crop", "back"); err != nil {
+	if err := addImage(finalBackPath, "crop", "back", backFile.Filename); err != nil {
 		return nil, err
 	}
 
