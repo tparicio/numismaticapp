@@ -1,11 +1,11 @@
 -- name: CreateCoin :one
 INSERT INTO coins (
-    id, country, year, face_value, currency, material, description, km_code,
+    id, name, mint, mintage, country, year, face_value, currency, material, description, km_code,
     min_value, max_value, grade, sample_image_url_front, sample_image_url_back,
     notes, gemini_details, group_id, user_notes
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8,
-    $9, $10, $11, $12, $13, $14, $15, $16, $17
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
+    $12, $13, $14, $15, $16, $17, $18, $19, $20
 ) RETURNING *;
 
 -- name: GetCoin :one
@@ -23,22 +23,25 @@ SELECT count(*) FROM coins;
 -- name: UpdateCoin :one
 UPDATE coins
 SET
-    country = $2,
-    year = $3,
-    face_value = $4,
-    currency = $5,
-    material = $6,
-    description = $7,
-    km_code = $8,
-    min_value = $9,
-    max_value = $10,
-    grade = $11,
-    sample_image_url_front = $12,
-    sample_image_url_back = $13,
-    notes = $14,
-    gemini_details = $15,
-    group_id = $16,
-    user_notes = $17,
+    name = $2,
+    mint = $3,
+    mintage = $4,
+    country = $5,
+    year = $6,
+    face_value = $7,
+    currency = $8,
+    material = $9,
+    description = $10,
+    km_code = $11,
+    min_value = $12,
+    max_value = $13,
+    grade = $14,
+    sample_image_url_front = $15,
+    sample_image_url_back = $16,
+    notes = $17,
+    gemini_details = $18,
+    group_id = $19,
+    user_notes = $20,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
 RETURNING *;

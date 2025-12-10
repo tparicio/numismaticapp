@@ -33,6 +33,9 @@ func (r *PostgresCoinRepository) Save(ctx context.Context, coin *domain.Coin) er
 
 	params := db.CreateCoinParams{
 		ID:                  pgtype.UUID{Bytes: coin.ID, Valid: true},
+		Name:                toNullString(coin.Name),
+		Mint:                toNullString(coin.Mint),
+		Mintage:             toNullInt4(coin.Mintage),
 		Country:             toNullString(coin.Country),
 		Year:                toNullInt4(coin.Year),
 		FaceValue:           toNullString(coin.FaceValue),
@@ -204,6 +207,9 @@ func toDomainCoin(row db.Coin) (*domain.Coin, error) {
 
 	return &domain.Coin{
 		ID:                  uuid.UUID(row.ID.Bytes),
+		Name:                row.Name.String,
+		Mint:                row.Mint.String,
+		Mintage:             int(row.Mintage.Int32),
 		Country:             row.Country.String,
 		Year:                int(row.Year.Int32),
 		FaceValue:           row.FaceValue.String,

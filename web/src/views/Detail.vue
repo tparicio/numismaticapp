@@ -37,6 +37,7 @@
     <!-- Details Section -->
     <div class="card bg-base-100 shadow-xl h-fit">
       <div class="card-body">
+        <h2 v-if="coin.name" class="text-2xl font-bold text-primary mb-1">{{ coin.name }}</h2>
         <h1 class="card-title text-4xl mb-2">{{ coin.country }} {{ coin.face_value }}</h1>
         <div class="flex gap-2 mb-6">
             <div class="badge badge-lg badge-primary">{{ coin.year }}</div>
@@ -56,6 +57,14 @@
             <div>
                 <span class="font-bold block text-sm text-gray-500">KM Code</span>
                 <span>{{ coin.km_code || 'N/A' }}</span>
+            </div>
+            <div>
+                <span class="font-bold block text-sm text-gray-500">Mint (Ceca)</span>
+                <span>{{ coin.mint || 'N/A' }}</span>
+            </div>
+            <div>
+                <span class="font-bold block text-sm text-gray-500">Mintage (Tirada)</span>
+                <span>{{ coin.mintage ? coin.mintage.toLocaleString() : 'N/A' }}</span>
             </div>
             <div>
                 <span class="font-bold block text-sm text-gray-500">Est. Value</span>

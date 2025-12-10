@@ -6,6 +6,9 @@ CREATE TYPE grade_type AS ENUM ('MC', 'RC', 'BC', 'MBC', 'EBC', 'SC', 'FDC', 'PR
 
 CREATE TABLE coins (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255),
+    mint VARCHAR(255),
+    mintage INTEGER,
     country VARCHAR(255),
     year INTEGER,
     face_value VARCHAR(100),

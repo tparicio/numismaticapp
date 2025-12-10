@@ -63,39 +63,32 @@
         </div>
 
         <!-- Group Selector -->
+        <!-- Group Selector -->
+
+
+        <!-- Group Selection -->
         <div class="form-control w-full">
           <label class="label">
-            <span class="label-text">Group / Book / Tray</span>
-            <span class="label-text-alt">Select existing or type to create new</span>
+            <span class="label-text">Group / Collection</span>
           </label>
-          <div class="relative">
-            <input 
-              type="text" 
-              v-model="groupName" 
-              list="groups-list"
-              placeholder="e.g. 'Spanish Silver', 'Tray 1'" 
-              class="input input-bordered w-full" 
-              @change="saveLastGroup"
-            />
-            <datalist id="groups-list">
-              <option v-for="g in groups" :key="g.id" :value="g.name" />
-            </datalist>
+          <div class="join w-full">
+            <select class="select select-bordered join-item w-full" v-model="selectedGroup">
+              <option value="">None</option>
+              <option v-for="group in groups" :key="group.id" :value="group.name">{{ group.name }}</option>
+            </select>
+            <button class="btn join-item" type="button" @click="showNewGroupModal = true">+</button>
           </div>
         </div>
 
         <!-- User Notes -->
         <div class="form-control w-full">
           <label class="label">
-            <span class="label-text">Your Notes</span>
+            <span class="label-text">My Notes</span>
           </label>
-          <textarea 
-            v-model="userNotes" 
-            class="textarea textarea-bordered h-24" 
-            placeholder="Purchase date, price, condition notes..."
-          ></textarea>
+          <textarea v-model="userNotes" class="textarea textarea-bordered h-24" placeholder="Add your personal notes here..."></textarea>
         </div>
 
-        <div class="alert alert-info shadow-lg" v-if="loading">
+        <div class="alert alert-info shadow-lg" v-if="uploading">
           <div>
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current flex-shrink-0 w-6 h-6 animate-spin"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             <span>Processing images... (AI Analysis is currently disabled)</span>
@@ -103,12 +96,30 @@
         </div>
 
         <div class="card-actions justify-end mt-6">
-          <button type="submit" class="btn btn-primary w-full sm:w-auto" :disabled="loading || !frontFile || !backFile">
-            Save Coin
+          <button type="submit" class="btn btn-primary w-full sm:w-auto" :disabled="uploading || !frontFile || !backFile">
+            <span v-if="uploading" class="loading loading-spinner"></span>
+            {{ uploading ? 'Processing Coin...' : 'Add Coin' }}
           </button>
         </div>
       </form>
     </div>
+
+    <!-- New Group Modal -->
+    <dialog id="new_group_modal" class="modal" :class="{ 'modal-open': showNewGroupModal }">
+      <div class="modal-box">
+        <h3 class="font-bold text-lg">Create New Group</h3>
+        <div class="form-control w-full mt-4">
+          <label class="label">
+            <span class="label-text">Group Name</span>
+          </label>
+          <input type="text" v-model="newGroupName" class="input input-bordered w-full" />
+        </div>
+        <div class="modal-action">
+          <button class="btn" @click="showNewGroupModal = false">Cancel</button>
+          <button class="btn btn-primary" @click="createGroup">Create</button>
+        </div>
+      </div>
+    </dialog>
   </div>
 </template>
 
@@ -123,34 +134,36 @@ const frontFile = ref(null)
 const backFile = ref(null)
 const frontPreview = ref(null)
 const backPreview = ref(null)
-const groupName = ref('')
 const userNotes = ref('')
+const selectedGroup = ref('')
 const groups = ref([])
-const loading = ref(false)
+const uploading = ref(false)
 const isDragging = ref(false)
 const error = ref(null)
+const showNewGroupModal = ref(false)
+const newGroupName = ref('')
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'
 
 onMounted(async () => {
-  // Load last used group
-  const lastGroup = localStorage.getItem('last_group_name')
-  if (lastGroup) {
-    groupName.value = lastGroup
-  }
+  await fetchGroups()
+})
 
-  // Fetch groups
+const fetchGroups = async () => {
   try {
     const res = await axios.get(`${API_URL}/groups`)
     groups.value = res.data || []
   } catch (e) {
     console.error("Failed to load groups", e)
   }
-})
+}
 
-const saveLastGroup = () => {
-  if (groupName.value) {
-    localStorage.setItem('last_group_name', groupName.value)
-  }
+const createGroup = async () => {
+  if (!newGroupName.value) return
+  groups.value.push({ id: Date.now(), name: newGroupName.value }) // Mock ID
+  selectedGroup.value = newGroupName.value
+  showNewGroupModal.value = false
+  newGroupName.value = ''
 }
 
 const triggerFileInput = () => {
@@ -231,21 +244,14 @@ const uploadCoin = async () => {
       return
   }
 
-  loading.value = true
+  uploading.value = true
   error.value = null
   
-  // Save last group before submit
-  saveLastGroup()
-
   const formData = new FormData()
   formData.append('front_image', frontFile.value)
   formData.append('back_image', backFile.value)
-  if (groupName.value) {
-    formData.append('group_name', groupName.value)
-  }
-  if (userNotes.value) {
-    formData.append('user_notes', userNotes.value)
-  }
+  formData.append('group_name', selectedGroup.value)
+  formData.append('user_notes', userNotes.value)
 
   try {
     const res = await axios.post(`${API_URL}/coins`, formData, {
@@ -259,7 +265,7 @@ const uploadCoin = async () => {
     console.error(e)
     error.value = 'Error uploading coin: ' + (e.response?.data?.error || e.message)
   } finally {
-    loading.value = false
+    uploading.value = false
   }
 }
 </script>

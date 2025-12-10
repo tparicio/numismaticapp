@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/antonioparicio/numismaticapp/internal/application"
@@ -30,16 +31,22 @@ func (h *CoinHandler) AddCoin(c *fiber.Ctx) error {
 
 	groupName := c.FormValue("group_name")
 	userNotes := c.FormValue("user_notes")
+	name := c.FormValue("name")
+	mint := c.FormValue("mint")
+	mintageStr := c.FormValue("mintage")
+	mintage := 0
+	if mintageStr != "" {
+		fmt.Sscanf(mintageStr, "%d", &mintage)
+	}
 
 	// Call service
-	coin, err := h.service.AddCoin(c.Context(), frontFile, backFile, groupName, userNotes)
+	coin, err := h.service.AddCoin(c.Context(), frontFile, backFile, groupName, userNotes, name, mint, mintage)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(coin)
 }
-
 func (h *CoinHandler) ListGroups(c *fiber.Ctx) error {
 	groups, err := h.service.ListGroups(c.Context())
 	if err != nil {

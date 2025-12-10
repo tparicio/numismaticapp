@@ -10,6 +10,9 @@ import (
 // Coin represents a numismatic coin in the collection.
 type Coin struct {
 	ID                  uuid.UUID      `json:"id"`
+	Name                string         `json:"name"`
+	Mint                string         `json:"mint"`
+	Mintage             int            `json:"mintage"`
 	Country             string         `json:"country"`
 	Year                int            `json:"year"`
 	FaceValue           string         `json:"face_value"`

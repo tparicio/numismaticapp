@@ -52,8 +52,9 @@ func NewCoinService(
 	}
 }
 
-func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipart.FileHeader, groupName, userNotes string) (*domain.Coin, error) {
-	// 1. Generate ID
+func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipart.FileHeader, groupName, userNotes, name, mint string, mintage int) (*domain.Coin, error) {
+	// 1. Process Images (Remove Background)
+	// We use Rembg to remove background and get a clean PNG
 	coinID := uuid.New()
 
 	// 2. Save Original Images & Process Background
@@ -146,19 +147,6 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 		RawDetails:              map[string]any{"info": "Gemini disabled"},
 	}
 
-	// 4. Post-Processing: Rotate based on Gemini's suggestion
-	// Gemini returns "vertical_correction_angle"
-	// finalFrontPath, err := s.imageService.Rotate(originalFrontPath, analysis.VerticalCorrectionAngle)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to rotate front: %w", err)
-	// }
-
-	// Assuming same rotation for back or 0. Let's use the same for now as discussed.
-	// finalBackPath, err := s.imageService.Rotate(originalBackPath, analysis.VerticalCorrectionAngle)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to rotate back: %w", err)
-	// }
-
 	// Handle Group
 	var groupID *int
 	if groupName != "" {
@@ -194,6 +182,9 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 		Images:              []domain.CoinImage{},
 		GroupID:             groupID,
 		UserNotes:           userNotes,
+		Name:                name,
+		Mint:                mint,
+		Mintage:             mintage,
 	}
 
 	// Helper to add image

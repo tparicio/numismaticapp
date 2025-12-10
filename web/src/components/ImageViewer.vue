@@ -16,7 +16,7 @@
       
       <img 
         :src="imageUrl" 
-        class="max-w-none transition-transform duration-75 ease-linear cursor-move"
+        class="max-h-[90vh] max-w-[90vw] object-contain transition-transform duration-75 ease-linear cursor-move"
         :style="{ transform: `translate(${position.x}px, ${position.y}px) scale(${scale})` }"
         alt="Full size coin"
         draggable="false"
