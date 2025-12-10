@@ -224,15 +224,71 @@
     </div>
 
     <!-- Random Coin Feature -->
-    <div v-if="stats.random_coin" class="card lg:card-side bg-base-100 shadow-xl">
-        <figure class="lg:w-1/3 p-6">
-            <img :src="getThumbnail(stats.random_coin)" class="rounded-xl shadow-lg hover:scale-105 transition-transform duration-300" />
+    <div v-if="stats.random_coin" class="card lg:card-side bg-base-100 shadow-xl overflow-hidden">
+        <figure class="lg:w-1/3 bg-base-200 p-6 flex flex-col gap-4 justify-center items-center">
+            <div class="flex gap-4">
+                <div class="avatar cursor-pointer" @click="router.push(`/coin/${stats.random_coin.id}`)">
+                    <div class="w-32 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2 shadow-xl hover:scale-105 transition-transform duration-300">
+                        <img :src="getThumbnail(stats.random_coin, 'front')" />
+                    </div>
+                </div>
+                <div class="avatar cursor-pointer" @click="router.push(`/coin/${stats.random_coin.id}`)">
+                    <div class="w-32 rounded-full ring ring-secondary ring-offset-base-100 ring-offset-2 shadow-xl hover:scale-105 transition-transform duration-300">
+                        <img :src="getThumbnail(stats.random_coin, 'back')" />
+                    </div>
+                </div>
+            </div>
+            <div class="text-xs uppercase tracking-widest opacity-50 font-bold">Click to view details</div>
         </figure>
         <div class="card-body">
-            <h2 class="card-title">Featured Coin: {{ stats.random_coin.name }}</h2>
-            <p>{{ stats.random_coin.description || 'No description available.' }}</p>
-            <div class="card-actions justify-end">
-                <button class="btn btn-primary" @click="router.push(`/coin/${stats.random_coin.id}`)">View Details</button>
+            <div class="flex justify-between items-start">
+                <div>
+                    <h2 class="card-title text-3xl font-bold mb-1">{{ stats.random_coin.name }}</h2>
+                    <div class="text-lg opacity-70 flex items-center gap-2">
+                        <span class="font-semibold">{{ stats.random_coin.country }}</span>
+                        <span>•</span>
+                        <span>{{ stats.random_coin.year }}</span>
+                    </div>
+                </div>
+                <div class="badge badge-lg badge-primary font-bold">{{ formatCurrency(stats.random_coin.max_value) }}</div>
+            </div>
+
+            <div class="divider my-2"></div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                    <div class="opacity-50">Face Value</div>
+                    <div class="font-bold">{{ stats.random_coin.face_value }} {{ stats.random_coin.currency }}</div>
+                </div>
+                <div>
+                    <div class="opacity-50">Mint</div>
+                    <div class="font-bold">{{ stats.random_coin.mint || '-' }}</div>
+                </div>
+                <div>
+                    <div class="opacity-50">Mintage</div>
+                    <div class="font-bold">{{ formatMintage(stats.random_coin.mintage) }}</div>
+                </div>
+                <div>
+                    <div class="opacity-50">KM Code</div>
+                    <div class="font-bold">{{ stats.random_coin.km_code || '-' }}</div>
+                </div>
+                <div v-if="stats.random_coin.group_name">
+                    <div class="opacity-50">Collection</div>
+                    <div class="badge badge-outline mt-1">{{ stats.random_coin.group_name }}</div>
+                </div>
+            </div>
+
+            <p class="mt-4 text-base-content/80 italic border-l-4 border-primary pl-4 py-2 bg-base-200/50 rounded-r">
+                "{{ stats.random_coin.description || 'No description available.' }}"
+            </p>
+
+            <div class="card-actions justify-end mt-4">
+                <button class="btn btn-primary gap-2" @click="router.push(`/coin/${stats.random_coin.id}`)">
+                    View Full Details
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
@@ -315,11 +371,11 @@ const formatDate = (dateStr) => {
   return new Date(dateStr).toLocaleDateString()
 }
 
-const getThumbnail = (coin) => {
+const getThumbnail = (coin, side = 'front') => {
   if (coin.images && coin.images.length > 0) {
-    const thumb = coin.images.find(i => i.image_type === 'thumbnail' && i.side === 'front')
+    const thumb = coin.images.find(i => i.image_type === 'thumbnail' && i.side === side)
     if (thumb) return `${API_URL.replace('/api/v1', '')}/${thumb.path}`
-    const crop = coin.images.find(i => i.image_type === 'crop' && i.side === 'front')
+    const crop = coin.images.find(i => i.image_type === 'crop' && i.side === side)
     if (crop) return `${API_URL.replace('/api/v1', '')}/${crop.path}`
   }
   return 'https://placehold.co/100x100?text=No+Image'

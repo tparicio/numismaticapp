@@ -94,6 +94,8 @@ type GroupRepository interface {
 	Create(ctx context.Context, name, description string) (*Group, error)
 	GetByName(ctx context.Context, name string) (*Group, error)
 	List(ctx context.Context) ([]*Group, error)
+	Update(ctx context.Context, group *Group) error
+	Delete(ctx context.Context, id int) error
 }
 
 // ImageService defines the interface for image processing operations.

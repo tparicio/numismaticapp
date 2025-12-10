@@ -63,22 +63,7 @@
         </div>
 
         <!-- Group Selector -->
-        <!-- Group Selector -->
-
-
-        <!-- Group Selection -->
-        <div class="form-control w-full">
-          <label class="label">
-            <span class="label-text">Group / Collection</span>
-          </label>
-          <div class="join w-full">
-            <select class="select select-bordered join-item w-full" v-model="selectedGroup" @change="handleGroupChange">
-              <option value="">None</option>
-              <option value="__NEW__">+ Create new group...</option>
-              <option v-for="group in groups" :key="group.id" :value="group.name">{{ group.name }}</option>
-            </select>
-          </div>
-        </div>
+        <GroupSelector v-model="selectedGroup" />
 
         <!-- User Notes -->
         <div class="form-control w-full">
@@ -103,37 +88,14 @@
         </div>
       </form>
     </div>
-
-    <!-- New Group Modal -->
-    <dialog id="new_group_modal" class="modal" :class="{ 'modal-open': showNewGroupModal }">
-      <div class="modal-box">
-        <h3 class="font-bold text-lg">Create New Group</h3>
-        <div class="form-control w-full mt-4">
-          <label class="label">
-            <span class="label-text">Group Name</span>
-          </label>
-          <input 
-            type="text" 
-            v-model="newGroupName" 
-            class="input input-bordered w-full" 
-            ref="newGroupInput"
-            @keyup.enter="createGroup"
-            placeholder="e.g. My Collection 2024"
-          />
-        </div>
-        <div class="modal-action">
-          <button class="btn" @click="cancelNewGroup">Cancel</button>
-          <button class="btn btn-primary" @click="createGroup">Create</button>
-        </div>
-      </div>
-    </dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
+import GroupSelector from '../components/GroupSelector.vue'
 
 const router = useRouter()
 const fileInput = ref(null)
@@ -143,69 +105,19 @@ const frontPreview = ref(null)
 const backPreview = ref(null)
 const userNotes = ref('')
 const selectedGroup = ref('')
-const groups = ref([])
 const uploading = ref(false)
 const isDragging = ref(false)
 const error = ref(null)
-const showNewGroupModal = ref(false)
-const newGroupName = ref('')
-const newGroupInput = ref(null)
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'
 
 onMounted(async () => {
-  await fetchGroups()
   // Preselect last used group
   const lastGroup = localStorage.getItem('lastSelectedGroup')
   if (lastGroup) {
-    // Verify it still exists
-    if (groups.value.some(g => g.name === lastGroup)) {
       selectedGroup.value = lastGroup
-    }
   }
 })
-
-const fetchGroups = async () => {
-  try {
-    const res = await axios.get(`${API_URL}/groups`)
-    groups.value = res.data || []
-  } catch (e) {
-    console.error("Failed to load groups", e)
-  }
-}
-
-const handleGroupChange = () => {
-  if (selectedGroup.value === '__NEW__') {
-    showNewGroupModal.value = true
-    selectedGroup.value = '' // Reset selection temporarily
-    nextTick(() => {
-      newGroupInput.value?.focus()
-    })
-  }
-}
-
-const cancelNewGroup = () => {
-  showNewGroupModal.value = false
-  newGroupName.value = ''
-  // Restore previous selection if needed, or leave empty
-}
-
-const createGroup = async () => {
-  if (!newGroupName.value) return
-  
-  // Optimistic update
-  const name = newGroupName.value
-  // Check if already exists
-  if (!groups.value.some(g => g.name === name)) {
-      groups.value.push({ id: Date.now(), name: name }) // Mock ID until refresh
-      // Sort groups by name to keep order
-      groups.value.sort((a, b) => a.name.localeCompare(b.name))
-  }
-  
-  selectedGroup.value = name
-  showNewGroupModal.value = false
-  newGroupName.value = ''
-}
 
 const triggerFileInput = () => {
   fileInput.value.click()

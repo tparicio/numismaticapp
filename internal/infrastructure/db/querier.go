@@ -16,6 +16,7 @@ type Querier interface {
 	CreateCoinImage(ctx context.Context, arg CreateCoinImageParams) (CoinImage, error)
 	CreateGroup(ctx context.Context, arg CreateGroupParams) (Group, error)
 	DeleteCoin(ctx context.Context, id pgtype.UUID) error
+	DeleteGroup(ctx context.Context, id int32) error
 	GetAllCoins(ctx context.Context) ([]Coin, error)
 	GetAllValues(ctx context.Context) ([]pgtype.Numeric, error)
 	GetCoin(ctx context.Context, id pgtype.UUID) (Coin, error)
@@ -37,6 +38,7 @@ type Querier interface {
 	ListRecentCoins(ctx context.Context) ([]Coin, error)
 	ListTopValuableCoins(ctx context.Context) ([]Coin, error)
 	UpdateCoin(ctx context.Context, arg UpdateCoinParams) (Coin, error)
+	UpdateGroup(ctx context.Context, arg UpdateGroupParams) (Group, error)
 }
 
 var _ Querier = (*Queries)(nil)

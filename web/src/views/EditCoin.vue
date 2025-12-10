@@ -164,11 +164,7 @@
           <h2 class="card-title text-sm uppercase text-base-content/70">Organization</h2>
           
           <div class="form-control w-full">
-            <label class="label"><span class="label-text">Group</span></label>
-            <select v-model="form.group_name" class="select select-bordered w-full">
-              <option value="">None</option>
-              <option v-for="g in groups" :key="g.id" :value="g.name">{{ g.name }}</option>
-            </select>
+            <GroupSelector v-model="form.group_name" />
           </div>
 
           <div class="form-control w-full">
@@ -193,6 +189,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
+import GroupSelector from '../components/GroupSelector.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -201,7 +198,6 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'
 const loading = ref(true)
 const saving = ref(false)
 const coin = ref(null)
-const groups = ref([])
 
 const form = ref({
   name: '',
@@ -243,13 +239,9 @@ const parseDateForSubmit = (dateString) => {
 
 onMounted(async () => {
   try {
-    const [coinRes, groupsRes] = await Promise.all([
-      axios.get(`${API_URL}/coins/${route.params.id}`),
-      axios.get(`${API_URL}/groups`)
-    ])
+    const coinRes = await axios.get(`${API_URL}/coins/${route.params.id}`)
     
     coin.value = coinRes.data
-    groups.value = groupsRes.data
 
     // Populate form
     const c = coin.value
@@ -278,12 +270,23 @@ onMounted(async () => {
         acquired_at: formatDateForInput(c.acquired_at),
         sold_at: formatDateForInput(c.sold_at),
         personal_notes: c.personal_notes || '',
-        group_name: ''
+        group_name: '' // Will be populated below if exists
     }
     
-    if (c.group_id) {
-      const g = groups.value.find(g => g.id === c.group_id)
-      if (g) form.value.group_name = g.name
+    // Fetch group details if assigned
+     if (c.group_id) {
+         try {
+             // We need to fetch groups to map ID to name, or just use the separate Groups endpoint
+             // To simplify, GroupSelector handles its own fetching. We just need to set the name.
+             // But we only have ID here.
+             // Let's fetch the specific group or all groups
+             const groupsRes = await axios.get(`${API_URL}/groups`)
+             const groups = groupsRes.data || []
+             const g = groups.find(g => g.id === c.group_id)
+             if (g) form.value.group_name = g.name
+         } catch (e) {
+             console.error("Failed to fetch groups for mapping", e)
+         }
     }
 
   } catch (e) {

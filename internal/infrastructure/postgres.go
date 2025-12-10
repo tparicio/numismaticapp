@@ -409,6 +409,25 @@ func (r *PostgresGroupRepository) List(ctx context.Context) ([]*domain.Group, er
 	return groups, nil
 }
 
+func (r *PostgresGroupRepository) Update(ctx context.Context, group *domain.Group) error {
+	row, err := r.q.UpdateGroup(ctx, db.UpdateGroupParams{
+		ID:          int32(group.ID),
+		Name:        group.Name,
+		Description: toNullString(group.Description),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to update group: %w", err)
+	}
+	// Update original struct with returned values (e.g. updated_at if we had it)
+	group.Name = row.Name
+	group.Description = row.Description.String
+	return nil
+}
+
+func (r *PostgresGroupRepository) Delete(ctx context.Context, id int) error {
+	return r.q.DeleteGroup(ctx, int32(id))
+}
+
 // Helper functions for conversion
 
 func toDomainCoin(row db.Coin) (*domain.Coin, error) {

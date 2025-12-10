@@ -145,6 +145,7 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 
 	// Handle Group
 	var groupID *int
+	groupName = strings.TrimSpace(groupName)
 	if groupName != "" {
 		group, err := s.groupRepo.GetByName(ctx, groupName)
 		if err != nil {
@@ -377,11 +378,49 @@ func (s *CoinService) GetDashboardStats(ctx context.Context) (*domain.DashboardS
 	stats.TotalSilverWeight, _ = s.repo.GetTotalWeightByMaterial(ctx, "%Silver%")
 	stats.TotalGoldWeight, _ = s.repo.GetTotalWeightByMaterial(ctx, "%Gold%")
 
-	stats.HeaviestCoin, _ = s.repo.GetHeaviestCoin(ctx)
-	stats.SmallestCoin, _ = s.repo.GetSmallestCoin(ctx)
-	stats.RandomCoin, _ = s.repo.GetRandomCoin(ctx)
+	if heaviest, err := s.repo.GetHeaviestCoin(ctx); err == nil && heaviest != nil {
+		stats.HeaviestCoin = heaviest
+	}
+
+	if smallest, err := s.repo.GetSmallestCoin(ctx); err == nil && smallest != nil {
+		stats.SmallestCoin = smallest
+	}
+
+	if random, err := s.repo.GetRandomCoin(ctx); err == nil && random != nil {
+		stats.RandomCoin = random
+	}
 
 	return stats, nil
+}
+
+func (s *CoinService) CreateGroup(ctx context.Context, name, description string) (*domain.Group, error) {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return nil, fmt.Errorf("group name cannot be empty")
+	}
+	return s.groupRepo.Create(ctx, name, description)
+}
+
+func (s *CoinService) UpdateGroup(ctx context.Context, id int, name, description string) (*domain.Group, error) {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return nil, fmt.Errorf("group name cannot be empty")
+	}
+
+	group := &domain.Group{
+		ID:          id,
+		Name:        name,
+		Description: description,
+	}
+
+	if err := s.groupRepo.Update(ctx, group); err != nil {
+		return nil, err
+	}
+	return group, nil
+}
+
+func (s *CoinService) DeleteGroup(ctx context.Context, id int) error {
+	return s.groupRepo.Delete(ctx, id)
 }
 
 func toRoman(n int) string {

@@ -55,6 +55,59 @@ func (h *CoinHandler) ListGroups(c *fiber.Ctx) error {
 	return c.JSON(groups)
 }
 
+type CreateGroupRequest struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+func (h *CoinHandler) CreateGroup(c *fiber.Ctx) error {
+	var req CreateGroupRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "cannot parse body"})
+	}
+
+	group, err := h.service.CreateGroup(c.Context(), req.Name, req.Description)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(group)
+}
+
+func (h *CoinHandler) UpdateGroup(c *fiber.Ctx) error {
+	idStr := c.Params("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid id"})
+	}
+
+	var req CreateGroupRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "cannot parse body"})
+	}
+
+	group, err := h.service.UpdateGroup(c.Context(), id, req.Name, req.Description)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(group)
+}
+
+func (h *CoinHandler) DeleteGroup(c *fiber.Ctx) error {
+	idStr := c.Params("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid id"})
+	}
+
+	if err := h.service.DeleteGroup(c.Context(), id); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.SendStatus(fiber.StatusNoContent)
+}
+
 func (h *CoinHandler) ListCoins(c *fiber.Ctx) error {
 	limit := 10
 	offset := 0

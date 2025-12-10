@@ -34,6 +34,16 @@ func (q *Queries) CreateGroup(ctx context.Context, arg CreateGroupParams) (Group
 	return i, err
 }
 
+const deleteGroup = `-- name: DeleteGroup :exec
+DELETE FROM groups
+WHERE id = $1
+`
+
+func (q *Queries) DeleteGroup(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteGroup, id)
+	return err
+}
+
 const getGroupByName = `-- name: GetGroupByName :one
 SELECT id, name, description, created_at FROM groups
 WHERE name = $1
@@ -79,4 +89,29 @@ func (q *Queries) ListGroups(ctx context.Context) ([]Group, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateGroup = `-- name: UpdateGroup :one
+UPDATE groups
+SET name = $2, description = $3
+WHERE id = $1
+RETURNING id, name, description, created_at
+`
+
+type UpdateGroupParams struct {
+	ID          int32       `json:"id"`
+	Name        string      `json:"name"`
+	Description pgtype.Text `json:"description"`
+}
+
+func (q *Queries) UpdateGroup(ctx context.Context, arg UpdateGroupParams) (Group, error) {
+	row := q.db.QueryRow(ctx, updateGroup, arg.ID, arg.Name, arg.Description)
+	var i Group
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.CreatedAt,
+	)
+	return i, err
 }
