@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/antonioparicio/numismaticapp/internal/domain"
 	"github.com/antonioparicio/numismaticapp/internal/infrastructure/db"
@@ -32,26 +33,33 @@ func (r *PostgresCoinRepository) Save(ctx context.Context, coin *domain.Coin) er
 	}
 
 	params := db.CreateCoinParams{
-		ID:                  pgtype.UUID{Bytes: coin.ID, Valid: true},
-		Name:                toNullString(coin.Name),
-		Mint:                toNullString(coin.Mint),
-		Mintage:             toNullInt4(coin.Mintage),
-		Country:             toNullString(coin.Country),
-		Year:                toNullInt4(coin.Year),
-		FaceValue:           toNullString(coin.FaceValue),
-		Currency:            toNullString(coin.Currency),
-		Material:            toNullString(coin.Material),
-		Description:         toNullString(coin.Description),
-		KmCode:              toNullString(coin.KMCode),
-		MinValue:            toNumeric(coin.MinValue),
-		MaxValue:            toNumeric(coin.MaxValue),
-		Grade:               toNullGradeType(coin.Grade),
-		SampleImageUrlFront: toNullString(coin.SampleImageURLFront),
-		SampleImageUrlBack:  toNullString(coin.SampleImageURLBack),
-		Notes:               toNullString(coin.Notes),
-		GeminiDetails:       geminiDetailsBytes,
-		GroupID:             toNullInt4Ptr(coin.GroupID),
-		UserNotes:           toNullString(coin.UserNotes),
+		ID:             pgtype.UUID{Bytes: coin.ID, Valid: true},
+		Name:           toNullString(coin.Name),
+		Mint:           toNullString(coin.Mint),
+		Mintage:        toNullInt8(coin.Mintage),
+		Country:        toNullString(coin.Country),
+		Year:           toNullInt4(coin.Year),
+		FaceValue:      toNullString(coin.FaceValue),
+		Currency:       toNullString(coin.Currency),
+		Material:       toNullString(coin.Material),
+		Description:    toNullString(coin.Description),
+		KmCode:         toNullString(coin.KMCode),
+		MinValue:       toNumeric(coin.MinValue),
+		MaxValue:       toNumeric(coin.MaxValue),
+		Grade:          toNullGradeType(coin.Grade),
+		TechnicalNotes: toNullString(coin.TechnicalNotes),
+		GeminiDetails:  geminiDetailsBytes,
+		GroupID:        toNullInt4Ptr(coin.GroupID),
+		PersonalNotes:  toNullString(coin.PersonalNotes),
+		WeightG:        toNumeric(coin.WeightG),
+		DiameterMm:     toNumeric(coin.DiameterMM),
+		ThicknessMm:    toNumeric(coin.ThicknessMM),
+		Edge:           toNullString(coin.Edge),
+		Shape:          toNullString(coin.Shape),
+		AcquiredAt:     toNullDate(coin.AcquiredAt),
+		SoldAt:         toNullDate(coin.SoldAt),
+		PricePaid:      toNumeric(coin.PricePaid),
+		SoldPrice:      toNumeric(coin.SoldPrice),
 	}
 
 	result, err := r.q.CreateCoin(ctx, params)
@@ -198,6 +206,11 @@ func toDomainCoin(row db.Coin) (*domain.Coin, error) {
 	// In production, handle pgtype.Numeric carefully
 	minVal, _ := row.MinValue.Float64Value()
 	maxVal, _ := row.MaxValue.Float64Value()
+	weightG, _ := row.WeightG.Float64Value()
+	diameterMM, _ := row.DiameterMm.Float64Value()
+	thicknessMM, _ := row.ThicknessMm.Float64Value()
+	pricePaid, _ := row.PricePaid.Float64Value()
+	soldPrice, _ := row.SoldPrice.Float64Value()
 
 	var groupID *int
 	if row.GroupID.Valid {
@@ -205,29 +218,48 @@ func toDomainCoin(row db.Coin) (*domain.Coin, error) {
 		groupID = &id
 	}
 
+	var acquiredAt *time.Time
+	if row.AcquiredAt.Valid {
+		t := row.AcquiredAt.Time
+		acquiredAt = &t
+	}
+
+	var soldAt *time.Time
+	if row.SoldAt.Valid {
+		t := row.SoldAt.Time
+		soldAt = &t
+	}
+
 	return &domain.Coin{
-		ID:                  uuid.UUID(row.ID.Bytes),
-		Name:                row.Name.String,
-		Mint:                row.Mint.String,
-		Mintage:             int(row.Mintage.Int32),
-		Country:             row.Country.String,
-		Year:                int(row.Year.Int32),
-		FaceValue:           row.FaceValue.String,
-		Currency:            row.Currency.String,
-		Material:            row.Material.String,
-		Description:         row.Description.String,
-		KMCode:              row.KmCode.String,
-		MinValue:            minVal.Float64,
-		MaxValue:            maxVal.Float64,
-		Grade:               string(row.Grade.GradeType),
-		SampleImageURLFront: row.SampleImageUrlFront.String,
-		SampleImageURLBack:  row.SampleImageUrlBack.String,
-		Notes:               row.Notes.String,
-		GeminiDetails:       geminiDetails,
-		GroupID:             groupID,
-		UserNotes:           row.UserNotes.String,
-		CreatedAt:           row.CreatedAt.Time,
-		UpdatedAt:           row.UpdatedAt.Time,
+		ID:             uuid.UUID(row.ID.Bytes),
+		Name:           row.Name.String,
+		Mint:           row.Mint.String,
+		Mintage:        row.Mintage.Int64,
+		Country:        row.Country.String,
+		Year:           int(row.Year.Int32),
+		FaceValue:      row.FaceValue.String,
+		Currency:       row.Currency.String,
+		Material:       row.Material.String,
+		Description:    row.Description.String,
+		KMCode:         row.KmCode.String,
+		MinValue:       minVal.Float64,
+		MaxValue:       maxVal.Float64,
+		Grade:          string(row.Grade.GradeType),
+		TechnicalNotes: row.TechnicalNotes.String,
+		GeminiDetails:  geminiDetails,
+		GroupID:        groupID,
+		PersonalNotes:  row.PersonalNotes.String,
+		WeightG:        weightG.Float64,
+		DiameterMM:     diameterMM.Float64,
+		ThicknessMM:    thicknessMM.Float64,
+		Edge:           row.Edge.String,
+		Shape:          row.Shape.String,
+		AcquiredAt:     acquiredAt,
+		SoldAt:         soldAt,
+		PricePaid:      pricePaid.Float64,
+		SoldPrice:      soldPrice.Float64,
+		CreatedAt:      row.CreatedAt.Time,
+		UpdatedAt:      row.UpdatedAt.Time,
 	}, nil
 }
 
@@ -285,6 +317,13 @@ func toNullInt4(i int) pgtype.Int4 {
 	}
 }
 
+func toNullInt8(i int64) pgtype.Int8 {
+	return pgtype.Int8{
+		Int64: i,
+		Valid: i != 0,
+	}
+}
+
 func toNullInt4Ptr(i *int) pgtype.Int4 {
 	if i == nil {
 		return pgtype.Int4{Valid: false}
@@ -299,5 +338,15 @@ func toNullGradeType(s string) db.NullGradeType {
 	return db.NullGradeType{
 		GradeType: db.GradeType(s),
 		Valid:     s != "",
+	}
+}
+
+func toNullDate(t *time.Time) pgtype.Date {
+	if t == nil {
+		return pgtype.Date{Valid: false}
+	}
+	return pgtype.Date{
+		Time:  *t,
+		Valid: true,
 	}
 }
