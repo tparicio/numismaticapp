@@ -79,15 +79,20 @@
         <div class="card-body">
           <h2 class="card-title text-sm uppercase text-base-content/70">Most Valuable</h2>
           <div class="divide-y divide-base-200">
-            <div v-for="coin in stats.top_valuable_coins" :key="coin.id" class="flex items-center gap-3 py-3">
+            <div v-for="coin in stats.top_valuable_coins" :key="coin.id" 
+                 class="flex items-center gap-3 py-3 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
+                 @click="router.push(`/coin/${coin.id}`)">
               <div class="avatar">
-                <div class="mask mask-squircle w-12 h-12">
-                  <img :src="getThumbnail(coin)" />
+                <div class="mask mask-squircle w-12 h-12 overflow-hidden">
+                  <img :src="getThumbnail(coin)" class="hover:scale-110 transition-transform duration-300" />
                 </div>
               </div>
               <div class="flex-1 min-w-0">
                 <div class="font-bold truncate">{{ coin.name || 'Unknown Coin' }}</div>
-                <div class="text-xs opacity-50">{{ coin.year }} • {{ coin.country }}</div>
+                <div class="text-xs opacity-50">
+                  <span v-if="coin.year && coin.year !== 0">{{ coin.year }} • </span>
+                  {{ coin.country }}
+                </div>
               </div>
               <div class="font-bold text-primary">{{ formatCurrency(coin.max_value) }}</div>
             </div>
@@ -100,17 +105,21 @@
         <div class="card-body">
           <h2 class="card-title text-sm uppercase text-base-content/70">Recently Added</h2>
           <div class="divide-y divide-base-200">
-            <div v-for="coin in stats.recent_coins" :key="coin.id" class="flex items-center gap-3 py-3">
+            <div v-for="coin in stats.recent_coins" :key="coin.id" 
+                 class="flex items-center gap-3 py-3 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
+                 @click="router.push(`/coin/${coin.id}`)">
               <div class="avatar">
-                <div class="mask mask-squircle w-12 h-12">
-                  <img :src="getThumbnail(coin)" />
+                <div class="mask mask-squircle w-12 h-12 overflow-hidden">
+                  <img :src="getThumbnail(coin)" class="hover:scale-110 transition-transform duration-300" />
                 </div>
               </div>
               <div class="flex-1 min-w-0">
                 <div class="font-bold truncate">{{ coin.name || 'Unknown Coin' }}</div>
                 <div class="text-xs opacity-50">{{ formatDate(coin.created_at) }}</div>
               </div>
-              <router-link :to="`/coin/${coin.id}`" class="btn btn-ghost btn-xs">View</router-link>
+              <div class="flex gap-1">
+                <button @click.stop="router.push(`/edit/${coin.id}`)" class="btn btn-ghost btn-xs text-info">Edit</button>
+              </div>
             </div>
           </div>
         </div>
@@ -122,6 +131,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
+import { useRouter } from 'vue-router'
 import {
   Chart as ChartJS,
   Title,
@@ -136,6 +146,7 @@ import { Bar, Doughnut } from 'vue-chartjs'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement)
 
+const router = useRouter()
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'
 
 const stats = ref({

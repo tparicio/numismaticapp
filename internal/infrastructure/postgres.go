@@ -224,6 +224,56 @@ func (r *PostgresCoinRepository) rowsToCoins(ctx context.Context, rows []db.Coin
 	return coins, nil
 }
 
+func (r *PostgresCoinRepository) Update(ctx context.Context, coin *domain.Coin) error {
+	// Convert map to JSONB byte array
+	geminiDetailsBytes, err := json.Marshal(coin.GeminiDetails)
+	if err != nil {
+		return fmt.Errorf("failed to marshal gemini details: %w", err)
+	}
+
+	params := db.UpdateCoinParams{
+		ID:             pgtype.UUID{Bytes: coin.ID, Valid: true},
+		Name:           toNullString(coin.Name),
+		Mint:           toNullString(coin.Mint),
+		Mintage:        toNullInt8(coin.Mintage),
+		Country:        toNullString(coin.Country),
+		Year:           toNullInt4(coin.Year),
+		FaceValue:      toNullString(coin.FaceValue),
+		Currency:       toNullString(coin.Currency),
+		Material:       toNullString(coin.Material),
+		Description:    toNullString(coin.Description),
+		KmCode:         toNullString(coin.KMCode),
+		MinValue:       toNumeric(coin.MinValue),
+		MaxValue:       toNumeric(coin.MaxValue),
+		Grade:          toNullGradeType(coin.Grade),
+		TechnicalNotes: toNullString(coin.TechnicalNotes),
+		GeminiDetails:  geminiDetailsBytes,
+		GroupID:        toNullInt4Ptr(coin.GroupID),
+		PersonalNotes:  toNullString(coin.PersonalNotes),
+		WeightG:        toNumeric(coin.WeightG),
+		DiameterMm:     toNumeric(coin.DiameterMM),
+		ThicknessMm:    toNumeric(coin.ThicknessMM),
+		Edge:           toNullString(coin.Edge),
+		Shape:          toNullString(coin.Shape),
+		AcquiredAt:     toNullDate(coin.AcquiredAt),
+		SoldAt:         toNullDate(coin.SoldAt),
+		PricePaid:      toNumeric(coin.PricePaid),
+		SoldPrice:      toNumeric(coin.SoldPrice),
+	}
+
+	result, err := r.q.UpdateCoin(ctx, params)
+	if err != nil {
+		return fmt.Errorf("failed to update coin: %w", err)
+	}
+
+	coin.UpdatedAt = result.UpdatedAt.Time
+	return nil
+}
+
+func (r *PostgresCoinRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	return r.q.DeleteCoin(ctx, pgtype.UUID{Bytes: id, Valid: true})
+}
+
 // Group Repository Implementation
 
 type PostgresGroupRepository struct {

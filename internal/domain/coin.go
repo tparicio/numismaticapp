@@ -76,6 +76,8 @@ type CoinRepository interface {
 	GetMaterialDistribution(ctx context.Context) (map[string]int, error)
 	GetGradeDistribution(ctx context.Context) (map[string]int, error)
 	GetAllValues(ctx context.Context) ([]float64, error)
+	Update(ctx context.Context, coin *Coin) error
+	Delete(ctx context.Context, id uuid.UUID) error
 }
 
 // GroupRepository defines the interface for persisting groups.

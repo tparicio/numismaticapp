@@ -100,3 +100,47 @@ func (h *CoinHandler) GetDashboardStats(c *fiber.Ctx) error {
 	}
 	return c.JSON(stats)
 }
+
+func (h *CoinHandler) UpdateCoin(c *fiber.Ctx) error {
+	idStr := c.Params("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid uuid"})
+	}
+
+	// For MVP, we only support updating text fields via JSON or Form
+	// Let's assume JSON for simplicity in Edit view
+	type UpdateRequest struct {
+		GroupName string `json:"group_name"`
+		UserNotes string `json:"user_notes"`
+		Name      string `json:"name"`
+		Mint      string `json:"mint"`
+		Mintage   int    `json:"mintage"`
+	}
+
+	var req UpdateRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
+	}
+
+	coin, err := h.service.UpdateCoin(c.Context(), id, req.GroupName, req.UserNotes, req.Name, req.Mint, req.Mintage)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(coin)
+}
+
+func (h *CoinHandler) DeleteCoin(c *fiber.Ctx) error {
+	idStr := c.Params("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid uuid"})
+	}
+
+	if err := h.service.DeleteCoin(c.Context(), id); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.SendStatus(fiber.StatusNoContent)
+}

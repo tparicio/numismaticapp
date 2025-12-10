@@ -388,3 +388,46 @@ func normalizeGrade(input string) string {
 	// Fallback to empty string which will be converted to NULL by repo
 	return ""
 }
+
+func (s *CoinService) UpdateCoin(ctx context.Context, id uuid.UUID, groupName, userNotes, name, mint string, mintage int) (*domain.Coin, error) {
+	coin, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get coin: %w", err)
+	}
+
+	// Update fields
+	if name != "" {
+		coin.Name = name
+	}
+	if mint != "" {
+		coin.Mint = mint
+	}
+	if mintage != 0 {
+		coin.Mintage = int64(mintage)
+	}
+	coin.PersonalNotes = userNotes
+
+	// Handle Group
+	if groupName != "" {
+		group, err := s.groupRepo.GetByName(ctx, groupName)
+		if err != nil {
+			// If not found (or other error), try to create
+			group, err = s.groupRepo.Create(ctx, groupName, "")
+			if err != nil {
+				return nil, fmt.Errorf("failed to create group: %w", err)
+			}
+		}
+		coin.GroupID = &group.ID
+	}
+
+	if err := s.repo.Update(ctx, coin); err != nil {
+		return nil, fmt.Errorf("failed to update coin: %w", err)
+	}
+
+	return coin, nil
+}
+
+func (s *CoinService) DeleteCoin(ctx context.Context, id uuid.UUID) error {
+	// Optional: Delete images from storage (omitted for MVP safety)
+	return s.repo.Delete(ctx, id)
+}

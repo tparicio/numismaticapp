@@ -28,6 +28,8 @@ func SetupRouter(app *fiber.App, coinHandler *CoinHandler, healthHandler *Health
 	v1.Post("/coins", coinHandler.AddCoin)
 	v1.Get("/coins", coinHandler.ListCoins)
 	v1.Get("/coins/:id", coinHandler.GetCoin)
+	v1.Put("/coins/:id", coinHandler.UpdateCoin)
+	v1.Delete("/coins/:id", coinHandler.DeleteCoin)
 	v1.Get("/dashboard", coinHandler.GetDashboardStats)
 
 	// SPA Fallback: Serve index.html for any other route not handled above
