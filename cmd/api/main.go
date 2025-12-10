@@ -48,6 +48,12 @@ func main() {
 	imageService := image.NewVipsImageService()
 	storageService := storage.NewLocalFileStorage("storage")
 
+	rembgURL := os.Getenv("REMBG_URL")
+	if rembgURL == "" {
+		rembgURL = "http://rembg:5000/api/remove" // Default for docker-compose
+	}
+	rembgClient := image.NewRembgClient(rembgURL)
+
 	// Run Migrations
 	migrator := infrastructure.NewMigrationService(dbPool)
 	if err := migrator.RunMigrations(ctx); err != nil {
@@ -55,7 +61,7 @@ func main() {
 	}
 
 	// Initialize Application Services
-	coinService := application.NewCoinService(coinRepo, groupRepo, imageService, geminiClient, storageService)
+	coinService := application.NewCoinService(coinRepo, groupRepo, imageService, geminiClient, storageService, rembgClient)
 
 	// 5. API
 	app := fiber.New(fiber.Config{

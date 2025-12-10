@@ -1,6 +1,7 @@
 package application
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -30,6 +31,7 @@ type CoinService struct {
 	imageService domain.ImageService
 	aiService    domain.AIService
 	storage      StorageService
+	bgRemover    domain.BackgroundRemover
 }
 
 func NewCoinService(
@@ -38,6 +40,7 @@ func NewCoinService(
 	imageService domain.ImageService,
 	aiService domain.AIService,
 	storage StorageService,
+	bgRemover domain.BackgroundRemover,
 ) *CoinService {
 	return &CoinService{
 		repo:         repo,
@@ -45,6 +48,7 @@ func NewCoinService(
 		imageService: imageService,
 		aiService:    aiService,
 		storage:      storage,
+		bgRemover:    bgRemover,
 	}
 }
 
@@ -52,12 +56,21 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 	// 1. Generate ID
 	coinID := uuid.New()
 
-	// 2. Save Original Images
+	// 2. Save Original Images & Process Background
 	frontSrc, err := frontFile.Open()
 	if err != nil {
 		return nil, fmt.Errorf("failed to open front file: %w", err)
 	}
 	defer frontSrc.Close()
+
+	if _, err := frontSrc.Seek(0, 0); err != nil {
+		return nil, fmt.Errorf("failed to seek front file: %w", err)
+	}
+
+	frontBytes, err := io.ReadAll(frontSrc)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read front file: %w", err)
+	}
 
 	backSrc, err := backFile.Open()
 	if err != nil {
@@ -65,37 +78,45 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 	}
 	defer backSrc.Close()
 
-	originalFrontPath, err := s.storage.SaveFile(coinID, "original_front.jpg", frontSrc)
+	if _, err := backSrc.Seek(0, 0); err != nil {
+		return nil, fmt.Errorf("failed to seek back file: %w", err)
+	}
+
+	backBytes, err := io.ReadAll(backSrc)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read back file: %w", err)
+	}
+
+	originalFrontPath, err := s.storage.SaveFile(coinID, "original_front.jpg", bytes.NewReader(frontBytes))
 	if err != nil {
 		return nil, fmt.Errorf("failed to save original front: %w", err)
 	}
 
-	originalBackPath, err := s.storage.SaveFile(coinID, "original_back.jpg", backSrc)
+	originalBackPath, err := s.storage.SaveFile(coinID, "original_back.jpg", bytes.NewReader(backBytes))
 	if err != nil {
 		return nil, fmt.Errorf("failed to save original back: %w", err)
 	}
 
-	// 3. Analyze with Gemini (to get rotation angle)
-	// We send the ORIGINALS to Gemini first? Or cropped?
-	// The prompt says: "Recibir front/back -> FileSystem -> Pre-Procesamiento (Crop) -> Inteligencia (Gemini) -> Post-Procesamiento (Rotate)"
-	// So:
-	// a. Crop originals to circle (store as temp or overwrite?)
-	// Let's crop to a new file "crop_front.png"
-	croppedFrontPath, err := s.imageService.CropToCircle(originalFrontPath)
+	// 3. Remove Background (Rembg)
+	// Process front
+	processedFrontBytes, err := s.bgRemover.RemoveBackground(ctx, frontBytes)
 	if err != nil {
-		return nil, fmt.Errorf("failed to crop front: %w", err)
+		return nil, fmt.Errorf("failed to remove background from front: %w", err)
+	}
+	processedFrontPath, err := s.storage.SaveFile(coinID, "processed_front.png", bytes.NewReader(processedFrontBytes))
+	if err != nil {
+		return nil, fmt.Errorf("failed to save processed front: %w", err)
 	}
 
-	croppedBackPath, err := s.imageService.CropToCircle(originalBackPath)
+	// Process back
+	processedBackBytes, err := s.bgRemover.RemoveBackground(ctx, backBytes)
 	if err != nil {
-		return nil, fmt.Errorf("failed to crop back: %w", err)
+		return nil, fmt.Errorf("failed to remove background from back: %w", err)
 	}
-
-	// b. Send CROPPED images to Gemini
-	// analysis, err := s.aiService.AnalyzeCoin(ctx, croppedFrontPath, croppedBackPath)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to analyze coin: %w", err)
-	// }
+	processedBackPath, err := s.storage.SaveFile(coinID, "processed_back.png", bytes.NewReader(processedBackBytes))
+	if err != nil {
+		return nil, fmt.Errorf("failed to save processed back: %w", err)
+	}
 
 	// TEMPORARY: Disable Gemini API
 	fmt.Println("⚠️ Gemini API disabled. Using dummy analysis.")
@@ -117,16 +138,16 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 
 	// 4. Post-Processing: Rotate based on Gemini's suggestion
 	// Gemini returns "vertical_correction_angle"
-	finalFrontPath, err := s.imageService.Rotate(croppedFrontPath, analysis.VerticalCorrectionAngle)
-	if err != nil {
-		return nil, fmt.Errorf("failed to rotate front: %w", err)
-	}
+	// finalFrontPath, err := s.imageService.Rotate(originalFrontPath, analysis.VerticalCorrectionAngle)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to rotate front: %w", err)
+	// }
 
 	// Assuming same rotation for back or 0. Let's use the same for now as discussed.
-	finalBackPath, err := s.imageService.Rotate(croppedBackPath, analysis.VerticalCorrectionAngle)
-	if err != nil {
-		return nil, fmt.Errorf("failed to rotate back: %w", err)
-	}
+	// finalBackPath, err := s.imageService.Rotate(originalBackPath, analysis.VerticalCorrectionAngle)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to rotate back: %w", err)
+	// }
 
 	// Handle Group
 	var groupID *int
@@ -156,8 +177,8 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 		MinValue:            analysis.MinValue,
 		MaxValue:            analysis.MaxValue,
 		Grade:               analysis.Grade,
-		SampleImageURLFront: finalFrontPath,
-		SampleImageURLBack:  finalBackPath,
+		SampleImageURLFront: originalFrontPath, // Was finalFrontPath
+		SampleImageURLBack:  originalBackPath,  // Was finalBackPath
 		Notes:               analysis.Notes,
 		GeminiDetails:       analysis.RawDetails,
 		Images:              []domain.CoinImage{},
@@ -194,10 +215,10 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 	if err := addImage(originalBackPath, "original", "back", backFile.Filename); err != nil {
 		return nil, err
 	}
-	if err := addImage(finalFrontPath, "crop", "front", frontFile.Filename); err != nil {
+	if err := addImage(processedFrontPath, "crop", "front", frontFile.Filename); err != nil {
 		return nil, err
 	}
-	if err := addImage(finalBackPath, "crop", "back", backFile.Filename); err != nil {
+	if err := addImage(processedBackPath, "crop", "back", backFile.Filename); err != nil {
 		return nil, err
 	}
 
