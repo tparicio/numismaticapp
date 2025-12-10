@@ -79,6 +79,8 @@ type ImageService interface {
 	// Rotate rotates the image by the given angle.
 	Rotate(imagePath string, angle float64) (string, error)
 	GetMetadata(imagePath string) (width, height int, size int64, mimeType string, err error)
+	// CropToContent crops the image to remove transparent borders and centers it.
+	CropToContent(image []byte) ([]byte, error)
 }
 
 // AIService defines the interface for AI analysis.

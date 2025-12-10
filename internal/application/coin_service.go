@@ -103,7 +103,12 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 	if err != nil {
 		return nil, fmt.Errorf("failed to remove background from front: %w", err)
 	}
-	processedFrontPath, err := s.storage.SaveFile(coinID, "processed_front.png", bytes.NewReader(processedFrontBytes))
+	// Crop and center
+	croppedFrontBytes, err := s.imageService.CropToContent(processedFrontBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to crop front: %w", err)
+	}
+	processedFrontPath, err := s.storage.SaveFile(coinID, "processed_front.png", bytes.NewReader(croppedFrontBytes))
 	if err != nil {
 		return nil, fmt.Errorf("failed to save processed front: %w", err)
 	}
@@ -113,7 +118,12 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 	if err != nil {
 		return nil, fmt.Errorf("failed to remove background from back: %w", err)
 	}
-	processedBackPath, err := s.storage.SaveFile(coinID, "processed_back.png", bytes.NewReader(processedBackBytes))
+	// Crop and center
+	croppedBackBytes, err := s.imageService.CropToContent(processedBackBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to crop back: %w", err)
+	}
+	processedBackPath, err := s.storage.SaveFile(coinID, "processed_back.png", bytes.NewReader(croppedBackBytes))
 	if err != nil {
 		return nil, fmt.Errorf("failed to save processed back: %w", err)
 	}

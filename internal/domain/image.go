@@ -39,4 +39,5 @@ type BackgroundRemover interface {
 type ImageProcessor interface {
 	ToPNG(image []byte) ([]byte, error)
 	Rotate(image []byte, angle float64) ([]byte, error)
+	CropToContent(image []byte) ([]byte, error)
 }
