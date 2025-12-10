@@ -174,7 +174,7 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 		Images:         []domain.CoinImage{},
 		GroupID:        groupID,
 		PersonalNotes:  userNotes,
-		Name:           name, // User provided name overrides AI? Or maybe AI doesn't provide name.
+		Name:           analysis.Name, // Use AI provided name
 		Mint:           analysis.Mint,
 		Mintage:        analysis.Mintage,
 		WeightG:        analysis.WeightG,

@@ -51,6 +51,7 @@ func (s *GeminiService) AnalyzeCoin(ctx context.Context, frontImagePath, backIma
 	Analiza estas imágenes de una moneda (anverso y reverso). 
 	Devuelve UNICAMENTE un objeto JSON válido (sin markdown, sin texto adicional) con la siguiente estructura:
 	{
+		"name": "Título descriptivo (ej: 1 Peseta S.F. (1939) Segarra de Gaia)",
 		"country": "País de origen",
 		"year": 1999,
 		"face_value": "Valor facial (ej: 1 Euro)",
@@ -62,7 +63,8 @@ func (s *GeminiService) AnalyzeCoin(ctx context.Context, frontImagePath, backIma
 		"max_value": 20.0,
 		"grade": "Estado de conservación estimado (ej: EBC, MBC)",
 		"notes": "Notas técnicas o de conservación",
-		"vertical_correction_angle": 0.0,
+		"vertical_correction_angle_front": 0.0,
+		"vertical_correction_angle_back": 0.0,
 		"weight_g": 0.0,
 		"diameter_mm": 0.0,
 		"thickness_mm": 0.0,
@@ -73,8 +75,10 @@ func (s *GeminiService) AnalyzeCoin(ctx context.Context, frontImagePath, backIma
 	}
 	
 	IMPORTANTE: 
-	1. El campo 'vertical_correction_angle' debe ser el ángulo de rotación en grados (positivo o negativo) necesario para que el anverso de la moneda quede perfectamente vertical.
+	1. 'vertical_correction_angle_front' y 'vertical_correction_angle_back' deben ser el ángulo de rotación en grados (positivo o negativo) necesario para que la imagen correspondiente quede perfectamente vertical.
 	2. Los campos numéricos (weight_g, diameter_mm, thickness_mm, mintage) deben ser estimaciones si no se pueden determinar con exactitud, o 0 si son totalmente desconocidos.
+	3. TODO el texto debe estar en ESPAÑOL.
+	4. El campo 'name' debe ser un título conciso pero descriptivo de la moneda.
 	`
 
 	resp, err := s.model.GenerateContent(ctx,

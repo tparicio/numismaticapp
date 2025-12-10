@@ -100,24 +100,26 @@ type AIService interface {
 
 // CoinAnalysisResult contains the data extracted by the AI.
 type CoinAnalysisResult struct {
-	Country                 string         `json:"country"`
-	Year                    int            `json:"year"`
-	FaceValue               string         `json:"face_value"`
-	Currency                string         `json:"currency"`
-	Material                string         `json:"material"`
-	Description             string         `json:"description"`
-	KMCode                  string         `json:"km_code"`
-	MinValue                float64        `json:"min_value"`
-	MaxValue                float64        `json:"max_value"`
-	Grade                   string         `json:"grade"`
-	Notes                   string         `json:"notes"`
-	VerticalCorrectionAngle float64        `json:"vertical_correction_angle"`
-	WeightG                 float64        `json:"weight_g"`
-	DiameterMM              float64        `json:"diameter_mm"`
-	ThicknessMM             float64        `json:"thickness_mm"`
-	Edge                    string         `json:"edge"`
-	Shape                   string         `json:"shape"`
-	Mint                    string         `json:"mint"`
-	Mintage                 int64          `json:"mintage"`
-	RawDetails              map[string]any `json:"raw_details"`
+	Country                      string         `json:"country"`
+	Year                         int            `json:"year"`
+	FaceValue                    string         `json:"face_value"`
+	Currency                     string         `json:"currency"`
+	Material                     string         `json:"material"`
+	Description                  string         `json:"description"`
+	KMCode                       string         `json:"km_code"`
+	MinValue                     float64        `json:"min_value"`
+	MaxValue                     float64        `json:"max_value"`
+	Grade                        string         `json:"grade"`
+	Name                         string         `json:"name"`
+	Notes                        string         `json:"notes"`
+	VerticalCorrectionAngleFront float64        `json:"vertical_correction_angle_front"`
+	VerticalCorrectionAngleBack  float64        `json:"vertical_correction_angle_back"`
+	WeightG                      float64        `json:"weight_g"`
+	DiameterMM                   float64        `json:"diameter_mm"`
+	ThicknessMM                  float64        `json:"thickness_mm"`
+	Edge                         string         `json:"edge"`
+	Shape                        string         `json:"shape"`
+	Mint                         string         `json:"mint"`
+	Mintage                      int64          `json:"mintage"`
+	RawDetails                   map[string]any `json:"raw_details"`
 }
