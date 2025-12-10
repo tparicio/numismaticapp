@@ -218,3 +218,51 @@ func (s *VipsImageService) CropToContent(data []byte) ([]byte, error) {
 
 	return buf.Bytes(), nil
 }
+
+func (s *VipsImageService) GenerateThumbnail(imagePath string, width int) (string, error) {
+	buffer, err := bimg.Read(imagePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read image: %w", err)
+	}
+
+	img := bimg.NewImage(buffer)
+
+	// Resize maintaining aspect ratio
+	// By setting height to 0, bimg calculates it automatically
+	newImg, err := img.Resize(width, 0)
+	if err != nil {
+		return "", fmt.Errorf("failed to resize image: %w", err)
+	}
+
+	// Save as PNG to preserve transparency
+	// If the input was not PNG, we might need to convert, but bimg.Resize returns a buffer.
+	// We should ensure it's saved as PNG.
+
+	// Check if we need to convert to PNG (if original wasn't) or just ensure output is PNG
+	// bimg.Resize returns []byte which is the image data in the original format usually,
+	// unless we explicitly convert.
+	// Let's force conversion to PNG to be safe for transparency.
+
+	processedImg := bimg.NewImage(newImg)
+	pngBuf, err := processedImg.Convert(bimg.PNG)
+	if err != nil {
+		return "", fmt.Errorf("failed to convert thumbnail to png: %w", err)
+	}
+
+	// Construct output path
+	basePath := imagePath
+	if len(basePath) > 4 {
+		// Strip extension if present (simple check)
+		// Better to use filepath.Ext but keeping it simple as per existing code style
+		if basePath[len(basePath)-4] == '.' {
+			basePath = basePath[:len(basePath)-4]
+		}
+	}
+	outputPath := basePath + "_thumb.png"
+
+	if err := bimg.Write(outputPath, pngBuf); err != nil {
+		return "", fmt.Errorf("failed to write thumbnail: %w", err)
+	}
+
+	return outputPath, nil
+}

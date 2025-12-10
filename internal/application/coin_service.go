@@ -232,6 +232,25 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 		return nil, err
 	}
 
+	// 5. Generate Thumbnails
+	// Front
+	thumbFrontPath, err := s.imageService.GenerateThumbnail(processedFrontPath, 300)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate front thumbnail: %w", err)
+	}
+	if err := addImage(thumbFrontPath, "thumbnail", "front", frontFile.Filename); err != nil {
+		return nil, err
+	}
+
+	// Back
+	thumbBackPath, err := s.imageService.GenerateThumbnail(processedBackPath, 300)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate back thumbnail: %w", err)
+	}
+	if err := addImage(thumbBackPath, "thumbnail", "back", backFile.Filename); err != nil {
+		return nil, err
+	}
+
 	// 6. Persist
 	if err := s.repo.Save(ctx, coin); err != nil {
 		return nil, fmt.Errorf("failed to save coin to db: %w", err)

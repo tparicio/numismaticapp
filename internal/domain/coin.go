@@ -78,6 +78,8 @@ type ImageService interface {
 	GetMetadata(imagePath string) (width, height int, size int64, mimeType string, err error)
 	// CropToContent crops the image to remove transparent borders and centers it.
 	CropToContent(image []byte) ([]byte, error)
+	// GenerateThumbnail creates a smaller version of the image preserving aspect ratio and transparency.
+	GenerateThumbnail(imagePath string, width int) (string, error)
 }
 
 // AIService defines the interface for AI analysis.
