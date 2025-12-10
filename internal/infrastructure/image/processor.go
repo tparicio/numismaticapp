@@ -16,32 +16,73 @@ func NewVipsImageService() *VipsImageService {
 	return &VipsImageService{}
 }
 
-func (s *VipsImageService) ProcessCoinImages(frontPath, backPath string, rotationAngle float64) (string, string, error) {
+func (s *VipsImageService) ProcessCoinImages(frontPath, backPath string) (string, string, error) {
 	// 1. Crop front to circle
 	croppedFront, err := s.CropToCircle(frontPath)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to crop front image: %w", err)
 	}
 
-	// 2. Rotate front
-	rotatedFront, err := s.Rotate(croppedFront, rotationAngle)
-	if err != nil {
-		return "", "", fmt.Errorf("failed to rotate front image: %w", err)
+	// 2. Trim front result
+	if err := s.Trim(croppedFront); err != nil {
+		return "", "", fmt.Errorf("failed to trim front image: %w", err)
 	}
 
-	// 3. Crop back to circle
+	// 3. Trim original front
+	if err := s.Trim(frontPath); err != nil {
+		return "", "", fmt.Errorf("failed to trim original front image: %w", err)
+	}
+
+	// 4. Crop back to circle
 	croppedBack, err := s.CropToCircle(backPath)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to crop back image: %w", err)
 	}
 
-	// 4. Rotate back
-	rotatedBack, err := s.Rotate(croppedBack, rotationAngle)
-	if err != nil {
-		return "", "", fmt.Errorf("failed to rotate back image: %w", err)
+	// 5. Trim back result
+	if err := s.Trim(croppedBack); err != nil {
+		return "", "", fmt.Errorf("failed to trim back image: %w", err)
 	}
 
-	return rotatedFront, rotatedBack, nil
+	// 6. Trim original back
+	if err := s.Trim(backPath); err != nil {
+		return "", "", fmt.Errorf("failed to trim original back image: %w", err)
+	}
+
+	return croppedFront, croppedBack, nil
+}
+
+func (s *VipsImageService) Trim(imagePath string) error {
+	buffer, err := bimg.Read(imagePath)
+	if err != nil {
+		return err
+	}
+
+	img := bimg.NewImage(buffer)
+	size, _ := img.Size()
+	fmt.Printf("DEBUG: Trimming %s. Original size: %dx%d\n", imagePath, size.Width, size.Height)
+
+	// Use Process with explicit threshold to be more aggressive
+	// Default is usually 10, we try 50 to catch shadows/noise
+	options := bimg.Options{
+		Trim:      true,
+		Threshold: 50,
+	}
+
+	trimmed, err := img.Process(options)
+	if err != nil {
+		return err
+	}
+
+	trimmedImg := bimg.NewImage(trimmed)
+	newSize, _ := trimmedImg.Size()
+	fmt.Printf("DEBUG: Trimmed %s. New size: %dx%d\n", imagePath, newSize.Width, newSize.Height)
+
+	if err := bimg.Write(imagePath, trimmed); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *VipsImageService) CropToCircle(imagePath string) (string, error) {
@@ -86,35 +127,6 @@ func (s *VipsImageService) CropToCircle(imagePath string) (string, error) {
 	}
 
 	return outputPath, nil
-}
-
-func (s *VipsImageService) Rotate(imagePath string, angle float64) (string, error) {
-	if angle == 0 {
-		return imagePath, nil
-	}
-
-	buffer, err := bimg.Read(imagePath)
-	if err != nil {
-		return "", err
-	}
-
-	img := bimg.NewImage(buffer)
-	rotated, err := img.Rotate(bimg.Angle(angle))
-	if err != nil {
-		return "", err
-	}
-
-	if len(imagePath) > 4 && imagePath[len(imagePath)-4:] == ".png" {
-		if err := bimg.Write(imagePath, rotated); err != nil {
-			return "", err
-		}
-	} else {
-		if err := bimg.Write(imagePath, rotated); err != nil {
-			return "", err
-		}
-	}
-
-	return imagePath, nil
 }
 
 func (s *VipsImageService) GetMetadata(imagePath string) (width, height int, size int64, mimeType string, err error) {

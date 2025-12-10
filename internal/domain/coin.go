@@ -71,13 +71,10 @@ type GroupRepository interface {
 
 // ImageService defines the interface for image processing operations.
 type ImageService interface {
-	// ProcessCoinImages takes raw front and back images, crops them to circle,
-	// and applies the given rotation angle.
-	ProcessCoinImages(frontPath, backPath string, rotationAngle float64) (processedFrontPath, processedBackPath string, err error)
+	// ProcessCoinImages takes raw front and back images, crops them to circle.
+	ProcessCoinImages(frontPath, backPath string) (processedFrontPath, processedBackPath string, err error)
 	// CropToCircle detects the coin and crops the image to a circle.
 	CropToCircle(imagePath string) (string, error)
-	// Rotate rotates the image by the given angle.
-	Rotate(imagePath string, angle float64) (string, error)
 	GetMetadata(imagePath string) (width, height int, size int64, mimeType string, err error)
 	// CropToContent crops the image to remove transparent borders and centers it.
 	CropToContent(image []byte) ([]byte, error)
