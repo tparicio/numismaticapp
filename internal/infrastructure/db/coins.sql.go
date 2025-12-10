@@ -141,6 +141,30 @@ func (q *Queries) DeleteCoin(ctx context.Context, id pgtype.UUID) error {
 	return err
 }
 
+const getAllValues = `-- name: GetAllValues :many
+SELECT max_value FROM coins WHERE max_value IS NOT NULL
+`
+
+func (q *Queries) GetAllValues(ctx context.Context) ([]pgtype.Numeric, error) {
+	rows, err := q.db.Query(ctx, getAllValues)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []pgtype.Numeric
+	for rows.Next() {
+		var max_value pgtype.Numeric
+		if err := rows.Scan(&max_value); err != nil {
+			return nil, err
+		}
+		items = append(items, max_value)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getCoin = `-- name: GetCoin :one
 SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, acquired_at, sold_at, price_paid, sold_price, created_at, updated_at FROM coins
 WHERE id = $1 LIMIT 1
@@ -183,6 +207,83 @@ func (q *Queries) GetCoin(ctx context.Context, id pgtype.UUID) (Coin, error) {
 	return i, err
 }
 
+const getGradeDistribution = `-- name: GetGradeDistribution :many
+SELECT grade, COUNT(*) as count
+FROM coins
+WHERE grade IS NOT NULL
+GROUP BY grade
+ORDER BY count DESC
+`
+
+type GetGradeDistributionRow struct {
+	Grade NullGradeType `json:"grade"`
+	Count int64         `json:"count"`
+}
+
+func (q *Queries) GetGradeDistribution(ctx context.Context) ([]GetGradeDistributionRow, error) {
+	rows, err := q.db.Query(ctx, getGradeDistribution)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetGradeDistributionRow
+	for rows.Next() {
+		var i GetGradeDistributionRow
+		if err := rows.Scan(&i.Grade, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getMaterialDistribution = `-- name: GetMaterialDistribution :many
+SELECT material, COUNT(*) as count
+FROM coins
+WHERE material IS NOT NULL AND material != ''
+GROUP BY material
+ORDER BY count DESC
+`
+
+type GetMaterialDistributionRow struct {
+	Material pgtype.Text `json:"material"`
+	Count    int64       `json:"count"`
+}
+
+func (q *Queries) GetMaterialDistribution(ctx context.Context) ([]GetMaterialDistributionRow, error) {
+	rows, err := q.db.Query(ctx, getMaterialDistribution)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetMaterialDistributionRow
+	for rows.Next() {
+		var i GetMaterialDistributionRow
+		if err := rows.Scan(&i.Material, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getTotalValue = `-- name: GetTotalValue :one
+SELECT COALESCE(SUM(max_value), 0)::float8 FROM coins
+`
+
+func (q *Queries) GetTotalValue(ctx context.Context) (float64, error) {
+	row := q.db.QueryRow(ctx, getTotalValue)
+	var column_1 float64
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const listCoins = `-- name: ListCoins :many
 SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, acquired_at, sold_at, price_paid, sold_price, created_at, updated_at FROM coins
 ORDER BY created_at DESC
@@ -196,6 +297,118 @@ type ListCoinsParams struct {
 
 func (q *Queries) ListCoins(ctx context.Context, arg ListCoinsParams) ([]Coin, error) {
 	rows, err := q.db.Query(ctx, listCoins, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Coin
+	for rows.Next() {
+		var i Coin
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Mint,
+			&i.Mintage,
+			&i.Country,
+			&i.Year,
+			&i.FaceValue,
+			&i.Currency,
+			&i.Material,
+			&i.Description,
+			&i.KmCode,
+			&i.MinValue,
+			&i.MaxValue,
+			&i.Grade,
+			&i.TechnicalNotes,
+			&i.GeminiDetails,
+			&i.GroupID,
+			&i.PersonalNotes,
+			&i.WeightG,
+			&i.DiameterMm,
+			&i.ThicknessMm,
+			&i.Edge,
+			&i.Shape,
+			&i.AcquiredAt,
+			&i.SoldAt,
+			&i.PricePaid,
+			&i.SoldPrice,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listRecentCoins = `-- name: ListRecentCoins :many
+SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, acquired_at, sold_at, price_paid, sold_price, created_at, updated_at FROM coins
+ORDER BY created_at DESC
+LIMIT 3
+`
+
+func (q *Queries) ListRecentCoins(ctx context.Context) ([]Coin, error) {
+	rows, err := q.db.Query(ctx, listRecentCoins)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Coin
+	for rows.Next() {
+		var i Coin
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Mint,
+			&i.Mintage,
+			&i.Country,
+			&i.Year,
+			&i.FaceValue,
+			&i.Currency,
+			&i.Material,
+			&i.Description,
+			&i.KmCode,
+			&i.MinValue,
+			&i.MaxValue,
+			&i.Grade,
+			&i.TechnicalNotes,
+			&i.GeminiDetails,
+			&i.GroupID,
+			&i.PersonalNotes,
+			&i.WeightG,
+			&i.DiameterMm,
+			&i.ThicknessMm,
+			&i.Edge,
+			&i.Shape,
+			&i.AcquiredAt,
+			&i.SoldAt,
+			&i.PricePaid,
+			&i.SoldPrice,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTopValuableCoins = `-- name: ListTopValuableCoins :many
+SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, acquired_at, sold_at, price_paid, sold_price, created_at, updated_at FROM coins
+ORDER BY max_value DESC
+LIMIT 3
+`
+
+func (q *Queries) ListTopValuableCoins(ctx context.Context) ([]Coin, error) {
+	rows, err := q.db.Query(ctx, listTopValuableCoins)
 	if err != nil {
 		return nil, err
 	}

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
+	"strings"
 
 	"github.com/antonioparicio/numismaticapp/internal/domain"
 	"github.com/google/uuid"
@@ -168,7 +169,7 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 		KMCode:         analysis.KMCode,
 		MinValue:       analysis.MinValue,
 		MaxValue:       analysis.MaxValue,
-		Grade:          analysis.Grade,
+		Grade:          normalizeGrade(analysis.Grade),
 		TechnicalNotes: analysis.Notes,
 		GeminiDetails:  analysis.RawDetails,
 		Images:         []domain.CoinImage{},
@@ -261,4 +262,129 @@ func (s *CoinService) GetCoin(ctx context.Context, id uuid.UUID) (*domain.Coin, 
 
 func (s *CoinService) ListGroups(ctx context.Context) ([]*domain.Group, error) {
 	return s.groupRepo.List(ctx)
+}
+
+func (s *CoinService) GetDashboardStats(ctx context.Context) (*domain.DashboardStats, error) {
+	stats := &domain.DashboardStats{}
+
+	// Total Coins
+	count, err := s.repo.Count(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count coins: %w", err)
+	}
+	stats.TotalCoins = count
+
+	// Total Value
+	totalValue, err := s.repo.GetTotalValue(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get total value: %w", err)
+	}
+	stats.TotalValue = totalValue
+
+	// Top Valuable
+	topValuable, err := s.repo.ListTopValuable(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list top valuable: %w", err)
+	}
+	// Convert pointers to values for struct
+	stats.TopValuableCoins = make([]domain.Coin, len(topValuable))
+	for i, c := range topValuable {
+		stats.TopValuableCoins[i] = *c
+	}
+
+	// Recent
+	recent, err := s.repo.ListRecent(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list recent: %w", err)
+	}
+	stats.RecentCoins = make([]domain.Coin, len(recent))
+	for i, c := range recent {
+		stats.RecentCoins[i] = *c
+	}
+
+	// Material Distribution
+	matDist, err := s.repo.GetMaterialDistribution(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get material distribution: %w", err)
+	}
+	stats.MaterialDistribution = matDist
+
+	// Grade Distribution
+	gradeDist, err := s.repo.GetGradeDistribution(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get grade distribution: %w", err)
+	}
+	stats.GradeDistribution = gradeDist
+
+	// Value Distribution
+	allValues, err := s.repo.GetAllValues(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get all values: %w", err)
+	}
+
+	stats.ValueDistribution = make(map[string]int)
+	// Initialize buckets to ensure they exist even if 0
+	buckets := []string{"0-10", "10-50", "50-100", "100-500", "500+"}
+	for _, b := range buckets {
+		stats.ValueDistribution[b] = 0
+	}
+
+	for _, v := range allValues {
+		if v < 10 {
+			stats.ValueDistribution["0-10"]++
+		} else if v < 50 {
+			stats.ValueDistribution["10-50"]++
+		} else if v < 100 {
+			stats.ValueDistribution["50-100"]++
+		} else if v < 500 {
+			stats.ValueDistribution["100-500"]++
+		} else {
+			stats.ValueDistribution["500+"]++
+		}
+	}
+
+	return stats, nil
+}
+
+func normalizeGrade(input string) string {
+	// Map of common variations to standard enum values
+	// 'MC', 'RC', 'BC', 'MBC', 'EBC', 'SC', 'FDC', 'PROOF'
+	input = strings.ToUpper(input)
+
+	// Direct match check
+	validGrades := []string{"MC", "RC", "BC", "MBC", "EBC", "SC", "FDC", "PROOF"}
+	for _, g := range validGrades {
+		if input == g {
+			return g
+		}
+	}
+
+	// Contains check for descriptive strings like "MBC (Muy Bien Conservada)"
+	if strings.Contains(input, "PROOF") {
+		return "PROOF"
+	}
+	if strings.Contains(input, "FDC") {
+		return "FDC"
+	}
+	if strings.Contains(input, "SC") {
+		return "SC"
+	}
+	if strings.Contains(input, "EBC") {
+		return "EBC"
+	}
+	if strings.Contains(input, "MBC") {
+		return "MBC"
+	}
+	if strings.Contains(input, "BC") {
+		return "BC"
+	}
+	if strings.Contains(input, "RC") {
+		return "RC"
+	}
+	if strings.Contains(input, "MC") {
+		return "MC"
+	}
+
+	// Fallback to empty string which will be converted to NULL by repo
+	return ""
 }

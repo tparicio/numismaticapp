@@ -59,3 +59,33 @@ RETURNING *;
 -- name: DeleteCoin :exec
 DELETE FROM coins
 WHERE id = $1;
+
+-- name: GetTotalValue :one
+SELECT COALESCE(SUM(max_value), 0)::float8 FROM coins;
+
+-- name: ListTopValuableCoins :many
+SELECT * FROM coins
+ORDER BY max_value DESC
+LIMIT 3;
+
+-- name: ListRecentCoins :many
+SELECT * FROM coins
+ORDER BY created_at DESC
+LIMIT 3;
+
+-- name: GetMaterialDistribution :many
+SELECT material, COUNT(*) as count
+FROM coins
+WHERE material IS NOT NULL AND material != ''
+GROUP BY material
+ORDER BY count DESC;
+
+-- name: GetGradeDistribution :many
+SELECT grade, COUNT(*) as count
+FROM coins
+WHERE grade IS NOT NULL
+GROUP BY grade
+ORDER BY count DESC;
+
+-- name: GetAllValues :many
+SELECT max_value FROM coins WHERE max_value IS NOT NULL;

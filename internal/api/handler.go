@@ -92,3 +92,11 @@ func (h *CoinHandler) GetCoin(c *fiber.Ctx) error {
 
 	return c.JSON(coin)
 }
+
+func (h *CoinHandler) GetDashboardStats(c *fiber.Ctx) error {
+	stats, err := h.service.GetDashboardStats(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(stats)
+}

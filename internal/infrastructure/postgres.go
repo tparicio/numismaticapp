@@ -148,6 +148,82 @@ func (r *PostgresCoinRepository) Count(ctx context.Context) (int64, error) {
 	return r.q.CountCoins(ctx)
 }
 
+func (r *PostgresCoinRepository) GetTotalValue(ctx context.Context) (float64, error) {
+	return r.q.GetTotalValue(ctx)
+}
+
+func (r *PostgresCoinRepository) ListTopValuable(ctx context.Context) ([]*domain.Coin, error) {
+	rows, err := r.q.ListTopValuableCoins(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list top valuable coins: %w", err)
+	}
+	return r.rowsToCoins(ctx, rows)
+}
+
+func (r *PostgresCoinRepository) ListRecent(ctx context.Context) ([]*domain.Coin, error) {
+	rows, err := r.q.ListRecentCoins(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list recent coins: %w", err)
+	}
+	return r.rowsToCoins(ctx, rows)
+}
+
+func (r *PostgresCoinRepository) GetMaterialDistribution(ctx context.Context) (map[string]int, error) {
+	rows, err := r.q.GetMaterialDistribution(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get material distribution: %w", err)
+	}
+	dist := make(map[string]int)
+	for _, row := range rows {
+		dist[row.Material.String] = int(row.Count)
+	}
+	return dist, nil
+}
+
+func (r *PostgresCoinRepository) GetGradeDistribution(ctx context.Context) (map[string]int, error) {
+	rows, err := r.q.GetGradeDistribution(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get grade distribution: %w", err)
+	}
+	dist := make(map[string]int)
+	for _, row := range rows {
+		dist[string(row.Grade.GradeType)] = int(row.Count)
+	}
+	return dist, nil
+}
+
+func (r *PostgresCoinRepository) GetAllValues(ctx context.Context) ([]float64, error) {
+	rows, err := r.q.GetAllValues(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get all values: %w", err)
+	}
+	values := make([]float64, len(rows))
+	for i, val := range rows {
+		f, _ := val.Float64Value()
+		values[i] = f.Float64
+	}
+	return values, nil
+}
+
+// Helper to avoid duplication
+func (r *PostgresCoinRepository) rowsToCoins(ctx context.Context, rows []db.Coin) ([]*domain.Coin, error) {
+	coins := make([]*domain.Coin, len(rows))
+	for i, row := range rows {
+		c, err := toDomainCoin(row)
+		if err != nil {
+			return nil, err
+		}
+		// Fetch images (N+1, acceptable for small lists like top 3)
+		images, err := r.q.ListCoinImagesByCoinID(ctx, row.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list coin images for coin %v: %w", row.ID, err)
+		}
+		c.Images = toDomainImages(images)
+		coins[i] = c
+	}
+	return coins, nil
+}
+
 // Group Repository Implementation
 
 type PostgresGroupRepository struct {

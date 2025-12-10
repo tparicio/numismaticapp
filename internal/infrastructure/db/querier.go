@@ -16,11 +16,17 @@ type Querier interface {
 	CreateCoinImage(ctx context.Context, arg CreateCoinImageParams) (CoinImage, error)
 	CreateGroup(ctx context.Context, arg CreateGroupParams) (Group, error)
 	DeleteCoin(ctx context.Context, id pgtype.UUID) error
+	GetAllValues(ctx context.Context) ([]pgtype.Numeric, error)
 	GetCoin(ctx context.Context, id pgtype.UUID) (Coin, error)
+	GetGradeDistribution(ctx context.Context) ([]GetGradeDistributionRow, error)
 	GetGroupByName(ctx context.Context, name string) (Group, error)
+	GetMaterialDistribution(ctx context.Context) ([]GetMaterialDistributionRow, error)
+	GetTotalValue(ctx context.Context) (float64, error)
 	ListCoinImagesByCoinID(ctx context.Context, coinID pgtype.UUID) ([]CoinImage, error)
 	ListCoins(ctx context.Context, arg ListCoinsParams) ([]Coin, error)
 	ListGroups(ctx context.Context) ([]Group, error)
+	ListRecentCoins(ctx context.Context) ([]Coin, error)
+	ListTopValuableCoins(ctx context.Context) ([]Coin, error)
 	UpdateCoin(ctx context.Context, arg UpdateCoinParams) (Coin, error)
 }
 

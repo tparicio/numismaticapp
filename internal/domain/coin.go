@@ -70,6 +70,12 @@ type CoinRepository interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*Coin, error)
 	List(ctx context.Context, limit, offset int) ([]*Coin, error)
 	Count(ctx context.Context) (int64, error)
+	GetTotalValue(ctx context.Context) (float64, error)
+	ListTopValuable(ctx context.Context) ([]*Coin, error)
+	ListRecent(ctx context.Context) ([]*Coin, error)
+	GetMaterialDistribution(ctx context.Context) (map[string]int, error)
+	GetGradeDistribution(ctx context.Context) (map[string]int, error)
+	GetAllValues(ctx context.Context) ([]float64, error)
 }
 
 // GroupRepository defines the interface for persisting groups.
