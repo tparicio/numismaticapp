@@ -72,11 +72,11 @@
             <span class="label-text">Group / Collection</span>
           </label>
           <div class="join w-full">
-            <select class="select select-bordered join-item w-full" v-model="selectedGroup">
+            <select class="select select-bordered join-item w-full" v-model="selectedGroup" @change="handleGroupChange">
               <option value="">None</option>
+              <option value="__NEW__">+ Create new group...</option>
               <option v-for="group in groups" :key="group.id" :value="group.name">{{ group.name }}</option>
             </select>
-            <button class="btn join-item" type="button" @click="showNewGroupModal = true">+</button>
           </div>
         </div>
 
@@ -91,7 +91,7 @@
         <div class="alert alert-info shadow-lg" v-if="uploading">
           <div>
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current flex-shrink-0 w-6 h-6 animate-spin"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <span>Processing images... (AI Analysis is currently disabled)</span>
+            <span>Processing images... (AI Analysis is running)</span>
           </div>
         </div>
 
@@ -112,10 +112,17 @@
           <label class="label">
             <span class="label-text">Group Name</span>
           </label>
-          <input type="text" v-model="newGroupName" class="input input-bordered w-full" />
+          <input 
+            type="text" 
+            v-model="newGroupName" 
+            class="input input-bordered w-full" 
+            ref="newGroupInput"
+            @keyup.enter="createGroup"
+            placeholder="e.g. My Collection 2024"
+          />
         </div>
         <div class="modal-action">
-          <button class="btn" @click="showNewGroupModal = false">Cancel</button>
+          <button class="btn" @click="cancelNewGroup">Cancel</button>
           <button class="btn btn-primary" @click="createGroup">Create</button>
         </div>
       </div>
@@ -124,7 +131,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
 
@@ -142,11 +149,20 @@ const isDragging = ref(false)
 const error = ref(null)
 const showNewGroupModal = ref(false)
 const newGroupName = ref('')
+const newGroupInput = ref(null)
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'
 
 onMounted(async () => {
   await fetchGroups()
+  // Preselect last used group
+  const lastGroup = localStorage.getItem('lastSelectedGroup')
+  if (lastGroup) {
+    // Verify it still exists
+    if (groups.value.some(g => g.name === lastGroup)) {
+      selectedGroup.value = lastGroup
+    }
+  }
 })
 
 const fetchGroups = async () => {
@@ -158,10 +174,35 @@ const fetchGroups = async () => {
   }
 }
 
+const handleGroupChange = () => {
+  if (selectedGroup.value === '__NEW__') {
+    showNewGroupModal.value = true
+    selectedGroup.value = '' // Reset selection temporarily
+    nextTick(() => {
+      newGroupInput.value?.focus()
+    })
+  }
+}
+
+const cancelNewGroup = () => {
+  showNewGroupModal.value = false
+  newGroupName.value = ''
+  // Restore previous selection if needed, or leave empty
+}
+
 const createGroup = async () => {
   if (!newGroupName.value) return
-  groups.value.push({ id: Date.now(), name: newGroupName.value }) // Mock ID
-  selectedGroup.value = newGroupName.value
+  
+  // Optimistic update
+  const name = newGroupName.value
+  // Check if already exists
+  if (!groups.value.some(g => g.name === name)) {
+      groups.value.push({ id: Date.now(), name: name }) // Mock ID until refresh
+      // Sort groups by name to keep order
+      groups.value.sort((a, b) => a.name.localeCompare(b.name))
+  }
+  
+  selectedGroup.value = name
   showNewGroupModal.value = false
   newGroupName.value = ''
 }
@@ -247,6 +288,11 @@ const uploadCoin = async () => {
   uploading.value = true
   error.value = null
   
+  // Save group preference
+  if (selectedGroup.value) {
+    localStorage.setItem('lastSelectedGroup', selectedGroup.value)
+  }
+
   const formData = new FormData()
   formData.append('front_image', frontFile.value)
   formData.append('back_image', backFile.value)

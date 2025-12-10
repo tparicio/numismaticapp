@@ -129,22 +129,16 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 		return nil, fmt.Errorf("failed to save processed back: %w", err)
 	}
 
-	// TEMPORARY: Disable Gemini API
-	fmt.Println("⚠️ Gemini API disabled. Using dummy analysis.")
-	analysis := &domain.CoinAnalysisResult{
-		Country:                 "",
-		Year:                    0,
-		FaceValue:               "",
-		Currency:                "",
-		Material:                "",
-		Description:             "Gemini analysis disabled",
-		KMCode:                  "",
-		MinValue:                0,
-		MaxValue:                0,
-		Grade:                   "",
-		Notes:                   "",
-		VerticalCorrectionAngle: 0,
-		RawDetails:              map[string]any{"info": "Gemini disabled"},
+	// 4. Analyze with Gemini
+	fmt.Println("🤖 Analyzing coin with Gemini...")
+	analysis, err := s.aiService.AnalyzeCoin(ctx, originalFrontPath, originalBackPath)
+	if err != nil {
+		// Log error but continue with empty analysis to not block creation
+		fmt.Printf("⚠️ Gemini analysis failed: %v\n", err)
+		analysis = &domain.CoinAnalysisResult{
+			Description: "Analysis failed",
+			RawDetails:  map[string]any{"error": err.Error()},
+		}
 	}
 
 	// Handle Group
@@ -180,19 +174,18 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 		Images:         []domain.CoinImage{},
 		GroupID:        groupID,
 		PersonalNotes:  userNotes,
-		Name:           name,
-		Mint:           mint,
-		Mintage:        int64(mintage),
-		// New fields initialized to zero values
-		WeightG:     0,
-		DiameterMM:  0,
-		ThicknessMM: 0,
-		Edge:        "",
-		Shape:       "",
-		AcquiredAt:  nil,
-		SoldAt:      nil,
-		PricePaid:   0,
-		SoldPrice:   0,
+		Name:           name, // User provided name overrides AI? Or maybe AI doesn't provide name.
+		Mint:           analysis.Mint,
+		Mintage:        analysis.Mintage,
+		WeightG:        analysis.WeightG,
+		DiameterMM:     analysis.DiameterMM,
+		ThicknessMM:    analysis.ThicknessMM,
+		Edge:           analysis.Edge,
+		Shape:          analysis.Shape,
+		AcquiredAt:     nil,
+		SoldAt:         nil,
+		PricePaid:      0,
+		SoldPrice:      0,
 	}
 
 	// Helper to add image

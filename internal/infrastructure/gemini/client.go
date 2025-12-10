@@ -23,7 +23,7 @@ func NewGeminiService(ctx context.Context, apiKey string) (*GeminiService, error
 		return nil, fmt.Errorf("failed to create gemini client: %w", err)
 	}
 
-	model := client.GenerativeModel("gemini-pro-vision")
+	model := client.GenerativeModel("gemini-1.5-flash")
 	model.SetTemperature(0.4) // Lower temperature for more deterministic results
 
 	return &GeminiService{
@@ -62,10 +62,19 @@ func (s *GeminiService) AnalyzeCoin(ctx context.Context, frontImagePath, backIma
 		"max_value": 20.0,
 		"grade": "Estado de conservación estimado (ej: EBC, MBC)",
 		"notes": "Notas técnicas o de conservación",
-		"vertical_correction_angle": 0.0
+		"vertical_correction_angle": 0.0,
+		"weight_g": 0.0,
+		"diameter_mm": 0.0,
+		"thickness_mm": 0.0,
+		"edge": "Descripción del canto (estriado, liso, leyenda...)",
+		"shape": "Forma (redonda, cuadrada...)",
+		"mint": "Ceca o marca de ceca",
+		"mintage": 0
 	}
 	
-	IMPORTANTE: El campo 'vertical_correction_angle' debe ser el ángulo de rotación en grados (positivo o negativo) necesario para que el anverso de la moneda quede perfectamente vertical (con el diseño orientado hacia arriba). Si ya está recta, devuelve 0.
+	IMPORTANTE: 
+	1. El campo 'vertical_correction_angle' debe ser el ángulo de rotación en grados (positivo o negativo) necesario para que el anverso de la moneda quede perfectamente vertical.
+	2. Los campos numéricos (weight_g, diameter_mm, thickness_mm, mintage) deben ser estimaciones si no se pueden determinar con exactitud, o 0 si son totalmente desconocidos.
 	`
 
 	resp, err := s.model.GenerateContent(ctx,

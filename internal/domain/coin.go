@@ -112,5 +112,12 @@ type CoinAnalysisResult struct {
 	Grade                   string         `json:"grade"`
 	Notes                   string         `json:"notes"`
 	VerticalCorrectionAngle float64        `json:"vertical_correction_angle"`
+	WeightG                 float64        `json:"weight_g"`
+	DiameterMM              float64        `json:"diameter_mm"`
+	ThicknessMM             float64        `json:"thickness_mm"`
+	Edge                    string         `json:"edge"`
+	Shape                   string         `json:"shape"`
+	Mint                    string         `json:"mint"`
+	Mintage                 int64          `json:"mintage"`
 	RawDetails              map[string]any `json:"raw_details"`
 }
