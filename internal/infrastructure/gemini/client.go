@@ -23,8 +23,8 @@ func NewGeminiService(ctx context.Context, apiKey string) (*GeminiService, error
 		return nil, fmt.Errorf("failed to create gemini client: %w", err)
 	}
 
-	model := client.GenerativeModel("gemini-1.5-flash")
-	model.SetTemperature(0.4) // Lower temperature for more deterministic results
+	model := client.GenerativeModel("gemini-2.5-flash")
+	model.SetTemperature(0.1) // Lower temperature for more deterministic results
 
 	return &GeminiService{
 		client: client,

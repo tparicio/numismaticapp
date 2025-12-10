@@ -49,7 +49,7 @@
 
           <!-- Swap Button -->
           <div v-if="frontFile && backFile" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
-             <button type="button" @click.stop="swapImages" class="btn btn-circle btn-primary shadow-lg tooltip" data-tip="Swap Front/Back">
+             <button type="button" @click.stop="swapImages" class="btn btn-circle btn-primary shadow-lg tooltip flex items-center justify-center" data-tip="Swap Front/Back">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
                 </svg>
