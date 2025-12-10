@@ -27,8 +27,6 @@
         <figure class="px-4 pt-4 relative group flex justify-center gap-2">
           <div class="relative group/img cursor-zoom-in" @click.stop="openViewer(coin, 'front')">
              <!-- Overlay for zoom hint -->
-            <div class="relative group/img cursor-zoom-in" @click.stop="openViewer(coin, 'front')">
-             <!-- Overlay for zoom hint -->
             <div class="absolute inset-0 bg-black bg-opacity-0 group-hover/img:bg-opacity-20 transition-all flex items-center justify-center z-10 rounded-full">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white opacity-0 group-hover/img:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />

@@ -141,6 +141,60 @@ func (q *Queries) DeleteCoin(ctx context.Context, id pgtype.UUID) error {
 	return err
 }
 
+const getAllCoins = `-- name: GetAllCoins :many
+SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, acquired_at, sold_at, price_paid, sold_price, created_at, updated_at FROM coins
+`
+
+func (q *Queries) GetAllCoins(ctx context.Context) ([]Coin, error) {
+	rows, err := q.db.Query(ctx, getAllCoins)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Coin
+	for rows.Next() {
+		var i Coin
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Mint,
+			&i.Mintage,
+			&i.Country,
+			&i.Year,
+			&i.FaceValue,
+			&i.Currency,
+			&i.Material,
+			&i.Description,
+			&i.KmCode,
+			&i.MinValue,
+			&i.MaxValue,
+			&i.Grade,
+			&i.TechnicalNotes,
+			&i.GeminiDetails,
+			&i.GroupID,
+			&i.PersonalNotes,
+			&i.WeightG,
+			&i.DiameterMm,
+			&i.ThicknessMm,
+			&i.Edge,
+			&i.Shape,
+			&i.AcquiredAt,
+			&i.SoldAt,
+			&i.PricePaid,
+			&i.SoldPrice,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getAllValues = `-- name: GetAllValues :many
 SELECT max_value FROM coins WHERE max_value IS NOT NULL
 `
@@ -207,6 +261,35 @@ func (q *Queries) GetCoin(ctx context.Context, id pgtype.UUID) (Coin, error) {
 	return i, err
 }
 
+const getCountryDistribution = `-- name: GetCountryDistribution :many
+SELECT country, COUNT(*) as count FROM coins GROUP BY country
+`
+
+type GetCountryDistributionRow struct {
+	Country pgtype.Text `json:"country"`
+	Count   int64       `json:"count"`
+}
+
+func (q *Queries) GetCountryDistribution(ctx context.Context) ([]GetCountryDistributionRow, error) {
+	rows, err := q.db.Query(ctx, getCountryDistribution)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetCountryDistributionRow
+	for rows.Next() {
+		var i GetCountryDistributionRow
+		if err := rows.Scan(&i.Country, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getGradeDistribution = `-- name: GetGradeDistribution :many
 SELECT grade, COUNT(*) as count
 FROM coins
@@ -238,6 +321,79 @@ func (q *Queries) GetGradeDistribution(ctx context.Context) ([]GetGradeDistribut
 		return nil, err
 	}
 	return items, nil
+}
+
+const getGroupDistribution = `-- name: GetGroupDistribution :many
+SELECT COALESCE(g.name, 'Uncategorized') as group_name, COUNT(c.id) as count 
+FROM coins c 
+LEFT JOIN groups g ON c.group_id = g.id 
+GROUP BY g.name
+`
+
+type GetGroupDistributionRow struct {
+	GroupName string `json:"group_name"`
+	Count     int64  `json:"count"`
+}
+
+func (q *Queries) GetGroupDistribution(ctx context.Context) ([]GetGroupDistributionRow, error) {
+	rows, err := q.db.Query(ctx, getGroupDistribution)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetGroupDistributionRow
+	for rows.Next() {
+		var i GetGroupDistributionRow
+		if err := rows.Scan(&i.GroupName, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getHeaviestCoin = `-- name: GetHeaviestCoin :one
+SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, acquired_at, sold_at, price_paid, sold_price, created_at, updated_at FROM coins ORDER BY weight_g DESC LIMIT 1
+`
+
+func (q *Queries) GetHeaviestCoin(ctx context.Context) (Coin, error) {
+	row := q.db.QueryRow(ctx, getHeaviestCoin)
+	var i Coin
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Mint,
+		&i.Mintage,
+		&i.Country,
+		&i.Year,
+		&i.FaceValue,
+		&i.Currency,
+		&i.Material,
+		&i.Description,
+		&i.KmCode,
+		&i.MinValue,
+		&i.MaxValue,
+		&i.Grade,
+		&i.TechnicalNotes,
+		&i.GeminiDetails,
+		&i.GroupID,
+		&i.PersonalNotes,
+		&i.WeightG,
+		&i.DiameterMm,
+		&i.ThicknessMm,
+		&i.Edge,
+		&i.Shape,
+		&i.AcquiredAt,
+		&i.SoldAt,
+		&i.PricePaid,
+		&i.SoldPrice,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const getMaterialDistribution = `-- name: GetMaterialDistribution :many
@@ -273,12 +429,200 @@ func (q *Queries) GetMaterialDistribution(ctx context.Context) ([]GetMaterialDis
 	return items, nil
 }
 
+const getOldestCoin = `-- name: GetOldestCoin :one
+SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, acquired_at, sold_at, price_paid, sold_price, created_at, updated_at FROM coins WHERE year > 0 ORDER BY year ASC LIMIT 1
+`
+
+func (q *Queries) GetOldestCoin(ctx context.Context) (Coin, error) {
+	row := q.db.QueryRow(ctx, getOldestCoin)
+	var i Coin
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Mint,
+		&i.Mintage,
+		&i.Country,
+		&i.Year,
+		&i.FaceValue,
+		&i.Currency,
+		&i.Material,
+		&i.Description,
+		&i.KmCode,
+		&i.MinValue,
+		&i.MaxValue,
+		&i.Grade,
+		&i.TechnicalNotes,
+		&i.GeminiDetails,
+		&i.GroupID,
+		&i.PersonalNotes,
+		&i.WeightG,
+		&i.DiameterMm,
+		&i.ThicknessMm,
+		&i.Edge,
+		&i.Shape,
+		&i.AcquiredAt,
+		&i.SoldAt,
+		&i.PricePaid,
+		&i.SoldPrice,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getRandomCoin = `-- name: GetRandomCoin :one
+SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, acquired_at, sold_at, price_paid, sold_price, created_at, updated_at FROM coins ORDER BY RANDOM() LIMIT 1
+`
+
+func (q *Queries) GetRandomCoin(ctx context.Context) (Coin, error) {
+	row := q.db.QueryRow(ctx, getRandomCoin)
+	var i Coin
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Mint,
+		&i.Mintage,
+		&i.Country,
+		&i.Year,
+		&i.FaceValue,
+		&i.Currency,
+		&i.Material,
+		&i.Description,
+		&i.KmCode,
+		&i.MinValue,
+		&i.MaxValue,
+		&i.Grade,
+		&i.TechnicalNotes,
+		&i.GeminiDetails,
+		&i.GroupID,
+		&i.PersonalNotes,
+		&i.WeightG,
+		&i.DiameterMm,
+		&i.ThicknessMm,
+		&i.Edge,
+		&i.Shape,
+		&i.AcquiredAt,
+		&i.SoldAt,
+		&i.PricePaid,
+		&i.SoldPrice,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getRarestCoins = `-- name: GetRarestCoins :many
+SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, acquired_at, sold_at, price_paid, sold_price, created_at, updated_at FROM coins WHERE mintage > 0 ORDER BY mintage ASC LIMIT $1
+`
+
+func (q *Queries) GetRarestCoins(ctx context.Context, limit int32) ([]Coin, error) {
+	rows, err := q.db.Query(ctx, getRarestCoins, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Coin
+	for rows.Next() {
+		var i Coin
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Mint,
+			&i.Mintage,
+			&i.Country,
+			&i.Year,
+			&i.FaceValue,
+			&i.Currency,
+			&i.Material,
+			&i.Description,
+			&i.KmCode,
+			&i.MinValue,
+			&i.MaxValue,
+			&i.Grade,
+			&i.TechnicalNotes,
+			&i.GeminiDetails,
+			&i.GroupID,
+			&i.PersonalNotes,
+			&i.WeightG,
+			&i.DiameterMm,
+			&i.ThicknessMm,
+			&i.Edge,
+			&i.Shape,
+			&i.AcquiredAt,
+			&i.SoldAt,
+			&i.PricePaid,
+			&i.SoldPrice,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getSmallestCoin = `-- name: GetSmallestCoin :one
+SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, acquired_at, sold_at, price_paid, sold_price, created_at, updated_at FROM coins WHERE diameter_mm > 0 ORDER BY diameter_mm ASC LIMIT 1
+`
+
+func (q *Queries) GetSmallestCoin(ctx context.Context) (Coin, error) {
+	row := q.db.QueryRow(ctx, getSmallestCoin)
+	var i Coin
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Mint,
+		&i.Mintage,
+		&i.Country,
+		&i.Year,
+		&i.FaceValue,
+		&i.Currency,
+		&i.Material,
+		&i.Description,
+		&i.KmCode,
+		&i.MinValue,
+		&i.MaxValue,
+		&i.Grade,
+		&i.TechnicalNotes,
+		&i.GeminiDetails,
+		&i.GroupID,
+		&i.PersonalNotes,
+		&i.WeightG,
+		&i.DiameterMm,
+		&i.ThicknessMm,
+		&i.Edge,
+		&i.Shape,
+		&i.AcquiredAt,
+		&i.SoldAt,
+		&i.PricePaid,
+		&i.SoldPrice,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getTotalValue = `-- name: GetTotalValue :one
 SELECT COALESCE(SUM(max_value), 0)::float8 FROM coins
 `
 
 func (q *Queries) GetTotalValue(ctx context.Context) (float64, error) {
 	row := q.db.QueryRow(ctx, getTotalValue)
+	var column_1 float64
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
+const getTotalWeightByMaterial = `-- name: GetTotalWeightByMaterial :one
+SELECT COALESCE(SUM(weight_g), 0)::float8 FROM coins WHERE material ILIKE $1
+`
+
+func (q *Queries) GetTotalWeightByMaterial(ctx context.Context, material pgtype.Text) (float64, error) {
+	row := q.db.QueryRow(ctx, getTotalWeightByMaterial, material)
 	var column_1 float64
 	err := row.Scan(&column_1)
 	return column_1, err

@@ -33,10 +33,10 @@
         </div>
       </div>
 
-      <!-- Details -->
+      <!-- Basic Details -->
       <div class="card bg-base-100 shadow-xl">
         <div class="card-body space-y-4">
-          <h2 class="card-title text-sm uppercase text-base-content/70">Details</h2>
+          <h2 class="card-title text-sm uppercase text-base-content/70">Basic Details</h2>
           
           <div class="form-control w-full">
             <label class="label"><span class="label-text">Name</span></label>
@@ -45,6 +45,45 @@
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="form-control w-full">
+              <label class="label"><span class="label-text">Country</span></label>
+              <input v-model="form.country" type="text" class="input input-bordered w-full" />
+            </div>
+            <div class="form-control w-full">
+              <label class="label"><span class="label-text">Year</span></label>
+              <input v-model.number="form.year" type="number" class="input input-bordered w-full" />
+            </div>
+            <div class="form-control w-full">
+              <label class="label"><span class="label-text">Face Value</span></label>
+              <input v-model="form.face_value" type="text" class="input input-bordered w-full" />
+            </div>
+            <div class="form-control w-full">
+              <label class="label"><span class="label-text">Currency</span></label>
+              <input v-model="form.currency" type="text" class="input input-bordered w-full" />
+            </div>
+             <div class="form-control w-full">
+              <label class="label"><span class="label-text">Material</span></label>
+              <input v-model="form.material" type="text" class="input input-bordered w-full" />
+            </div>
+             <div class="form-control w-full">
+              <label class="label"><span class="label-text">Grade</span></label>
+              <input v-model="form.grade" type="text" class="input input-bordered w-full" />
+            </div>
+          </div>
+
+           <div class="form-control w-full">
+            <label class="label"><span class="label-text">Description</span></label>
+            <textarea v-model="form.description" class="textarea textarea-bordered h-24"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Technical Details -->
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body space-y-4">
+          <h2 class="card-title text-sm uppercase text-base-content/70">Technical Details</h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <div class="form-control w-full">
               <label class="label"><span class="label-text">Mint</span></label>
               <input v-model="form.mint" type="text" class="input input-bordered w-full" />
             </div>
@@ -52,8 +91,78 @@
               <label class="label"><span class="label-text">Mintage</span></label>
               <input v-model.number="form.mintage" type="number" class="input input-bordered w-full" />
             </div>
+            <div class="form-control w-full">
+              <label class="label"><span class="label-text">KM Code</span></label>
+              <input v-model="form.km_code" type="text" class="input input-bordered w-full" />
+            </div>
+             <div class="form-control w-full">
+              <label class="label"><span class="label-text">Weight (g)</span></label>
+              <input v-model.number="form.weight_g" type="number" step="0.01" class="input input-bordered w-full" />
+            </div>
+            <div class="form-control w-full">
+              <label class="label"><span class="label-text">Diameter (mm)</span></label>
+              <input v-model.number="form.diameter_mm" type="number" step="0.01" class="input input-bordered w-full" />
+            </div>
+            <div class="form-control w-full">
+              <label class="label"><span class="label-text">Thickness (mm)</span></label>
+              <input v-model.number="form.thickness_mm" type="number" step="0.01" class="input input-bordered w-full" />
+            </div>
+             <div class="form-control w-full">
+              <label class="label"><span class="label-text">Edge</span></label>
+              <input v-model="form.edge" type="text" class="input input-bordered w-full" />
+            </div>
+             <div class="form-control w-full">
+              <label class="label"><span class="label-text">Shape</span></label>
+              <input v-model="form.shape" type="text" class="input input-bordered w-full" />
+            </div>
           </div>
 
+           <div class="form-control w-full">
+            <label class="label"><span class="label-text">Technical Notes</span></label>
+            <textarea v-model="form.technical_notes" class="textarea textarea-bordered h-24"></textarea>
+          </div>
+        </div>
+      </div>
+
+       <!-- Valuation & Acquisition -->
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body space-y-4">
+          <h2 class="card-title text-sm uppercase text-base-content/70">Valuation & Acquisition</h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <div class="form-control w-full">
+              <label class="label"><span class="label-text">Min Value</span></label>
+              <input v-model.number="form.min_value" type="number" step="0.01" class="input input-bordered w-full" />
+            </div>
+            <div class="form-control w-full">
+              <label class="label"><span class="label-text">Max Value</span></label>
+              <input v-model.number="form.max_value" type="number" step="0.01" class="input input-bordered w-full" />
+            </div>
+             <div class="form-control w-full">
+              <label class="label"><span class="label-text">Price Paid</span></label>
+              <input v-model.number="form.price_paid" type="number" step="0.01" class="input input-bordered w-full" />
+            </div>
+             <div class="form-control w-full">
+              <label class="label"><span class="label-text">Sold Price</span></label>
+              <input v-model.number="form.sold_price" type="number" step="0.01" class="input input-bordered w-full" />
+            </div>
+             <div class="form-control w-full">
+              <label class="label"><span class="label-text">Acquired At</span></label>
+              <input v-model="form.acquired_at" type="date" class="input input-bordered w-full" />
+            </div>
+             <div class="form-control w-full">
+              <label class="label"><span class="label-text">Sold At</span></label>
+              <input v-model="form.sold_at" type="date" class="input input-bordered w-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Organization -->
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body space-y-4">
+          <h2 class="card-title text-sm uppercase text-base-content/70">Organization</h2>
+          
           <div class="form-control w-full">
             <label class="label"><span class="label-text">Group</span></label>
             <select v-model="form.group_name" class="select select-bordered w-full">
@@ -64,7 +173,7 @@
 
           <div class="form-control w-full">
             <label class="label"><span class="label-text">Personal Notes</span></label>
-            <textarea v-model="form.user_notes" class="textarea textarea-bordered h-24"></textarea>
+            <textarea v-model="form.personal_notes" class="textarea textarea-bordered h-24"></textarea>
           </div>
         </div>
       </div>
@@ -96,11 +205,41 @@ const groups = ref([])
 
 const form = ref({
   name: '',
+  country: '',
+  year: 0,
+  face_value: '',
+  currency: '',
+  material: '',
+  grade: '',
+  description: '',
   mint: '',
   mintage: 0,
+  km_code: '',
+  weight_g: 0,
+  diameter_mm: 0,
+  thickness_mm: 0,
+  edge: '',
+  shape: '',
+  technical_notes: '',
+  min_value: 0,
+  max_value: 0,
+  price_paid: 0,
+  sold_price: 0,
+  acquired_at: '',
+  sold_at: '',
   group_name: '',
-  user_notes: ''
+  personal_notes: ''
 })
+
+const formatDateForInput = (dateString) => {
+    if (!dateString) return ''
+    return new Date(dateString).toISOString().split('T')[0]
+}
+
+const parseDateForSubmit = (dateString) => {
+    if (!dateString) return null
+    return new Date(dateString).toISOString()
+}
 
 onMounted(async () => {
   try {
@@ -113,13 +252,37 @@ onMounted(async () => {
     groups.value = groupsRes.data
 
     // Populate form
-    form.value.name = coin.value.name || ''
-    form.value.mint = coin.value.mint || ''
-    form.value.mintage = coin.value.mintage || 0
-    form.value.user_notes = coin.value.personal_notes || ''
+    const c = coin.value
+    form.value = {
+        name: c.name || '',
+        country: c.country || '',
+        year: c.year || 0,
+        face_value: c.face_value || '',
+        currency: c.currency || '',
+        material: c.material || '',
+        grade: c.grade || '',
+        description: c.description || '',
+        mint: c.mint || '',
+        mintage: c.mintage || 0,
+        km_code: c.km_code || '',
+        weight_g: c.weight_g || 0,
+        diameter_mm: c.diameter_mm || 0,
+        thickness_mm: c.thickness_mm || 0,
+        edge: c.edge || '',
+        shape: c.shape || '',
+        technical_notes: c.technical_notes || '',
+        min_value: c.min_value || 0,
+        max_value: c.max_value || 0,
+        price_paid: c.price_paid || 0,
+        sold_price: c.sold_price || 0,
+        acquired_at: formatDateForInput(c.acquired_at),
+        sold_at: formatDateForInput(c.sold_at),
+        personal_notes: c.personal_notes || '',
+        group_name: ''
+    }
     
-    if (coin.value.group_id) {
-      const g = groups.value.find(g => g.id === coin.value.group_id)
+    if (c.group_id) {
+      const g = groups.value.find(g => g.id === c.group_id)
       if (g) form.value.group_name = g.name
     }
 
@@ -142,7 +305,12 @@ const getThumbnail = (side) => {
 const submit = async () => {
   saving.value = true
   try {
-    await axios.put(`${API_URL}/coins/${route.params.id}`, form.value)
+    const payload = {
+        ...form.value,
+        acquired_at: parseDateForSubmit(form.value.acquired_at),
+        sold_at: parseDateForSubmit(form.value.sold_at)
+    }
+    await axios.put(`${API_URL}/coins/${route.params.id}`, payload)
     router.push(`/coin/${route.params.id}`)
   } catch (e) {
     console.error("Failed to update coin", e)

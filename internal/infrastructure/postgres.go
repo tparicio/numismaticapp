@@ -205,6 +205,97 @@ func (r *PostgresCoinRepository) GetAllValues(ctx context.Context) ([]float64, e
 	return values, nil
 }
 
+func (r *PostgresCoinRepository) GetCountryDistribution(ctx context.Context) (map[string]int, error) {
+	rows, err := r.q.GetCountryDistribution(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get country distribution: %w", err)
+	}
+	dist := make(map[string]int)
+	for _, row := range rows {
+		dist[row.Country.String] = int(row.Count)
+	}
+	return dist, nil
+}
+
+func (r *PostgresCoinRepository) GetOldestCoin(ctx context.Context) (*domain.Coin, error) {
+	row, err := r.q.GetOldestCoin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get oldest coin: %w", err)
+	}
+	return toDomainCoin(row)
+}
+
+func (r *PostgresCoinRepository) GetRarestCoins(ctx context.Context, limit int) ([]*domain.Coin, error) {
+	rows, err := r.q.GetRarestCoins(ctx, int32(limit))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get rarest coins: %w", err)
+	}
+	return r.rowsToCoins(ctx, rows)
+}
+
+func (r *PostgresCoinRepository) GetGroupDistribution(ctx context.Context) (map[string]int, error) {
+	rows, err := r.q.GetGroupDistribution(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get group distribution: %w", err)
+	}
+	dist := make(map[string]int)
+	for _, row := range rows {
+		dist[row.GroupName] = int(row.Count)
+	}
+	return dist, nil
+}
+
+func (r *PostgresCoinRepository) GetTotalWeightByMaterial(ctx context.Context, materialLike string) (float64, error) {
+	weight, err := r.q.GetTotalWeightByMaterial(ctx, toNullString(materialLike))
+	if err != nil {
+		return 0, fmt.Errorf("failed to get total weight: %w", err)
+	}
+	return weight, nil
+}
+
+func (r *PostgresCoinRepository) GetHeaviestCoin(ctx context.Context) (*domain.Coin, error) {
+	row, err := r.q.GetHeaviestCoin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get heaviest coin: %w", err)
+	}
+	return toDomainCoin(row)
+}
+
+func (r *PostgresCoinRepository) GetSmallestCoin(ctx context.Context) (*domain.Coin, error) {
+	row, err := r.q.GetSmallestCoin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get smallest coin: %w", err)
+	}
+	return toDomainCoin(row)
+}
+
+func (r *PostgresCoinRepository) GetRandomCoin(ctx context.Context) (*domain.Coin, error) {
+	row, err := r.q.GetRandomCoin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get random coin: %w", err)
+	}
+	return toDomainCoin(row)
+}
+
+func (r *PostgresCoinRepository) GetAllCoins(ctx context.Context) ([]*domain.Coin, error) {
+	rows, err := r.q.GetAllCoins(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get all coins: %w", err)
+	}
+	// For scatter plot, we might not need images, but let's keep it consistent or optimize later.
+	// Optimization: Don't fetch images for scatter plot to avoid N+1 on large dataset.
+	// The frontend only needs Year and Grade.
+	coins := make([]*domain.Coin, len(rows))
+	for i, row := range rows {
+		c, err := toDomainCoin(row)
+		if err != nil {
+			return nil, err
+		}
+		coins[i] = c
+	}
+	return coins, nil
+}
+
 // Helper to avoid duplication
 func (r *PostgresCoinRepository) rowsToCoins(ctx context.Context, rows []db.Coin) ([]*domain.Coin, error) {
 	coins := make([]*domain.Coin, len(rows))

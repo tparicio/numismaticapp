@@ -7,6 +7,7 @@ import (
 	"io"
 	"mime/multipart"
 	"strings"
+	"time"
 
 	"github.com/antonioparicio/numismaticapp/internal/domain"
 	"github.com/google/uuid"
@@ -343,7 +344,66 @@ func (s *CoinService) GetDashboardStats(ctx context.Context) (*domain.DashboardS
 		}
 	}
 
+	// New Analytics
+	stats.CountryDistribution, _ = s.repo.GetCountryDistribution(ctx)
+
+	// Century Distribution (derived from GetAllCoins or separate query? Let's use GetAllCoins for flexibility)
+	allCoins, err := s.repo.GetAllCoins(ctx)
+	if err == nil {
+		stats.AllCoins = make([]domain.Coin, len(allCoins))
+		stats.CenturyDistribution = make(map[string]int)
+		for i, c := range allCoins {
+			stats.AllCoins[i] = *c
+			if c.Year > 0 {
+				century := (c.Year-1)/100 + 1
+				key := fmt.Sprintf("S. %s", toRoman(century))
+				stats.CenturyDistribution[key]++
+			}
+		}
+	}
+
+	stats.OldestCoin, _ = s.repo.GetOldestCoin(ctx)
+
+	rarest, err := s.repo.GetRarestCoins(ctx, 5)
+	if err == nil {
+		stats.RarestCoins = make([]domain.Coin, len(rarest))
+		for i, c := range rarest {
+			stats.RarestCoins[i] = *c
+		}
+	}
+
+	stats.GroupDistribution, _ = s.repo.GetGroupDistribution(ctx)
+
+	stats.TotalSilverWeight, _ = s.repo.GetTotalWeightByMaterial(ctx, "%Silver%")
+	stats.TotalGoldWeight, _ = s.repo.GetTotalWeightByMaterial(ctx, "%Gold%")
+
+	stats.HeaviestCoin, _ = s.repo.GetHeaviestCoin(ctx)
+	stats.SmallestCoin, _ = s.repo.GetSmallestCoin(ctx)
+	stats.RandomCoin, _ = s.repo.GetRandomCoin(ctx)
+
 	return stats, nil
+}
+
+func toRoman(n int) string {
+	if n <= 0 {
+		return ""
+	}
+	// Simplified for centuries (1-21)
+	vals := []struct {
+		val int
+		sym string
+	}{
+		{21, "XXI"}, {20, "XX"}, {19, "XIX"}, {18, "XVIII"}, {17, "XVII"},
+		{16, "XVI"}, {15, "XV"}, {14, "XIV"}, {13, "XIII"}, {12, "XII"},
+		{11, "XI"}, {10, "X"}, {9, "IX"}, {8, "VIII"}, {7, "VII"},
+		{6, "VI"}, {5, "V"}, {4, "IV"}, {3, "III"}, {2, "II"}, {1, "I"},
+	}
+	for _, v := range vals {
+		if n == v.val {
+			return v.sym
+		}
+	}
+	return fmt.Sprintf("%d", n)
 }
 
 func normalizeGrade(input string) string {
@@ -389,35 +449,79 @@ func normalizeGrade(input string) string {
 	return ""
 }
 
-func (s *CoinService) UpdateCoin(ctx context.Context, id uuid.UUID, groupName, userNotes, name, mint string, mintage int) (*domain.Coin, error) {
+type UpdateCoinParams struct {
+	Name           string     `json:"name"`
+	Mint           string     `json:"mint"`
+	Mintage        int64      `json:"mintage"`
+	Country        string     `json:"country"`
+	Year           int        `json:"year"`
+	FaceValue      string     `json:"face_value"`
+	Currency       string     `json:"currency"`
+	Material       string     `json:"material"`
+	Description    string     `json:"description"`
+	KMCode         string     `json:"km_code"`
+	MinValue       float64    `json:"min_value"`
+	MaxValue       float64    `json:"max_value"`
+	Grade          string     `json:"grade"`
+	TechnicalNotes string     `json:"technical_notes"`
+	PersonalNotes  string     `json:"personal_notes"`
+	WeightG        float64    `json:"weight_g"`
+	DiameterMM     float64    `json:"diameter_mm"`
+	ThicknessMM    float64    `json:"thickness_mm"`
+	Edge           string     `json:"edge"`
+	Shape          string     `json:"shape"`
+	AcquiredAt     *time.Time `json:"acquired_at"`
+	SoldAt         *time.Time `json:"sold_at"`
+	PricePaid      float64    `json:"price_paid"`
+	SoldPrice      float64    `json:"sold_price"`
+	GroupName      string     `json:"group_name"`
+}
+
+func (s *CoinService) UpdateCoin(ctx context.Context, id uuid.UUID, params UpdateCoinParams) (*domain.Coin, error) {
 	coin, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get coin: %w", err)
 	}
 
 	// Update fields
-	if name != "" {
-		coin.Name = name
-	}
-	if mint != "" {
-		coin.Mint = mint
-	}
-	if mintage != 0 {
-		coin.Mintage = int64(mintage)
-	}
-	coin.PersonalNotes = userNotes
+	coin.Name = params.Name
+	coin.Mint = params.Mint
+	coin.Mintage = params.Mintage
+	coin.Country = params.Country
+	coin.Year = params.Year
+	coin.FaceValue = params.FaceValue
+	coin.Currency = params.Currency
+	coin.Material = params.Material
+	coin.Description = params.Description
+	coin.KMCode = params.KMCode
+	coin.MinValue = params.MinValue
+	coin.MaxValue = params.MaxValue
+	coin.Grade = normalizeGrade(params.Grade)
+	coin.TechnicalNotes = params.TechnicalNotes
+	coin.PersonalNotes = params.PersonalNotes
+	coin.WeightG = params.WeightG
+	coin.DiameterMM = params.DiameterMM
+	coin.ThicknessMM = params.ThicknessMM
+	coin.Edge = params.Edge
+	coin.Shape = params.Shape
+	coin.AcquiredAt = params.AcquiredAt
+	coin.SoldAt = params.SoldAt
+	coin.PricePaid = params.PricePaid
+	coin.SoldPrice = params.SoldPrice
 
 	// Handle Group
-	if groupName != "" {
-		group, err := s.groupRepo.GetByName(ctx, groupName)
+	if params.GroupName != "" {
+		group, err := s.groupRepo.GetByName(ctx, params.GroupName)
 		if err != nil {
 			// If not found (or other error), try to create
-			group, err = s.groupRepo.Create(ctx, groupName, "")
+			group, err = s.groupRepo.Create(ctx, params.GroupName, "")
 			if err != nil {
 				return nil, fmt.Errorf("failed to create group: %w", err)
 			}
 		}
 		coin.GroupID = &group.ID
+	} else {
+		coin.GroupID = nil
 	}
 
 	if err := s.repo.Update(ctx, coin); err != nil {

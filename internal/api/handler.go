@@ -108,22 +108,12 @@ func (h *CoinHandler) UpdateCoin(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid uuid"})
 	}
 
-	// For MVP, we only support updating text fields via JSON or Form
-	// Let's assume JSON for simplicity in Edit view
-	type UpdateRequest struct {
-		GroupName string `json:"group_name"`
-		UserNotes string `json:"user_notes"`
-		Name      string `json:"name"`
-		Mint      string `json:"mint"`
-		Mintage   int    `json:"mintage"`
-	}
-
-	var req UpdateRequest
+	var req application.UpdateCoinParams
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
 	}
 
-	coin, err := h.service.UpdateCoin(c.Context(), id, req.GroupName, req.UserNotes, req.Name, req.Mint, req.Mintage)
+	coin, err := h.service.UpdateCoin(c.Context(), id, req)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}

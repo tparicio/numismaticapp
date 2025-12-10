@@ -89,3 +89,33 @@ ORDER BY count DESC;
 
 -- name: GetAllValues :many
 SELECT max_value FROM coins WHERE max_value IS NOT NULL;
+
+-- name: GetCountryDistribution :many
+SELECT country, COUNT(*) as count FROM coins GROUP BY country;
+
+-- name: GetOldestCoin :one
+SELECT * FROM coins WHERE year > 0 ORDER BY year ASC LIMIT 1;
+
+-- name: GetRarestCoins :many
+SELECT * FROM coins WHERE mintage > 0 ORDER BY mintage ASC LIMIT $1;
+
+-- name: GetGroupDistribution :many
+SELECT COALESCE(g.name, 'Uncategorized') as group_name, COUNT(c.id) as count 
+FROM coins c 
+LEFT JOIN groups g ON c.group_id = g.id 
+GROUP BY g.name;
+
+-- name: GetTotalWeightByMaterial :one
+SELECT COALESCE(SUM(weight_g), 0)::float8 FROM coins WHERE material ILIKE $1;
+
+-- name: GetHeaviestCoin :one
+SELECT * FROM coins ORDER BY weight_g DESC LIMIT 1;
+
+-- name: GetSmallestCoin :one
+SELECT * FROM coins WHERE diameter_mm > 0 ORDER BY diameter_mm ASC LIMIT 1;
+
+-- name: GetRandomCoin :one
+SELECT * FROM coins ORDER BY RANDOM() LIMIT 1;
+
+-- name: GetAllCoins :many
+SELECT * FROM coins;

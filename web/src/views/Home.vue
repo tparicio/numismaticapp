@@ -125,6 +125,117 @@
         </div>
       </div>
     </div>
+
+    <!-- Advanced Analytics -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title">Geographic Distribution</h2>
+            <div class="h-64 relative">
+                <Bar v-if="countryChartData" :data="countryChartData" :options="chartOptions" />
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Timeline (Centuries) -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title">Timeline (Centuries)</h2>
+                <div class="h-64 relative">
+                    <Bar v-if="timelineChartData" :data="timelineChartData" :options="chartOptions" />
+                </div>
+                <div v-if="stats.oldest_coin" class="alert alert-info mt-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <div>
+                        <h3 class="font-bold">Oldest Gem</h3>
+                        <div class="text-xs">{{ stats.oldest_coin.year }}: {{ stats.oldest_coin.name }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quality Matrix (Year vs Grade) -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title">Quality Matrix (Year vs Grade)</h2>
+                <div class="h-64 relative">
+                    <Scatter v-if="qualityChartData" :data="qualityChartData" :options="scatterOptions" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Storage Distribution -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title">Storage</h2>
+                <div class="h-64 relative flex justify-center">
+                    <Doughnut v-if="storageChartData" :data="storageChartData" :options="doughnutOptions" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Rarest Coins -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title text-sm uppercase text-base-content/70">Top Rarity (Lowest Mintage)</h2>
+                <div class="divide-y divide-base-200">
+                    <div v-for="coin in stats.rarest_coins" :key="coin.id" 
+                         class="flex items-center gap-3 py-3 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
+                         @click="router.push(`/coin/${coin.id}`)">
+                         <div class="flex-1">
+                            <div class="font-bold">{{ coin.name }}</div>
+                            <div class="text-xs opacity-50">{{ coin.year }} • {{ coin.country }}</div>
+                         </div>
+                         <div class="badge badge-accent">{{ formatMintage(coin.mintage) }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trivia & Physical Stats -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title text-sm uppercase text-base-content/70">Trivia & Physical Stats</h2>
+                <div class="space-y-4">
+                    <div class="stats stats-vertical shadow w-full">
+                        <div class="stat">
+                            <div class="stat-title">Silver Reserve</div>
+                            <div class="stat-value text-primary text-2xl">{{ stats.total_silver_weight.toFixed(1) }}g</div>
+                            <div class="stat-desc">Pure Silver (.999 approx)</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-title">Gold Reserve</div>
+                            <div class="stat-value text-warning text-2xl">{{ stats.total_gold_weight.toFixed(1) }}g</div>
+                            <div class="stat-desc">Pure Gold</div>
+                        </div>
+                    </div>
+                    
+                    <div v-if="stats.heaviest_coin" class="text-sm">
+                        <span class="font-bold">Heaviest:</span> {{ stats.heaviest_coin.name }} ({{ stats.heaviest_coin.weight_g }}g)
+                    </div>
+                    <div v-if="stats.smallest_coin" class="text-sm">
+                        <span class="font-bold">Smallest:</span> {{ stats.smallest_coin.name }} ({{ stats.smallest_coin.diameter_mm }}mm)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Random Coin Feature -->
+    <div v-if="stats.random_coin" class="card lg:card-side bg-base-100 shadow-xl">
+        <figure class="lg:w-1/3 p-6">
+            <img :src="getThumbnail(stats.random_coin)" class="rounded-xl shadow-lg hover:scale-105 transition-transform duration-300" />
+        </figure>
+        <div class="card-body">
+            <h2 class="card-title">Featured Coin: {{ stats.random_coin.name }}</h2>
+            <p>{{ stats.random_coin.description || 'No description available.' }}</p>
+            <div class="card-actions justify-end">
+                <button class="btn btn-primary" @click="router.push(`/coin/${stats.random_coin.id}`)">View Details</button>
+            </div>
+        </div>
+    </div>
   </div>
 </template>
 
@@ -140,11 +251,12 @@ import {
   BarElement,
   CategoryScale,
   LinearScale,
-  ArcElement
+  ArcElement,
+  PointElement
 } from 'chart.js'
-import { Bar, Doughnut } from 'vue-chartjs'
+import { Bar, Doughnut, Scatter } from 'vue-chartjs'
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement)
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement)
 
 const router = useRouter()
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'
@@ -156,7 +268,18 @@ const stats = ref({
   recent_coins: [],
   value_distribution: {},
   material_distribution: {},
-  grade_distribution: {}
+  grade_distribution: {},
+  country_distribution: {},
+  century_distribution: {},
+  oldest_coin: null,
+  rarest_coins: [],
+  group_distribution: {},
+  total_silver_weight: 0,
+  total_gold_weight: 0,
+  heaviest_coin: null,
+  smallest_coin: null,
+  random_coin: null,
+  all_coins: []
 })
 
 const chartOptions = {
@@ -200,6 +323,42 @@ const getThumbnail = (coin) => {
     if (crop) return `${API_URL.replace('/api/v1', '')}/${crop.path}`
   }
   return 'https://placehold.co/100x100?text=No+Image'
+}
+
+const formatMintage = (value) => {
+    if (value === 0) return 'Unknown'
+    if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M'
+    if (value >= 1000) return (value / 1000).toFixed(0) + 'k'
+    return value.toString()
+}
+
+const scatterOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+        x: {
+            type: 'linear',
+            position: 'bottom',
+            title: { display: true, text: 'Year' }
+        },
+        y: {
+            type: 'linear',
+            title: { display: true, text: 'Grade (0-70)' },
+            min: 0,
+            max: 75
+        }
+    },
+    plugins: {
+        legend: { display: false },
+        tooltip: {
+            callbacks: {
+                label: (context) => {
+                    const point = context.raw
+                    return `${point.name} (${point.grade}): ${point.x}`
+                }
+            }
+        }
+    }
 }
 
 // Chart Data Computed Properties
@@ -257,5 +416,87 @@ const gradeChartData = computed(() => {
       data
     }]
   }
+})
+
+const timelineChartData = computed(() => {
+    const dist = stats.value.century_distribution
+    if (!dist) return null
+
+    // Sort centuries
+    const labels = Object.keys(dist).sort()
+    const data = labels.map(l => dist[l])
+
+    return {
+        labels,
+        datasets: [{
+            label: 'Coins per Century',
+            backgroundColor: '#8b5cf6',
+            data
+        }]
+    }
+})
+
+const qualityChartData = computed(() => {
+    const coins = stats.value.all_coins
+    if (!coins || coins.length === 0) return null
+
+    const gradeMap = {
+        'MC': 10, 'RC': 20, 'BC': 30, 'MBC': 40, 'EBC': 50, 'SC': 60, 'FDC': 65, 'PROOF': 70
+    }
+
+    const data = coins
+        .filter(c => c.year > 0 && c.grade && gradeMap[c.grade])
+        .map(c => ({
+            x: c.year,
+            y: gradeMap[c.grade],
+            name: c.name,
+            grade: c.grade
+        }))
+
+    return {
+        datasets: [{
+            label: 'Quality vs Year',
+            backgroundColor: '#f59e0b',
+            data
+        }]
+    }
+})
+
+const storageChartData = computed(() => {
+    const dist = stats.value.group_distribution
+    if (!dist) return null
+
+    const labels = Object.keys(dist)
+    const data = Object.values(dist)
+    const colors = [
+        '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#6366f1'
+    ]
+
+    return {
+        labels,
+        datasets: [{
+            backgroundColor: colors,
+            data
+        }]
+    }
+})
+
+const countryChartData = computed(() => {
+    const dist = stats.value.country_distribution
+    if (!dist) return null
+
+    // Sort by count desc
+    const sorted = Object.entries(dist).sort((a, b) => b[1] - a[1])
+    const labels = sorted.map(e => e[0])
+    const data = sorted.map(e => e[1])
+
+    return {
+        labels,
+        datasets: [{
+            label: 'Coins by Country',
+            backgroundColor: '#0ea5e9',
+            data
+        }]
+    }
 })
 </script>

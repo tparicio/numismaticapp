@@ -78,6 +78,15 @@ type CoinRepository interface {
 	GetAllValues(ctx context.Context) ([]float64, error)
 	Update(ctx context.Context, coin *Coin) error
 	Delete(ctx context.Context, id uuid.UUID) error
+	GetCountryDistribution(ctx context.Context) (map[string]int, error)
+	GetOldestCoin(ctx context.Context) (*Coin, error)
+	GetRarestCoins(ctx context.Context, limit int) ([]*Coin, error)
+	GetGroupDistribution(ctx context.Context) (map[string]int, error)
+	GetTotalWeightByMaterial(ctx context.Context, materialLike string) (float64, error)
+	GetHeaviestCoin(ctx context.Context) (*Coin, error)
+	GetSmallestCoin(ctx context.Context) (*Coin, error)
+	GetRandomCoin(ctx context.Context) (*Coin, error)
+	GetAllCoins(ctx context.Context) ([]*Coin, error)
 }
 
 // GroupRepository defines the interface for persisting groups.
