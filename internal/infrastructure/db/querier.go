@@ -19,6 +19,7 @@ type Querier interface {
 	DeleteGroup(ctx context.Context, id int32) error
 	GetAllCoins(ctx context.Context) ([]Coin, error)
 	GetAllValues(ctx context.Context) ([]pgtype.Numeric, error)
+	GetAverageValue(ctx context.Context) (float64, error)
 	GetCoin(ctx context.Context, id pgtype.UUID) (Coin, error)
 	GetCountryDistribution(ctx context.Context) ([]GetCountryDistributionRow, error)
 	GetGradeDistribution(ctx context.Context) ([]GetGradeDistributionRow, error)

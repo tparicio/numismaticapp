@@ -74,6 +74,9 @@ WHERE id = $1;
 -- name: GetTotalValue :one
 SELECT COALESCE(SUM(max_value), 0)::float8 FROM coins;
 
+-- name: GetAverageValue :one
+SELECT COALESCE(AVG(max_value), 0)::float8 FROM coins;
+
 -- name: ListTopValuableCoins :many
 SELECT * FROM coins
 ORDER BY max_value DESC

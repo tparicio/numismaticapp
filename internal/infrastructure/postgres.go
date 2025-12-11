@@ -160,6 +160,10 @@ func (r *PostgresCoinRepository) GetTotalValue(ctx context.Context) (float64, er
 	return r.q.GetTotalValue(ctx)
 }
 
+func (r *PostgresCoinRepository) GetAverageValue(ctx context.Context) (float64, error) {
+	return r.q.GetAverageValue(ctx)
+}
+
 func (r *PostgresCoinRepository) ListTopValuable(ctx context.Context) ([]*domain.Coin, error) {
 	rows, err := r.q.ListTopValuableCoins(ctx)
 	if err != nil {

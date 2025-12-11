@@ -4,6 +4,7 @@ package domain
 type DashboardStats struct {
 	TotalCoins           int64          `json:"total_coins"`
 	TotalValue           float64        `json:"total_value"`
+	AverageValue         float64        `json:"average_value"`
 	TopValuableCoins     []Coin         `json:"top_valuable_coins"`
 	RecentCoins          []Coin         `json:"recent_coins"`
 	MaterialDistribution map[string]int `json:"material_distribution"`

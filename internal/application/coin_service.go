@@ -283,6 +283,13 @@ func (s *CoinService) GetDashboardStats(ctx context.Context) (*domain.DashboardS
 	}
 	stats.TotalValue = totalValue
 
+	// Average Value
+	avgValue, err := s.repo.GetAverageValue(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get average value: %w", err)
+	}
+	stats.AverageValue = avgValue
+
 	// Top Valuable
 	topValuable, err := s.repo.ListTopValuable(ctx)
 	if err != nil {

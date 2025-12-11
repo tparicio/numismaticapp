@@ -26,6 +26,17 @@
           <div class="stat-desc">Estimated market value</div>
         </div>
       </div>
+
+      <div class="stats shadow">
+        <div class="stat">
+          <div class="stat-figure text-accent">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+          </div>
+          <div class="stat-title">Average Value</div>
+          <div class="stat-value text-accent">{{ formatCurrency(stats.average_value) }}</div>
+          <div class="stat-desc">Per coin</div>
+        </div>
+      </div>
       
       <div class="stats shadow">
         <div class="stat">
@@ -319,6 +330,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'
 const stats = ref({
   total_coins: 0,
   total_value: 0,
+  average_value: 0,
   top_valuable_coins: [],
   recent_coins: [],
   value_distribution: {},

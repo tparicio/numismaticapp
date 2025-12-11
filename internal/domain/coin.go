@@ -83,6 +83,7 @@ type CoinRepository interface {
 	List(ctx context.Context, filter CoinFilter) ([]*Coin, error)
 	Count(ctx context.Context) (int64, error)
 	GetTotalValue(ctx context.Context) (float64, error)
+	GetAverageValue(ctx context.Context) (float64, error)
 	ListTopValuable(ctx context.Context) ([]*Coin, error)
 	ListRecent(ctx context.Context) ([]*Coin, error)
 	GetMaterialDistribution(ctx context.Context) (map[string]int, error)

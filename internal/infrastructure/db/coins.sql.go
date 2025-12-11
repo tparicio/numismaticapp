@@ -219,6 +219,17 @@ func (q *Queries) GetAllValues(ctx context.Context) ([]pgtype.Numeric, error) {
 	return items, nil
 }
 
+const getAverageValue = `-- name: GetAverageValue :one
+SELECT COALESCE(AVG(max_value), 0)::float8 FROM coins
+`
+
+func (q *Queries) GetAverageValue(ctx context.Context) (float64, error) {
+	row := q.db.QueryRow(ctx, getAverageValue)
+	var column_1 float64
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const getCoin = `-- name: GetCoin :one
 SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, acquired_at, sold_at, price_paid, sold_price, created_at, updated_at FROM coins
 WHERE id = $1 LIMIT 1
