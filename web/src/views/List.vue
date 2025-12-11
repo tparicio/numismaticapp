@@ -1,14 +1,32 @@
 <template>
   <div>
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
       <h2 class="text-3xl font-bold">My Collection</h2>
-      <div class="join">
-        <button class="join-item btn" :class="{ 'btn-active': viewMode === 'grid' }" @click="viewMode = 'grid'">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
-        </button>
-        <button class="join-item btn" :class="{ 'btn-active': viewMode === 'table' }" @click="viewMode = 'table'">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
-        </button>
+      
+      <div class="flex flex-wrap gap-2 w-full md:w-auto items-center">
+        <!-- Search -->
+        <input type="text" v-model="filters.query" placeholder="Search..." class="input input-bordered w-full md:w-48 input-sm" />
+        
+        <!-- Group Filter -->
+        <select v-model="filters.group_id" class="select select-bordered select-sm w-full md:w-40">
+          <option value="">All Groups</option>
+          <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
+        </select>
+
+        <!-- Advanced Filters (Simple for now) -->
+        <input type="number" v-model="filters.year" placeholder="Year" class="input input-bordered input-sm w-24" />
+        <input type="text" v-model="filters.country" placeholder="Country" class="input input-bordered input-sm w-32" />
+        <input type="number" v-model="filters.min_price" placeholder="Min €" class="input input-bordered input-sm w-20" />
+        <input type="number" v-model="filters.max_price" placeholder="Max €" class="input input-bordered input-sm w-20" />
+
+        <div class="join">
+            <button class="join-item btn btn-sm" :class="{ 'btn-active': viewMode === 'grid' }" @click="viewMode = 'grid'">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+            </button>
+            <button class="join-item btn btn-sm" :class="{ 'btn-active': viewMode === 'table' }" @click="viewMode = 'table'">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+            </button>
+        </div>
       </div>
     </div>
     
@@ -53,6 +71,9 @@
             </span>
           </h2>
           <p class="text-sm text-gray-500">{{ coin.currency }}</p>
+          <div class="mt-1 font-bold text-success">
+            {{ coin.min_value }} - {{ coin.max_value }} €
+          </div>
           <div class="card-actions justify-end mt-2">
             <div class="badge badge-outline" v-if="coin.grade">{{ coin.grade }}</div>
             <div class="badge badge-outline">{{ coin.material }}</div>
@@ -111,7 +132,7 @@
             <td>{{ coin.mint || '-' }}</td>
             <td>{{ formatMintage(coin.mintage) }}</td>
             <td class="font-semibold">{{ coin.country }}</td>
-            <td>{{ coin.face_value }}</td>
+            <td class="font-bold text-success">{{ coin.min_value }} - {{ coin.max_value }} €</td>
             <td>{{ (coin.year && coin.year !== 0) ? coin.year : '-' }}</td>
             <td>{{ coin.currency }}</td>
             <td><div class="badge badge-ghost" v-if="coin.grade">{{ coin.grade }}</div><span v-else>-</span></td>
@@ -159,13 +180,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
 import ImageViewer from '../components/ImageViewer.vue'
 import { formatMintage } from '../utils/formatters'
 
 const coins = ref([])
+const groups = ref([])
 const loading = ref(true)
 const viewMode = ref('grid')
 const router = useRouter()
@@ -174,6 +196,60 @@ const STORAGE_URL = 'http://localhost:8080' // Base URL for static files
 
 const viewerOpen = ref(false)
 const viewerImage = ref('')
+
+// Filters
+const filters = ref({
+    query: '',
+    group_id: '',
+    year: '',
+    country: '',
+    min_price: '',
+    max_price: ''
+})
+
+// Debounce helper
+let timeout = null
+const debouncedFetch = () => {
+    if (timeout) clearTimeout(timeout)
+    timeout = setTimeout(() => {
+        fetchCoins()
+    }, 300)
+}
+
+watch(filters, () => {
+    debouncedFetch()
+}, { deep: true })
+
+const fetchGroups = async () => {
+    try {
+        const res = await axios.get(`${API_URL}/groups`)
+        groups.value = res.data
+    } catch (e) {
+        console.error("Failed to fetch groups", e)
+    }
+}
+
+const fetchCoins = async () => {
+    loading.value = true
+    try {
+        const params = new URLSearchParams()
+        params.append('limit', 50)
+        
+        if (filters.value.query) params.append('q', filters.value.query)
+        if (filters.value.group_id) params.append('group_id', filters.value.group_id)
+        if (filters.value.year) params.append('year', filters.value.year)
+        if (filters.value.country) params.append('country', filters.value.country)
+        if (filters.value.min_price) params.append('min_price', filters.value.min_price)
+        if (filters.value.max_price) params.append('max_price', filters.value.max_price)
+
+        const res = await axios.get(`${API_URL}/coins?${params.toString()}`)
+        coins.value = res.data
+    } catch (e) {
+        console.error(e)
+    } finally {
+        loading.value = false
+    }
+}
 
 // Delete Modal State
 const deleteModalOpen = ref(false)
@@ -246,13 +322,7 @@ const goToDetail = (id) => {
 }
 
 onMounted(async () => {
-  try {
-    const res = await axios.get(`${API_URL}/coins?limit=50`)
-    coins.value = res.data
-  } catch (e) {
-    console.error(e)
-  } finally {
-    loading.value = false
-  }
+    fetchGroups()
+    fetchCoins()
 })
 </script>

@@ -225,20 +225,19 @@
 
     <!-- Random Coin Feature -->
     <div v-if="stats.random_coin" class="card lg:card-side bg-base-100 shadow-xl overflow-hidden">
-        <figure class="lg:w-1/3 bg-base-200 p-6 flex flex-col gap-4 justify-center items-center">
+        <figure class="lg:w-auto lg:shrink-0 bg-base-200 p-6 flex flex-col gap-4 justify-center items-center">
             <div class="flex gap-4">
                 <div class="avatar cursor-pointer" @click="router.push(`/coin/${stats.random_coin.id}`)">
-                    <div class="w-32 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2 shadow-xl hover:scale-105 transition-transform duration-300">
-                        <img :src="getThumbnail(stats.random_coin, 'front')" />
+                    <div class="w-40 sm:w-48 rounded-xl shadow-xl hover:scale-105 transition-transform duration-300">
+                        <img :src="getThumbnail(stats.random_coin, 'front')" class="object-contain" />
                     </div>
                 </div>
                 <div class="avatar cursor-pointer" @click="router.push(`/coin/${stats.random_coin.id}`)">
-                    <div class="w-32 rounded-full ring ring-secondary ring-offset-base-100 ring-offset-2 shadow-xl hover:scale-105 transition-transform duration-300">
-                        <img :src="getThumbnail(stats.random_coin, 'back')" />
+                    <div class="w-40 sm:w-48 rounded-xl shadow-xl hover:scale-105 transition-transform duration-300">
+                        <img :src="getThumbnail(stats.random_coin, 'back')" class="object-contain" />
                     </div>
                 </div>
             </div>
-            <div class="text-xs uppercase tracking-widest opacity-50 font-bold">Click to view details</div>
         </figure>
         <div class="card-body">
             <div class="flex justify-between items-start">

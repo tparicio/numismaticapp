@@ -64,11 +64,23 @@ type CoinImage struct {
 	UpdatedAt        time.Time `json:"updated_at"`
 }
 
+// CoinFilter defines available filters for listing coins.
+type CoinFilter struct {
+	Limit    int
+	Offset   int
+	GroupID  *int
+	Year     *int
+	Country  *string
+	Query    *string
+	MinPrice *float64
+	MaxPrice *float64
+}
+
 // CoinRepository defines the interface for persisting coins.
 type CoinRepository interface {
 	Save(ctx context.Context, coin *Coin) error
 	GetByID(ctx context.Context, id uuid.UUID) (*Coin, error)
-	List(ctx context.Context, limit, offset int) ([]*Coin, error)
+	List(ctx context.Context, filter CoinFilter) ([]*Coin, error)
 	Count(ctx context.Context) (int64, error)
 	GetTotalValue(ctx context.Context) (float64, error)
 	ListTopValuable(ctx context.Context) ([]*Coin, error)

@@ -116,11 +116,19 @@ func (r *PostgresCoinRepository) GetByID(ctx context.Context, id uuid.UUID) (*do
 	return coin, nil
 }
 
-func (r *PostgresCoinRepository) List(ctx context.Context, limit, offset int) ([]*domain.Coin, error) {
-	rows, err := r.q.ListCoins(ctx, db.ListCoinsParams{
-		Limit:  int32(limit),
-		Offset: int32(offset),
-	})
+func (r *PostgresCoinRepository) List(ctx context.Context, filter domain.CoinFilter) ([]*domain.Coin, error) {
+	params := db.ListCoinsParams{
+		Limit:    int32(filter.Limit),
+		Offset:   int32(filter.Offset),
+		GroupID:  toNullInt4Ptr(filter.GroupID),
+		Year:     toNullInt4Ptr(filter.Year),
+		Country:  toNullStringPtr(filter.Country),
+		Query:    toNullStringPtr(filter.Query),
+		MinPrice: toNullFloat8Ptr(filter.MinPrice),
+		MaxPrice: toNullFloat8Ptr(filter.MaxPrice),
+	}
+
+	rows, err := r.q.ListCoins(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list coins: %w", err)
 	}
@@ -258,7 +266,16 @@ func (r *PostgresCoinRepository) GetHeaviestCoin(ctx context.Context) (*domain.C
 	if err != nil {
 		return nil, fmt.Errorf("failed to get heaviest coin: %w", err)
 	}
-	return toDomainCoin(row)
+	coin, err := toDomainCoin(row)
+	if err != nil {
+		return nil, err
+	}
+	images, err := r.q.ListCoinImagesByCoinID(ctx, row.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list images: %w", err)
+	}
+	coin.Images = toDomainImages(images)
+	return coin, nil
 }
 
 func (r *PostgresCoinRepository) GetSmallestCoin(ctx context.Context) (*domain.Coin, error) {
@@ -266,7 +283,16 @@ func (r *PostgresCoinRepository) GetSmallestCoin(ctx context.Context) (*domain.C
 	if err != nil {
 		return nil, fmt.Errorf("failed to get smallest coin: %w", err)
 	}
-	return toDomainCoin(row)
+	coin, err := toDomainCoin(row)
+	if err != nil {
+		return nil, err
+	}
+	images, err := r.q.ListCoinImagesByCoinID(ctx, row.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list images: %w", err)
+	}
+	coin.Images = toDomainImages(images)
+	return coin, nil
 }
 
 func (r *PostgresCoinRepository) GetRandomCoin(ctx context.Context) (*domain.Coin, error) {
@@ -274,7 +300,16 @@ func (r *PostgresCoinRepository) GetRandomCoin(ctx context.Context) (*domain.Coi
 	if err != nil {
 		return nil, fmt.Errorf("failed to get random coin: %w", err)
 	}
-	return toDomainCoin(row)
+	coin, err := toDomainCoin(row)
+	if err != nil {
+		return nil, err
+	}
+	images, err := r.q.ListCoinImagesByCoinID(ctx, row.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list images: %w", err)
+	}
+	coin.Images = toDomainImages(images)
+	return coin, nil
 }
 
 func (r *PostgresCoinRepository) GetAllCoins(ctx context.Context) ([]*domain.Coin, error) {
@@ -577,6 +612,16 @@ func toNullGradeType(s string) db.NullGradeType {
 	}
 }
 
+func toNullStringPtr(s *string) pgtype.Text {
+	if s == nil {
+		return pgtype.Text{Valid: false}
+	}
+	return pgtype.Text{
+		String: *s,
+		Valid:  true,
+	}
+}
+
 func toNullDate(t *time.Time) pgtype.Date {
 	if t == nil {
 		return pgtype.Date{Valid: false}
@@ -584,5 +629,15 @@ func toNullDate(t *time.Time) pgtype.Date {
 	return pgtype.Date{
 		Time:  *t,
 		Valid: true,
+	}
+}
+
+func toNullFloat8Ptr(f *float64) pgtype.Float8 {
+	if f == nil {
+		return pgtype.Float8{Valid: false}
+	}
+	return pgtype.Float8{
+		Float64: *f,
+		Valid:   true,
 	}
 }

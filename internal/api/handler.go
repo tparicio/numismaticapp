@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/antonioparicio/numismaticapp/internal/application"
+	"github.com/antonioparicio/numismaticapp/internal/domain"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
@@ -123,7 +124,44 @@ func (h *CoinHandler) ListCoins(c *fiber.Ctx) error {
 		}
 	}
 
-	coins, err := h.service.ListCoins(c.Context(), limit, offset)
+	filter := domain.CoinFilter{
+		Limit:  limit,
+		Offset: offset,
+	}
+
+	if g := c.Query("group_id"); g != "" {
+		if val, err := strconv.Atoi(g); err == nil {
+			filter.GroupID = &val
+		}
+	}
+
+	if y := c.Query("year"); y != "" {
+		if val, err := strconv.Atoi(y); err == nil {
+			filter.Year = &val
+		}
+	}
+
+	if country := c.Query("country"); country != "" {
+		filter.Country = &country
+	}
+
+	if q := c.Query("q"); q != "" {
+		filter.Query = &q
+	}
+
+	if minPrice := c.Query("min_price"); minPrice != "" {
+		if val, err := strconv.ParseFloat(minPrice, 64); err == nil {
+			filter.MinPrice = &val
+		}
+	}
+
+	if maxPrice := c.Query("max_price"); maxPrice != "" {
+		if val, err := strconv.ParseFloat(maxPrice, 64); err == nil {
+			filter.MaxPrice = &val
+		}
+	}
+
+	coins, err := h.service.ListCoins(c.Context(), filter)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}

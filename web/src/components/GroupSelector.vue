@@ -87,7 +87,18 @@ const inputRef = ref(null)
 const fetchGroups = async () => {
   try {
     const res = await axios.get(`${API_URL}/groups`)
-    groups.value = (res.data || []).filter(g => g.name && g.name.trim() !== '')
+    console.log("GroupSelector: raw response", res.data)
+    
+    const rawGroups = res.data || []
+    
+    // Normalize and filter
+    groups.value = rawGroups.map(g => ({
+        id: g.id || g.ID,
+        name: g.name || g.Name || 'Unnamed Group',
+        description: g.description || g.Description
+    })).filter(g => g.name && g.name.trim() !== '')
+    
+    console.log("GroupSelector: processed groups", groups.value)
   } catch (e) {
     console.error("Failed to fetch groups", e)
   }

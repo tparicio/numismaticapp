@@ -630,17 +630,43 @@ func (q *Queries) GetTotalWeightByMaterial(ctx context.Context, material pgtype.
 
 const listCoins = `-- name: ListCoins :many
 SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, acquired_at, sold_at, price_paid, sold_price, created_at, updated_at FROM coins
+WHERE 
+    ($3::int IS NULL OR group_id = $3)
+    AND ($4::int IS NULL OR year = $4)
+    AND ($5::text IS NULL OR country ILIKE $5)
+    AND ($6::text IS NULL OR 
+        name ILIKE '%' || $6 || '%' OR 
+        description ILIKE '%' || $6 || '%' OR
+        km_code ILIKE '%' || $6 || '%'
+    )
+    AND ($7::float8 IS NULL OR min_value >= $7::float8)
+    AND ($8::float8 IS NULL OR max_value <= $8::float8)
 ORDER BY created_at DESC
 LIMIT $1 OFFSET $2
 `
 
 type ListCoinsParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	Limit    int32         `json:"limit"`
+	Offset   int32         `json:"offset"`
+	GroupID  pgtype.Int4   `json:"group_id"`
+	Year     pgtype.Int4   `json:"year"`
+	Country  pgtype.Text   `json:"country"`
+	Query    pgtype.Text   `json:"query"`
+	MinPrice pgtype.Float8 `json:"min_price"`
+	MaxPrice pgtype.Float8 `json:"max_price"`
 }
 
 func (q *Queries) ListCoins(ctx context.Context, arg ListCoinsParams) ([]Coin, error) {
-	rows, err := q.db.Query(ctx, listCoins, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listCoins,
+		arg.Limit,
+		arg.Offset,
+		arg.GroupID,
+		arg.Year,
+		arg.Country,
+		arg.Query,
+		arg.MinPrice,
+		arg.MaxPrice,
+	)
 	if err != nil {
 		return nil, err
 	}

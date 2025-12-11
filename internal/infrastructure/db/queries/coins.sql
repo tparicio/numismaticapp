@@ -17,6 +17,17 @@ WHERE id = $1 LIMIT 1;
 
 -- name: ListCoins :many
 SELECT * FROM coins
+WHERE 
+    (sqlc.narg('group_id')::int IS NULL OR group_id = sqlc.narg('group_id'))
+    AND (sqlc.narg('year')::int IS NULL OR year = sqlc.narg('year'))
+    AND (sqlc.narg('country')::text IS NULL OR country ILIKE sqlc.narg('country'))
+    AND (sqlc.narg('query')::text IS NULL OR 
+        name ILIKE '%' || sqlc.narg('query') || '%' OR 
+        description ILIKE '%' || sqlc.narg('query') || '%' OR
+        km_code ILIKE '%' || sqlc.narg('query') || '%'
+    )
+    AND (sqlc.narg('min_price')::float8 IS NULL OR min_value >= sqlc.narg('min_price')::float8)
+    AND (sqlc.narg('max_price')::float8 IS NULL OR max_value <= sqlc.narg('max_price')::float8)
 ORDER BY created_at DESC
 LIMIT $1 OFFSET $2;
 

@@ -254,8 +254,8 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 	return coin, nil
 }
 
-func (s *CoinService) ListCoins(ctx context.Context, limit, offset int) ([]*domain.Coin, error) {
-	return s.repo.List(ctx, limit, offset)
+func (s *CoinService) ListCoins(ctx context.Context, filter domain.CoinFilter) ([]*domain.Coin, error) {
+	return s.repo.List(ctx, filter)
 }
 
 func (s *CoinService) GetCoin(ctx context.Context, id uuid.UUID) (*domain.Coin, error) {
