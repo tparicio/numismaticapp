@@ -642,3 +642,70 @@ func (s *CoinService) downloadAndSaveImage(coinID uuid.UUID, url, filename strin
 func (s *CoinService) GetGeminiModels(ctx context.Context) ([]domain.GeminiModelInfo, error) {
 	return s.aiService.ListModels(ctx)
 }
+
+func (s *CoinService) ReanalyzeCoin(ctx context.Context, id uuid.UUID, modelName string, temperature float32) (*domain.Coin, error) {
+	// 1. Get Coin
+	coin, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("coin not found: %w", err)
+	}
+
+	// 2. Find Original Images
+	var frontPath, backPath string
+	for _, img := range coin.Images {
+		if img.ImageType == "original" {
+			if img.Side == "front" {
+				frontPath = img.Path
+			} else if img.Side == "back" {
+				backPath = img.Path
+			}
+		}
+	}
+
+	if frontPath == "" || backPath == "" {
+		return nil, fmt.Errorf("original images not found for this coin")
+	}
+
+	// 3. Analyze with Gemini
+	fmt.Printf("🤖 Re-analyzing coin %s with Gemini...\n", id)
+	analysis, err := s.aiService.AnalyzeCoin(ctx, frontPath, backPath, modelName, temperature)
+	if err != nil {
+		return nil, fmt.Errorf("gemini analysis failed: %w", err)
+	}
+
+	// 4. Update Coin Fields from Analysis
+	coin.Country = analysis.Country
+	coin.Year = analysis.Year
+	coin.FaceValue = analysis.FaceValue
+	coin.Currency = analysis.Currency
+	coin.Material = analysis.Material
+	coin.Description = analysis.Description
+	coin.KMCode = analysis.KMCode
+	coin.NumistaNumber = analysis.NumistaNumber
+	coin.MinValue = analysis.MinValue
+	coin.MaxValue = analysis.MaxValue
+	coin.Grade = normalizeGrade(analysis.Grade)
+	coin.TechnicalNotes = analysis.Notes
+	coin.GeminiDetails = analysis.RawDetails
+	coin.Name = analysis.Name
+	coin.Mint = analysis.Mint
+	coin.Mintage = analysis.Mintage
+	coin.WeightG = analysis.WeightG
+	coin.DiameterMM = analysis.DiameterMM
+	coin.ThicknessMM = analysis.ThicknessMM
+	coin.Edge = analysis.Edge
+	coin.Shape = analysis.Shape
+	coin.GeminiModel = modelName
+	coin.GeminiTemperature = float64(temperature)
+	// We don't overwrite UserNotes, AddedAt, etc.
+
+	// 5. Update in Repo
+	// We use the same Update method but need to orchestrate it via UpdateCoin or direct repo update.
+	// Since UpdateCoin accepts a param struct, we might need a direct save or construct the params.
+	// Let's us direct repo update since we modified the entity directly.
+	if err := s.repo.Update(ctx, coin); err != nil {
+		return nil, fmt.Errorf("failed to update coin: %w", err)
+	}
+
+	return coin, nil
+}

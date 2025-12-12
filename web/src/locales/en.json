@@ -14,7 +14,9 @@
         "update": "Update",
         "back": "Back",
         "view_details": "View Full Details",
-        "unknown": "Unknown"
+        "unknown": "Unknown",
+        "reprocess": "Reprocess",
+        "process": "Process"
     },
     "grades": {
         "PROOF": {
@@ -158,7 +160,12 @@
             "added_on": "Added On"
         },
         "no_notes": "No notes available.",
-        "back_gallery": "Back to Gallery"
+        "back_gallery": "Back to Gallery",
+        "reprocess_tooltip": "Reprocess with AI",
+        "reprocess_modal": {
+            "title": "Reprocess with Artificial Intelligence",
+            "warning": "Warning! This will re-send original images to Gemini and OVERWRITE all coin details (Name, year, country, description, etc) with new response. Personal notes will be kept."
+        }
     },
     "dashboard": {
         "title": "Dashboard",

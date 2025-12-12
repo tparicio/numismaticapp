@@ -243,3 +243,32 @@ func (h *CoinHandler) DeleteCoin(c *fiber.Ctx) error {
 
 	return c.SendStatus(fiber.StatusNoContent)
 }
+
+type ReanalyzeRequest struct {
+	ModelName   string  `json:"model_name"`
+	Temperature float32 `json:"temperature"`
+}
+
+func (h *CoinHandler) ReanalyzeCoin(c *fiber.Ctx) error {
+	idStr := c.Params("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid uuid"})
+	}
+
+	var req ReanalyzeRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid body"})
+	}
+
+	if req.Temperature == 0 {
+		req.Temperature = 0.4
+	}
+
+	coin, err := h.service.ReanalyzeCoin(c.Context(), id, req.ModelName, req.Temperature)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(coin)
+}

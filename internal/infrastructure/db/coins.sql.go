@@ -908,7 +908,6 @@ SET
     sold_at = $25,
     price_paid = $26,
     sold_price = $27,
-    sold_price = $27,
     numista_number = $28,
     gemini_model = $29,
     gemini_temperature = $30,

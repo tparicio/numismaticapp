@@ -14,7 +14,9 @@
         "update": "Actualizar",
         "back": "Volver",
         "view_details": "Ver Detalles Completos",
-        "unknown": "Desconocido"
+        "unknown": "Desconocido",
+        "reprocess": "Reprocesar",
+        "process": "Procesar"
     },
     "grades": {
         "PROOF": {
@@ -163,7 +165,12 @@
             "added_on": "Añadida el"
         },
         "no_notes": "Sin notas disponibles.",
-        "back_gallery": "Volver a la Galería"
+        "back_gallery": "Volver a la Galería",
+        "reprocess_tooltip": "Reprocesar con IA",
+        "reprocess_modal": {
+            "title": "Reprocesar con Inteligencia Artificial",
+            "warning": "¡Advertencia! Esta acción volverá a enviar las imágenes originales a Gemini y SOBREESCRIBIRÁ todos los detalles de la moneda (Nombre, año, país, descripción, etc) con la nueva respuesta. Las notas personales se mantendrán."
+        }
     },
     "dashboard": {
         "title": "Dashboard",
