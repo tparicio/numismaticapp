@@ -326,7 +326,9 @@ import MapChart from '../components/MapChart.vue'
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement)
 
 const router = useRouter()
+
 const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
+const activeTab = ref('recent')
 
 const stats = ref({
   total_coins: 0,
@@ -338,7 +340,7 @@ const stats = ref({
   material_distribution: {},
   grade_distribution: {},
   country_distribution: {},
-  century_distribution: {},
+  decade_distribution: {},
   oldest_coin: null,
   rarest_coins: [],
   group_distribution: {},
@@ -443,7 +445,7 @@ const valueChartData = computed(() => {
     labels,
     datasets: [{
       label: 'Coins',
-      backgroundColor: '#3b82f6',
+      backgroundColor: '#7c3aed', // Violeta (Money)
       data
     }]
   }
@@ -455,10 +457,13 @@ const materialChartData = computed(() => {
   
   const labels = Object.keys(dist)
   const data = Object.values(dist)
-  const colors = [
-    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40',
-    '#C9CBCF', '#FF6384', '#36A2EB', '#FFCE56'
-  ]
+  const colors = labels.map(label => {
+      const l = label.toLowerCase()
+      if (l.includes('gold') || l.includes('oro')) return '#D97706'
+      if (l.includes('silver') || l.includes('plata')) return '#94A3B8'
+      if (l.includes('copper') || l.includes('bronze') || l.includes('cobre') || l.includes('laton')) return '#C2410C'
+      return '#CBD5E1' // Nickel/Steel/Other
+  })
 
   return {
     labels,
@@ -473,32 +478,44 @@ const gradeChartData = computed(() => {
   const dist = stats.value.grade_distribution
   if (!dist) return null
   
-  const labels = Object.keys(dist)
-  const data = Object.values(dist)
+  // Custom sort order for grades if possible, otherwise rely on backend or simple sort
+  const gradeOrder = ['RC', 'BC', 'MBC', 'EBC', 'SC', 'FDC', 'PROOF']
+  const labels = Object.keys(dist).sort((a, b) => {
+      return gradeOrder.indexOf(a) - gradeOrder.indexOf(b)
+  })
+  
+  const data = labels.map(l => dist[l])
+  
+  const colors = labels.map(label => {
+      if (['RC', 'BC'].includes(label)) return '#BEF264' // Low
+      if (['MBC', 'EBC'].includes(label)) return '#22C55E' // Mid
+      if (['SC', 'FDC', 'PROOF'].includes(label)) return '#15803D' // High
+      return '#22C55E' // Default
+  })
 
   return {
     labels,
     datasets: [{
       label: 'Coins',
-      backgroundColor: '#10b981',
+      backgroundColor: colors,
       data
     }]
   }
 })
 
 const timelineChartData = computed(() => {
-    const dist = stats.value.century_distribution
+    const dist = stats.value.decade_distribution
     if (!dist) return null
 
-    // Sort centuries
+    // Sort decades
     const labels = Object.keys(dist).sort()
     const data = labels.map(l => dist[l])
 
     return {
         labels,
         datasets: [{
-            label: 'Coins per Century',
-            backgroundColor: '#8b5cf6',
+            label: 'Coins per Decade',
+            backgroundColor: '#4F46E5', // Indigo
             data
         }]
     }

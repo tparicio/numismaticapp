@@ -355,19 +355,26 @@ func (s *CoinService) GetDashboardStats(ctx context.Context) (*domain.DashboardS
 	// New Analytics
 	stats.CountryDistribution, _ = s.repo.GetCountryDistribution(ctx)
 
-	// Century Distribution (derived from GetAllCoins or separate query? Let's use GetAllCoins for flexibility)
+	// Century & Decade Distribution (derived from GetAllCoins)
 	allCoins, err := s.repo.GetAllCoins(ctx)
 	if err == nil {
 		stats.AllCoins = make([]domain.Coin, len(allCoins))
 		stats.CenturyDistribution = make(map[string]int)
+		stats.DecadeDistribution = make(map[string]int)
 		var totalSilver, totalGold float64
 
 		for i, c := range allCoins {
 			stats.AllCoins[i] = *c
 			if c.Year > 0 {
+				// Century
 				century := (c.Year-1)/100 + 1
 				key := fmt.Sprintf("S. %s", toRoman(century))
 				stats.CenturyDistribution[key]++
+
+				// Decade (e.g. 1995 -> 1990s)
+				decade := (c.Year / 10) * 10
+				decadeKey := fmt.Sprintf("%ds", decade)
+				stats.DecadeDistribution[decadeKey]++
 			}
 
 			// Calculate weights in memory to allow exclusion of Nordic Gold
