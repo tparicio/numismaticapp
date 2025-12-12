@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     build:
@@ -43,7 +41,7 @@ services:
 
   img-test:
     build:
-      context: .
+      context: ../../
       dockerfile: deployment/docker/Dockerfile.test
     container_name: numismatic-img-test
     ports:

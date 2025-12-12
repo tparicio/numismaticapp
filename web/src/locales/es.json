@@ -1,0 +1,37 @@
+{
+    "nav": {
+        "title": "NumismaticApp",
+        "home": "Inicio",
+        "collection": "Colección",
+        "add_coin": "Añadir Moneda"
+    },
+    "common": {
+        "loading": "Cargando...",
+        "edit": "Editar",
+        "delete": "Eliminar",
+        "cancel": "Cancelar"
+    },
+    "dashboard": {
+        "title": "Dashboard",
+        "subtitle": "Resumen de tu colección numismática",
+        "stats": {
+            "total_value": "Valor Total",
+            "market_value": "Valor estimado de mercado",
+            "avg_value": "Valor Medio",
+            "per_coin": "Por moneda",
+            "total_coins": "Total Monedas",
+            "in_collection": "En colección"
+        },
+        "tabs": {
+            "recent": "Recientes",
+            "valuable": "Más Valiosas"
+        },
+        "charts": {
+            "value_dist": "Distribución de Valor",
+            "materials": "Materiales",
+            "grades": "Estados de Conservación",
+            "timeline": "Línea Temporal (Décadas)",
+            "geo": "Distribución Geográfica"
+        }
+    }
+}

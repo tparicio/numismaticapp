@@ -3,8 +3,8 @@
     <!-- Header -->
     <div class="flex justify-between items-center">
       <div>
-        <h1 class="text-3xl font-bold">Dashboard</h1>
-        <p class="text-base-content/70">Overview of your numismatic collection</p>
+        <h1 class="text-3xl font-bold">{{ $t('dashboard.title') }}</h1>
+        <p class="text-base-content/70">{{ $t('dashboard.subtitle') }}</p>
       </div>
       <router-link to="/add" class="btn btn-primary gap-2">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
@@ -21,20 +21,24 @@
           <div class="stat-figure text-primary">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
           </div>
-          <div class="stat-title">Total Value</div>
+          <div class="stat-title">{{ $t('dashboard.stats.total_value') }}</div>
           <div class="stat-value text-primary">{{ formatCurrency(stats.total_value) }}</div>
-          <div class="stat-desc">Estimated market value</div>
+          <div class="stat-desc">{{ $t('dashboard.stats.market_value') }}</div>
         </div>
       </div>
 
       <div class="stats shadow">
         <div class="stat">
           <div class="stat-figure text-accent">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
           </div>
-          <div class="stat-title">Average Value</div>
-          <div class="stat-value text-accent">{{ formatCurrency(stats.average_value) }}</div>
-          <div class="stat-desc">Per coin</div>
+          <div class="stat-title">Top Rarity</div>
+          <div class="stat-value text-accent text-lg overflow-hidden truncate whitespace-nowrap max-w-[10rem]" :title="stats.rarest_coins?.[0]?.name">
+            {{ stats.rarest_coins?.[0]?.name || 'N/A' }}
+          </div>
+          <div class="stat-desc" v-if="stats.rarest_coins?.[0]">
+            {{ formatMintage(stats.rarest_coins[0].mintage) }} units
+          </div>
         </div>
       </div>
       
@@ -43,9 +47,9 @@
           <div class="stat-figure text-secondary">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
           </div>
-          <div class="stat-title">Total Coins</div>
+          <div class="stat-title">{{ $t('dashboard.stats.total_coins') }}</div>
           <div class="stat-value text-secondary">{{ stats.total_coins }}</div>
-          <div class="stat-desc">In collection</div>
+          <div class="stat-desc">{{ $t('dashboard.stats.in_collection') }}</div>
         </div>
       </div>
     </div>
@@ -55,7 +59,7 @@
       <!-- Value Distribution -->
       <div class="card bg-base-100 shadow-xl">
         <div class="card-body">
-          <h2 class="card-title">Value Distribution</h2>
+          <h2 class="card-title">{{ $t('dashboard.charts.value_dist') }}</h2>
           <div class="h-64 relative">
             <Bar v-if="valueChartData" :data="valueChartData" :options="chartOptions" />
           </div>
@@ -65,7 +69,7 @@
       <!-- Material Distribution -->
       <div class="card bg-base-100 shadow-xl">
         <div class="card-body">
-          <h2 class="card-title">Materials</h2>
+          <h2 class="card-title">{{ $t('dashboard.charts.materials') }}</h2>
           <div class="h-64 relative flex justify-center">
             <Doughnut v-if="materialChartData" :data="materialChartData" :options="doughnutOptions" />
           </div>
@@ -78,71 +82,73 @@
       <!-- Grade Distribution -->
       <div class="card bg-base-100 shadow-xl lg:col-span-1">
         <div class="card-body">
-          <h2 class="card-title">Grades</h2>
+          <h2 class="card-title">{{ $t('dashboard.charts.grades') }}</h2>
           <div class="h-64 relative">
             <Bar v-if="gradeChartData" :data="gradeChartData" :options="chartOptions" />
           </div>
         </div>
       </div>
 
-      <!-- Top Valuable -->
-      <div class="card bg-base-100 shadow-xl lg:col-span-1">
-        <div class="card-body">
-          <h2 class="card-title text-sm uppercase text-base-content/70">Most Valuable</h2>
-          <div class="divide-y divide-base-200">
-            <div v-for="coin in stats.top_valuable_coins" :key="coin.id" 
-                 class="flex items-center gap-3 py-3 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
-                 @click="router.push(`/coin/${coin.id}`)">
-              <div class="avatar">
-                <div class="mask mask-squircle w-12 h-12 overflow-hidden">
-                  <img :src="getThumbnail(coin)" class="hover:scale-110 transition-transform duration-300" />
-                </div>
-              </div>
-              <div class="flex-1 min-w-0">
-                <div class="font-bold truncate">{{ coin.name || 'Unknown Coin' }}</div>
-                <div class="text-xs opacity-50">
-                  <span v-if="coin.year && coin.year !== 0">{{ coin.year }} • </span>
-                  {{ coin.country }}
-                </div>
-              </div>
-              <div class="font-bold text-primary">{{ formatCurrency(coin.max_value) }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Recent -->
-      <div class="card bg-base-100 shadow-xl lg:col-span-1">
-        <div class="card-body">
-          <h2 class="card-title text-sm uppercase text-base-content/70">Recently Added</h2>
-          <div class="divide-y divide-base-200">
-            <div v-for="coin in stats.recent_coins" :key="coin.id" 
-                 class="flex items-center gap-3 py-3 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
-                 @click="router.push(`/coin/${coin.id}`)">
-              <div class="avatar">
-                <div class="mask mask-squircle w-12 h-12 overflow-hidden">
-                  <img :src="getThumbnail(coin)" class="hover:scale-110 transition-transform duration-300" />
-                </div>
-              </div>
-              <div class="flex-1 min-w-0">
-                <div class="font-bold truncate">{{ coin.name || 'Unknown Coin' }}</div>
-                <div class="text-xs opacity-50">{{ formatDate(coin.created_at) }}</div>
-              </div>
-              <div class="flex gap-1">
-                <button @click.stop="router.push(`/edit/${coin.id}`)" class="btn btn-ghost btn-xs text-info">Edit</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Advanced Analytics -->
-    <div class="card bg-base-100 shadow-xl">
-        <div class="card-body">
-            <h2 class="card-title">Geographic Distribution</h2>
-            <div class="h-96 relative w-full rounded-box overflow-hidden border border-base-200">
-                <MapChart v-if="stats.country_distribution" :data="stats.country_distribution" />
+    <!-- Main Content: Map & Lists -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Map (2/3 width) -->
+        <div class="card bg-base-100 shadow-xl lg:col-span-2">
+            <div class="card-body">
+                <h2 class="card-title">{{ $t('dashboard.charts.geo') }}</h2>
+                <div class="h-96 relative w-full rounded-box overflow-hidden border border-base-200">
+                    <MapChart v-if="stats.country_distribution" :data="stats.country_distribution" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Labs / Lists (1/3 width) -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body p-4">
+                <div class="tabs tabs-boxed bg-base-200 mb-4">
+                    <a class="tab" :class="{ 'tab-active': activeTab === 'recent' }" @click="activeTab = 'recent'">{{ $t('dashboard.tabs.recent') }}</a>
+                    <a class="tab" :class="{ 'tab-active': activeTab === 'valuable' }" @click="activeTab = 'valuable'">{{ $t('dashboard.tabs.valuable') }}</a>
+                </div>
+
+                <div class="divide-y divide-base-200" v-if="activeTab === 'recent'">
+                    <div v-for="coin in stats.recent_coins" :key="coin.id" 
+                         class="flex items-center gap-3 py-3 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
+                         @click="router.push(`/coin/${coin.id}`)">
+                      <div class="avatar">
+                        <div class="mask mask-squircle w-12 h-12 overflow-hidden">
+                          <img :src="getThumbnail(coin)" class="hover:scale-110 transition-transform duration-300" />
+                        </div>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="font-bold truncate">{{ coin.name || 'Unknown Coin' }}</div>
+                        <div class="text-xs opacity-50">{{ formatDate(coin.created_at) }}</div>
+                      </div>
+                      <div class="flex gap-1">
+                        <button @click.stop="router.push(`/edit/${coin.id}`)" class="btn btn-ghost btn-xs text-info">{{ $t('common.edit') }}</button>
+                      </div>
+                    </div>
+                </div>
+
+                <div class="divide-y divide-base-200" v-if="activeTab === 'valuable'">
+                    <div v-for="coin in stats.top_valuable_coins" :key="coin.id" 
+                         class="flex items-center gap-3 py-3 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
+                         @click="router.push(`/coin/${coin.id}`)">
+                      <div class="avatar">
+                        <div class="mask mask-squircle w-12 h-12 overflow-hidden">
+                          <img :src="getThumbnail(coin)" class="hover:scale-110 transition-transform duration-300" />
+                        </div>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="font-bold truncate">{{ coin.name || 'Unknown Coin' }}</div>
+                        <div class="text-xs opacity-50">
+                          <span v-if="coin.year && coin.year !== 0">{{ coin.year }} • </span>
+                          {{ coin.country }}
+                        </div>
+                      </div>
+                      <div class="font-bold text-primary">{{ formatCurrency(coin.max_value) }}</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -151,7 +157,7 @@
         <!-- Timeline (Centuries) -->
         <div class="card bg-base-100 shadow-xl">
             <div class="card-body">
-                <h2 class="card-title">Timeline (Centuries)</h2>
+                <h2 class="card-title">{{ $t('dashboard.charts.timeline') }}</h2>
                 <div class="h-64 relative">
                     <Bar v-if="timelineChartData" :data="timelineChartData" :options="chartOptions" />
                 </div>
