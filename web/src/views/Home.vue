@@ -141,10 +141,8 @@
     <div class="card bg-base-100 shadow-xl">
         <div class="card-body">
             <h2 class="card-title">Geographic Distribution</h2>
-            <div class="h-64 relative">
             <div class="h-96 relative w-full rounded-box overflow-hidden border border-base-200">
                 <MapChart v-if="stats.country_distribution" :data="stats.country_distribution" />
-            </div>
             </div>
         </div>
     </div>
