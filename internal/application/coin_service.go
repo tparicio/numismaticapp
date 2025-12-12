@@ -417,6 +417,9 @@ func (s *CoinService) GetDashboardStats(ctx context.Context) (*domain.DashboardS
 
 	stats.GroupDistribution, _ = s.repo.GetGroupDistribution(ctx)
 
+	// Group Stats for Widget
+	stats.GroupStats, _ = s.repo.GetGroupStats(ctx)
+
 	// Previously fetched weights here, now calculated above
 
 	if heaviest, err := s.repo.GetHeaviestCoin(ctx); err == nil && heaviest != nil {

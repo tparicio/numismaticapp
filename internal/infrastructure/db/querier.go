@@ -25,6 +25,7 @@ type Querier interface {
 	GetGradeDistribution(ctx context.Context) ([]GetGradeDistributionRow, error)
 	GetGroupByName(ctx context.Context, name string) (Group, error)
 	GetGroupDistribution(ctx context.Context) ([]GetGroupDistributionRow, error)
+	GetGroupStats(ctx context.Context) ([]GetGroupStatsRow, error)
 	GetHeaviestCoin(ctx context.Context) (Coin, error)
 	GetMaterialDistribution(ctx context.Context) ([]GetMaterialDistributionRow, error)
 	GetOldestCoin(ctx context.Context) (Coin, error)

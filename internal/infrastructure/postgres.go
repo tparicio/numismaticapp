@@ -260,6 +260,31 @@ func (r *PostgresCoinRepository) GetGroupDistribution(ctx context.Context) (map[
 	return dist, nil
 }
 
+func (r *PostgresCoinRepository) GetGroupStats(ctx context.Context) ([]domain.GroupStat, error) {
+	rows, err := r.q.GetGroupStats(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get group stats: %w", err)
+	}
+
+	stats := make([]domain.GroupStat, len(rows))
+	for i, row := range rows {
+		// Handle null group ID
+		groupID := 0
+		if row.GroupID.Valid {
+			groupID = int(row.GroupID.Int32)
+		}
+
+		stats[i] = domain.GroupStat{
+			GroupID:   groupID,
+			GroupName: row.GroupName,
+			Count:     row.Count,
+			MinVal:    row.MinVal,
+			MaxVal:    row.MaxVal,
+		}
+	}
+	return stats, nil
+}
+
 func (r *PostgresCoinRepository) GetTotalWeightByMaterial(ctx context.Context, materialLike string) (float64, error) {
 	weight, err := r.q.GetTotalWeightByMaterial(ctx, toNullString(materialLike))
 	if err != nil {

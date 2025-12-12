@@ -16,7 +16,10 @@
         "view_details": "View Full Details",
         "unknown": "Unknown",
         "reprocess": "Reprocess",
-        "process": "Process"
+        "process": "Process",
+        "name": "Name",
+        "count": "Count",
+        "value_range": "Value Range"
     },
     "grades": {
         "PROOF": {
@@ -219,6 +222,11 @@
             "km_code": "KM Code",
             "collection": "Collection",
             "no_desc": "No description available."
+        }
+    },
+    "widgets": {
+        "storage_stats": {
+            "title": "Storage Statistics"
         }
     }
 }

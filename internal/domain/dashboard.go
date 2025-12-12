@@ -22,4 +22,13 @@ type DashboardStats struct {
 	SmallestCoin         *Coin          `json:"smallest_coin"`
 	RandomCoin           *Coin          `json:"random_coin"`
 	AllCoins             []Coin         `json:"all_coins"`
+	GroupStats           []GroupStat    `json:"group_stats"`
+}
+
+type GroupStat struct {
+	GroupID   int     `json:"group_id"`
+	GroupName string  `json:"group_name"`
+	Count     int64   `json:"count"`
+	MinVal    float64 `json:"min_value"`
+	MaxVal    float64 `json:"max_value"`
 }

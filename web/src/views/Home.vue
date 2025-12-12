@@ -103,6 +103,53 @@
       </div>
       </div>
 
+      <!-- Rarest Coins -->
+      <div class="card bg-base-100 shadow-xl lg:col-span-1">
+          <div class="card-body">
+              <h2 class="card-title text-sm uppercase text-base-content/70">{{ $t('dashboard.lists.top_rarity') }}</h2>
+              <div class="divide-y divide-base-200">
+                  <div v-for="coin in stats.rarest_coins" :key="coin.id" 
+                       class="flex items-center gap-3 py-3 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
+                       @click="router.push(`/coin/${coin.id}`)">
+                       <div class="flex-1">
+                          <div class="font-bold">{{ coin.name }}</div>
+                          <div class="text-xs opacity-50">{{ coin.year }} • {{ coin.country }}</div>
+                       </div>
+                       <div class="badge badge-accent">{{ formatMintage(coin.mintage) }}</div>
+                  </div>
+              </div>
+          </div>
+      </div>
+
+      <!-- Trivia & Physical Stats -->
+      <div class="card bg-base-100 shadow-xl lg:col-span-1">
+          <div class="card-body">
+              <h2 class="card-title text-sm uppercase text-base-content/70">{{ $t('dashboard.lists.trivia') }}</h2>
+              <div class="space-y-4">
+                  <div class="stats stats-vertical shadow w-full">
+                      <div class="stat">
+                          <div class="stat-title">{{ $t('dashboard.stats.silver_reserve') }}</div>
+                          <div class="stat-value text-primary text-2xl">{{ stats.total_silver_weight.toFixed(1) }}g</div>
+                          <div class="stat-desc">{{ $t('dashboard.stats.pure_silver') }}</div>
+                      </div>
+                      <div class="stat">
+                          <div class="stat-title">{{ $t('dashboard.stats.gold_reserve') }}</div>
+                          <div class="stat-value text-warning text-2xl">{{ stats.total_gold_weight.toFixed(1) }}g</div>
+                          <div class="stat-desc">{{ $t('dashboard.stats.pure_gold') }}</div>
+                      </div>
+                  </div>
+                  
+                  <div v-if="stats.heaviest_coin" class="text-sm">
+                      <span class="font-bold">{{ $t('dashboard.stats.heaviest') }}</span> {{ stats.heaviest_coin.name }} ({{ stats.heaviest_coin.weight_g }}g)
+                  </div>
+                  <div v-if="stats.smallest_coin" class="text-sm">
+                      <span class="font-bold">{{ $t('dashboard.stats.smallest') }}</span> {{ stats.smallest_coin.name }} ({{ stats.smallest_coin.diameter_mm }}mm)
+                  </div>
+              </div>
+          </div>
+      </div>
+    </div>
+
 
 
     <!-- Main Content: Map & Lists -->
@@ -207,57 +254,59 @@
             </div>
         </div>
 
-        <!-- Rarest Coins -->
-        <div class="card bg-base-100 shadow-xl">
-            <div class="card-body">
-                <h2 class="card-title text-sm uppercase text-base-content/70">{{ $t('dashboard.lists.top_rarity') }}</h2>
-                <div class="divide-y divide-base-200">
-                    <div v-for="coin in stats.rarest_coins" :key="coin.id" 
-                         class="flex items-center gap-3 py-3 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
-                         @click="router.push(`/coin/${coin.id}`)">
-                         <div class="flex-1">
-                            <div class="font-bold">{{ coin.name }}</div>
-                            <div class="text-xs opacity-50">{{ coin.year }} • {{ coin.country }}</div>
-                         </div>
-                         <div class="badge badge-accent">{{ formatMintage(coin.mintage) }}</div>
-                    </div>
+        <!-- Storage Stats Widget -->
+        <div class="card bg-base-100 shadow-xl overflow-hidden lg:col-span-2" v-if="stats.group_stats && stats.group_stats.length > 0">
+            <div class="card-body p-0">
+                <div class="p-4 border-b border-base-200 flex justify-between items-center">
+                     <h2 class="card-title text-lg">{{ $t('dashboard.widgets.storage_stats.title') || 'Estadísticas de Almacenamiento' }}</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="table w-full">
+                        <thead>
+                            <tr>
+                                <th>{{ $t('common.name') || 'Nombre' }}</th>
+                                <th class="text-center">{{ $t('common.count') || 'Cantidad' }}</th>
+                                <th class="text-right">{{ $t('common.value_range') || 'Rango de Valor' }}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="group in stats.group_stats" :key="group.group_id" 
+                                class="hover:bg-base-200 cursor-pointer transition-colors"
+                                @click="router.push({ path: '/list', query: { group_id: group.group_id } })">
+                                <td class="font-bold">{{ group.group_name }}</td>
+                                <td class="text-center">
+                                    <div class="badge badge-secondary badge-outline">{{ group.count }}</div>
+                                </td>
+                                <td class="text-right font-mono text-sm">
+                                    <span class="text-success">{{ formatCurrency(group.min_value) }}</span>
+                                    <span class="mx-1 text-base-content/50">-</span>
+                                    <span class="text-primary font-bold">{{ formatCurrency(group.max_value) }}</span>
+                                </td>
+                                <td class="text-right">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 ml-auto opacity-50">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                    </svg>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <!-- Trivia & Physical Stats -->
-        <div class="card bg-base-100 shadow-xl">
-            <div class="card-body">
-                <h2 class="card-title text-sm uppercase text-base-content/70">{{ $t('dashboard.lists.trivia') }}</h2>
-                <div class="space-y-4">
-                    <div class="stats stats-vertical shadow w-full">
-                        <div class="stat">
-                            <div class="stat-title">{{ $t('dashboard.stats.silver_reserve') }}</div>
-                            <div class="stat-value text-primary text-2xl">{{ stats.total_silver_weight.toFixed(1) }}g</div>
-                            <div class="stat-desc">{{ $t('dashboard.stats.pure_silver') }}</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-title">{{ $t('dashboard.stats.gold_reserve') }}</div>
-                            <div class="stat-value text-warning text-2xl">{{ stats.total_gold_weight.toFixed(1) }}g</div>
-                            <div class="stat-desc">{{ $t('dashboard.stats.pure_gold') }}</div>
-                        </div>
-                    </div>
-                    
-                    <div v-if="stats.heaviest_coin" class="text-sm">
-                        <span class="font-bold">{{ $t('dashboard.stats.heaviest') }}</span> {{ stats.heaviest_coin.name }} ({{ stats.heaviest_coin.weight_g }}g)
-                    </div>
-                    <div v-if="stats.smallest_coin" class="text-sm">
-                        <span class="font-bold">{{ $t('dashboard.stats.smallest') }}</span> {{ stats.smallest_coin.name }} ({{ stats.smallest_coin.diameter_mm }}mm)
-                    </div>
-                </div>
-            </div>
-        </div>
+
     </div>
+
+
+
+
+
 
     <!-- Random Coin Feature -->
     <div v-if="stats.random_coin" class="card lg:card-side bg-base-100 shadow-xl overflow-hidden">
         <figure class="lg:w-auto lg:shrink-0 bg-base-200 p-6 flex flex-col gap-4 justify-center items-center">
-            <div class="flex gap-4">
+            <div class="flex gap-4 flex-row lg:flex-col">
                 <div class="avatar cursor-pointer" @click="router.push(`/coin/${stats.random_coin.id}`)">
                     <div class="w-40 sm:w-48 rounded-xl shadow-xl hover:scale-105 transition-transform duration-300">
                         <img :src="getThumbnail(stats.random_coin, 'front')" class="object-contain" />
@@ -375,6 +424,7 @@ const stats = ref({
   heaviest_coin: null,
   smallest_coin: null,
   random_coin: null,
+  group_stats: [],
   all_coins: []
 })
 

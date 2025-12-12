@@ -182,7 +182,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import axios from 'axios'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import ImageViewer from '../components/ImageViewer.vue'
 import { formatMintage } from '../utils/formatters'
 
@@ -198,13 +198,14 @@ const viewerOpen = ref(false)
 const viewerImage = ref('')
 
 // Filters
+const route = useRoute()
 const filters = ref({
-    query: '',
-    group_id: '',
-    year: '',
-    country: '',
-    min_price: '',
-    max_price: ''
+    query: route.query.q || '',
+    group_id: route.query.group_id || '',
+    year: route.query.year || '',
+    country: route.query.country || '',
+    min_price: route.query.min_price || '',
+    max_price: route.query.max_price || ''
 })
 
 // Debounce helper

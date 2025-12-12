@@ -85,12 +85,12 @@ SELECT COALESCE(AVG(max_value), 0)::float8 FROM coins;
 -- name: ListTopValuableCoins :many
 SELECT * FROM coins
 ORDER BY max_value DESC
-LIMIT 3;
+LIMIT 5;
 
 -- name: ListRecentCoins :many
 SELECT * FROM coins
 ORDER BY created_at DESC
-LIMIT 3;
+LIMIT 5;
 
 -- name: GetMaterialDistribution :many
 SELECT material, COUNT(*) as count
@@ -138,3 +138,15 @@ SELECT * FROM coins ORDER BY RANDOM() LIMIT 1;
 
 -- name: GetAllCoins :many
 SELECT * FROM coins;
+
+-- name: GetGroupStats :many
+SELECT 
+    g.id as group_id, 
+    COALESCE(g.name, 'Uncategorized') as group_name, 
+    COUNT(c.id) as count,
+    COALESCE(MIN(c.min_value), 0)::float8 as min_val,
+    COALESCE(MAX(c.max_value), 0)::float8 as max_val
+FROM coins c 
+LEFT JOIN groups g ON c.group_id = g.id 
+GROUP BY g.id, g.name
+ORDER BY count DESC;

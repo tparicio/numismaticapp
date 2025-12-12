@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  app:
+    image: tparicio/numismaticapp:latest
+    container_name: numismatic-app
+    restart: unless-stopped
+    ports:
+      - "8090:8080"
+    environment:
+      - APP_ENV=production
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - REMBG_URL=http://rembg:5000
+    depends_on:
+      - db
+      - rembg
+    volumes:
+      - ./storage:/app/storage
+
+  db:
+    image: postgres:16-alpine
+    container_name: numismatic-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+
+  rembg:
+    image: danielgatis/rembg:no-gpu
+    container_name: numismatic-rembg
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    command: s -u u2net -p 5000
+
+volumes:
+  postgres_data:

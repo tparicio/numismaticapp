@@ -142,7 +142,7 @@ func (s *GeminiService) AnalyzeCoin(ctx context.Context, frontImagePath, backIma
 		"numista_number": 0,
 		"min_value": 0.0,
 		"max_value": 0.0,
-		"grade": "Estado estimado",
+		"grade": "Estado estimado (USAR SOLO: PROOF, FDC, SC, EBC, MBC, BC, RC, MC)",
 		"reference_source_name": "Nombre de la fuente (ej: Numista, uCoin)",
 		"notes": "Notas",
 		"weight_g": 0.0,

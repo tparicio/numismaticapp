@@ -383,6 +383,53 @@ func (q *Queries) GetGroupDistribution(ctx context.Context) ([]GetGroupDistribut
 	return items, nil
 }
 
+const getGroupStats = `-- name: GetGroupStats :many
+SELECT 
+    g.id as group_id, 
+    COALESCE(g.name, 'Uncategorized') as group_name, 
+    COUNT(c.id) as count,
+    COALESCE(MIN(c.min_value), 0)::float8 as min_val,
+    COALESCE(MAX(c.max_value), 0)::float8 as max_val
+FROM coins c 
+LEFT JOIN groups g ON c.group_id = g.id 
+GROUP BY g.id, g.name
+ORDER BY count DESC
+`
+
+type GetGroupStatsRow struct {
+	GroupID   pgtype.Int4 `json:"group_id"`
+	GroupName string      `json:"group_name"`
+	Count     int64       `json:"count"`
+	MinVal    float64     `json:"min_val"`
+	MaxVal    float64     `json:"max_val"`
+}
+
+func (q *Queries) GetGroupStats(ctx context.Context) ([]GetGroupStatsRow, error) {
+	rows, err := q.db.Query(ctx, getGroupStats)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetGroupStatsRow
+	for rows.Next() {
+		var i GetGroupStatsRow
+		if err := rows.Scan(
+			&i.GroupID,
+			&i.GroupName,
+			&i.Count,
+			&i.MinVal,
+			&i.MaxVal,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getHeaviestCoin = `-- name: GetHeaviestCoin :one
 SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, numista_number, acquired_at, sold_at, price_paid, sold_price, gemini_model, gemini_temperature, created_at, updated_at FROM coins ORDER BY weight_g DESC LIMIT 1
 `
@@ -764,7 +811,7 @@ func (q *Queries) ListCoins(ctx context.Context, arg ListCoinsParams) ([]Coin, e
 const listRecentCoins = `-- name: ListRecentCoins :many
 SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, numista_number, acquired_at, sold_at, price_paid, sold_price, gemini_model, gemini_temperature, created_at, updated_at FROM coins
 ORDER BY created_at DESC
-LIMIT 3
+LIMIT 5
 `
 
 func (q *Queries) ListRecentCoins(ctx context.Context) ([]Coin, error) {
@@ -823,7 +870,7 @@ func (q *Queries) ListRecentCoins(ctx context.Context) ([]Coin, error) {
 const listTopValuableCoins = `-- name: ListTopValuableCoins :many
 SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, numista_number, acquired_at, sold_at, price_paid, sold_price, gemini_model, gemini_temperature, created_at, updated_at FROM coins
 ORDER BY max_value DESC
-LIMIT 3
+LIMIT 5
 `
 
 func (q *Queries) ListTopValuableCoins(ctx context.Context) ([]Coin, error) {

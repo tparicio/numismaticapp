@@ -98,6 +98,7 @@ type CoinRepository interface {
 	GetOldestCoin(ctx context.Context) (*Coin, error)
 	GetRarestCoins(ctx context.Context, limit int) ([]*Coin, error)
 	GetGroupDistribution(ctx context.Context) (map[string]int, error)
+	GetGroupStats(ctx context.Context) ([]GroupStat, error)
 	GetTotalWeightByMaterial(ctx context.Context, materialLike string) (float64, error)
 	GetHeaviestCoin(ctx context.Context) (*Coin, error)
 	GetSmallestCoin(ctx context.Context) (*Coin, error)
