@@ -55,7 +55,7 @@ func NewCoinService(
 	}
 }
 
-func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipart.FileHeader, groupName, userNotes, name, mint string, mintage int) (*domain.Coin, error) {
+func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipart.FileHeader, groupName, userNotes, name, mint string, mintage int, modelName string, temperature float32) (*domain.Coin, error) {
 	// 1. Process Images (Remove Background)
 	// We use Rembg to remove background and get a clean PNG
 	coinID := uuid.New()
@@ -134,7 +134,7 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 
 	// 4. Analyze with Gemini
 	fmt.Println("🤖 Analyzing coin with Gemini...")
-	analysis, err := s.aiService.AnalyzeCoin(ctx, originalFrontPath, originalBackPath)
+	analysis, err := s.aiService.AnalyzeCoin(ctx, originalFrontPath, originalBackPath, modelName, temperature)
 	if err != nil {
 		// Log error but continue with empty analysis to not block creation
 		fmt.Printf("⚠️ Gemini analysis failed: %v\n", err)
@@ -239,20 +239,6 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 	if err := addImage(processedBackPath, "crop", "back", backFile.Filename); err != nil {
 		return nil, err
 	}
-
-	// Add Reference Images - Removed as per new requirement
-	/*
-		if analysis.ReferenceImageFrontURL != "" {
-			if path, err := s.downloadAndSaveImage(coinID, analysis.ReferenceImageFrontURL, "sample_front.jpg"); err == nil {
-				_ = addImage(path, "sample", "front", "reference_front.jpg")
-			}
-		}
-		if analysis.ReferenceImageBackURL != "" {
-			if path, err := s.downloadAndSaveImage(coinID, analysis.ReferenceImageBackURL, "sample_back.jpg"); err == nil {
-				_ = addImage(path, "sample", "back", "reference_back.jpg")
-			}
-		}
-	*/
 
 	// 5. Generate Thumbnails
 	// Front
@@ -649,4 +635,8 @@ func (s *CoinService) downloadAndSaveImage(coinID uuid.UUID, url, filename strin
 	}
 
 	return s.storage.SaveFile(coinID, filename, resp.Body)
+}
+
+func (s *CoinService) GetGeminiModels(ctx context.Context) ([]domain.GeminiModelInfo, error) {
+	return s.aiService.ListModels(ctx)
 }

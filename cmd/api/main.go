@@ -39,7 +39,9 @@ func main() {
 	// Initialize Infrastructure
 	coinRepo := infrastructure.NewPostgresCoinRepository(dbPool)
 	groupRepo := infrastructure.NewPostgresGroupRepository(dbPool)
-	geminiClient, err := gemini.NewGeminiService(ctx, os.Getenv("GEMINI_API_KEY"))
+
+	geminiModel := os.Getenv("GEMINI_MODEL")
+	geminiClient, err := gemini.NewGeminiService(ctx, os.Getenv("GEMINI_API_KEY"), geminiModel)
 	if err != nil {
 		log.Fatalf("Failed to create Gemini client: %v", err)
 	}

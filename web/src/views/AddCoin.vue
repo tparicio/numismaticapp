@@ -62,6 +62,43 @@
           <span>{{ error }}</span>
         </div>
 
+        <!-- AI Settings -->
+        <div class="collapse collapse-arrow border border-base-300 bg-base-100 rounded-box">
+          <input type="checkbox" /> 
+          <div class="collapse-title text-xl font-medium">
+             {{ $t('form.ai_settings') || 'Configuración IA' }}
+          </div>
+          <div class="collapse-content space-y-4">
+             <!-- Model Selector -->
+             <div class="form-control w-full">
+               <label class="label">
+                 <span class="label-text">Gemini Model</span>
+               </label>
+               <select v-model="selectedModel" class="select select-bordered w-full">
+                 <option v-for="model in availableModels" :key="model.name" :value="model.name">
+                   {{ model.name }}
+                 </option>
+               </select>
+               <label class="label" v-if="selectedModelDescription">
+                 <span class="label-text-alt text-base-content/70">{{ selectedModelDescription }}</span>
+               </label>
+             </div>
+
+             <!-- Temperature Slider -->
+             <div class="form-control w-full">
+               <label class="label">
+                 <span class="label-text">Creatividad (Temperatura)</span>
+                 <span class="label-text-alt">{{ temperature }}</span>
+               </label>
+               <input type="range" min="0" max="1" step="0.1" v-model.number="temperature" class="range range-primary range-xs" />
+               <div class="w-full flex justify-between text-xs px-2 mt-1">
+                 <span>Preciso</span>
+                 <span>Creativo</span>
+               </div>
+             </div>
+          </div>
+        </div>
+
         <!-- Group Selector -->
         <GroupSelector v-model="selectedGroup" />
 
@@ -92,7 +129,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
 import GroupSelector from '../components/GroupSelector.vue'
@@ -111,13 +148,55 @@ const uploading = ref(false)
 const isDragging = ref(false)
 const error = ref(null)
 
+// AI Config
+const availableModels = ref([])
+const selectedModel = ref('gemini-2.5-flash') // Default fallback
+const temperature = ref(0.4)
+
 const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
+
+const selectedModelDescription = computed(() => {
+  const model = availableModels.value.find(m => m.name === selectedModel.value)
+  return model ? model.description : ''
+})
 
 onMounted(async () => {
   // Preselect last used group
   const lastGroup = localStorage.getItem('lastSelectedGroup')
   if (lastGroup) {
       selectedGroup.value = lastGroup
+  }
+
+  // Load AI Preferences
+  const lastModel = localStorage.getItem('lastSelectedModel')
+  if (lastModel) selectedModel.value = lastModel
+  const lastTemp = localStorage.getItem('lastTemperature')
+  if (lastTemp) temperature.value = parseFloat(lastTemp)
+
+  // Fetch Models
+  try {
+      const res = await axios.get(`${API_URL}/gemini/models`)
+      if (res.data && res.data.length > 0) {
+          availableModels.value = res.data
+          // If stored model not in list (and list not empty), default to first or specific default
+          const modelExists = availableModels.value.some(m => m.name === selectedModel.value)
+          if (!modelExists) {
+             // Try to find gemini-2.5-flash or gemini-1.5-flash
+             const cleanDefault = availableModels.value.find(m => m.name.includes('gemini-2.5-flash') || m.name.includes('gemini-1.5-flash'))
+             if (cleanDefault) {
+                 selectedModel.value = cleanDefault.name
+             } else {
+                 selectedModel.value = availableModels.value[0].name
+             }
+          }
+      }
+  } catch (e) {
+      console.error("Failed to fetch models", e)
+      // Fallback manual list if API fails? Or just rely on default string
+      availableModels.value = [
+          { name: 'gemini-2.0-flash', description: 'Fast and versatile' },
+          { name: 'gemini-1.5-flash', description: 'Previous generic model' }
+      ]
   }
 })
 
@@ -202,16 +281,18 @@ const uploadCoin = async () => {
   uploading.value = true
   error.value = null
   
-  // Save group preference
-  if (selectedGroup.value) {
-    localStorage.setItem('lastSelectedGroup', selectedGroup.value)
-  }
+  // Save preferences
+  if (selectedGroup.value) localStorage.setItem('lastSelectedGroup', selectedGroup.value)
+  if (selectedModel.value) localStorage.setItem('lastSelectedModel', selectedModel.value)
+  localStorage.setItem('lastTemperature', temperature.value)
 
   const formData = new FormData()
   formData.append('front_image', frontFile.value)
   formData.append('back_image', backFile.value)
   formData.append('group_name', selectedGroup.value)
   formData.append('user_notes', userNotes.value)
+  formData.append('model_name', selectedModel.value)
+  formData.append('temperature', temperature.value.toString())
 
   try {
     const res = await axios.post(`${API_URL}/coins`, formData, {

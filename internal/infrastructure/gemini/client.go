@@ -9,26 +9,23 @@ import (
 
 	"github.com/antonioparicio/numismaticapp/internal/domain"
 	"github.com/google/generative-ai-go/genai"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
 type GeminiService struct {
 	client *genai.Client
-	model  *genai.GenerativeModel
 }
 
-func NewGeminiService(ctx context.Context, apiKey string) (*GeminiService, error) {
+func NewGeminiService(ctx context.Context, apiKey string, _ string) (*GeminiService, error) {
+	// We no longer set a default model here as it's per-request
 	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create gemini client: %w", err)
 	}
 
-	model := client.GenerativeModel("gemini-2.5-flash")
-	model.SetTemperature(0.1) // Lower temperature for more deterministic results
-
 	return &GeminiService{
 		client: client,
-		model:  model,
 	}, nil
 }
 
@@ -36,7 +33,42 @@ func (s *GeminiService) Close() error {
 	return s.client.Close()
 }
 
-func (s *GeminiService) AnalyzeCoin(ctx context.Context, frontImagePath, backImagePath string) (*domain.CoinAnalysisResult, error) {
+func (s *GeminiService) ListModels(ctx context.Context) ([]domain.GeminiModelInfo, error) {
+	iter := s.client.ListModels(ctx)
+	var models []domain.GeminiModelInfo
+	for {
+		m, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to list models: %w", err)
+		}
+
+		// Filter for Gemini models that generate content
+		if strings.Contains(m.Name, "gemini") && (strings.Contains(m.SupportedGenerationMethods[0], "generateContent") || len(m.SupportedGenerationMethods) > 0) {
+			// Basic filtering, can be refined. Ideally check for "generateContent" in SupportedGenerationMethods
+			isContent := false
+			for _, method := range m.SupportedGenerationMethods {
+				if method == "generateContent" {
+					isContent = true
+					break
+				}
+			}
+			if isContent {
+				// Clean up name "models/gemini-1.5-flash" -> "gemini-1.5-flash"
+				cleanName := strings.TrimPrefix(m.Name, "models/")
+				models = append(models, domain.GeminiModelInfo{
+					Name:        cleanName,
+					Description: m.Description,
+				})
+			}
+		}
+	}
+	return models, nil
+}
+
+func (s *GeminiService) AnalyzeCoin(ctx context.Context, frontImagePath, backImagePath string, modelName string, temperature float32) (*domain.CoinAnalysisResult, error) {
 	frontData, err := os.ReadFile(frontImagePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read front image: %w", err)
@@ -46,6 +78,14 @@ func (s *GeminiService) AnalyzeCoin(ctx context.Context, frontImagePath, backIma
 	if err != nil {
 		return nil, fmt.Errorf("failed to read back image: %w", err)
 	}
+
+	if modelName == "" {
+		modelName = "gemini-1.5-flash"
+	}
+
+	// Ensure model has temperature set
+	model := s.client.GenerativeModel(modelName)
+	model.SetTemperature(temperature)
 
 	prompt := `
 	Actúa como un experto numismático y analista de imagen. Tu tarea es extraer datos técnicos, calcular la corrección de rotación de una moneda y buscar referencias visuales comparativas.
@@ -93,7 +133,7 @@ func (s *GeminiService) AnalyzeCoin(ctx context.Context, frontImagePath, backIma
 	}
 	`
 
-	resp, err := s.model.GenerateContent(ctx,
+	resp, err := model.GenerateContent(ctx,
 		genai.Text(prompt),
 		genai.ImageData("jpeg", frontData),
 		genai.ImageData("jpeg", backData),

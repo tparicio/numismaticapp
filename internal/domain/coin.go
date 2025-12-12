@@ -127,10 +127,17 @@ type ImageService interface {
 	Rotate(imagePath string, angle float64) error
 }
 
+type GeminiModelInfo struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
 // AIService defines the interface for AI analysis.
 type AIService interface {
 	// AnalyzeCoin analyzes the front and back images of a coin and returns metadata.
-	AnalyzeCoin(ctx context.Context, frontImagePath, backImagePath string) (*CoinAnalysisResult, error)
+	AnalyzeCoin(ctx context.Context, frontImagePath, backImagePath, modelName string, temperature float32) (*CoinAnalysisResult, error)
+	// ListModels returns a list of available Gemini models.
+	ListModels(ctx context.Context) ([]GeminiModelInfo, error)
 }
 
 // CoinAnalysisResult contains the data extracted by the AI.

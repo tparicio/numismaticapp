@@ -40,14 +40,32 @@ func (h *CoinHandler) AddCoin(c *fiber.Ctx) error {
 		fmt.Sscanf(mintageStr, "%d", &mintage)
 	}
 
+	modelName := c.FormValue("model_name")
+	temperatureStr := c.FormValue("temperature")
+	var temperature float32 = 0.4 // Default
+	if temperatureStr != "" {
+		if val, err := strconv.ParseFloat(temperatureStr, 32); err == nil {
+			temperature = float32(val)
+		}
+	}
+
 	// Call service
-	coin, err := h.service.AddCoin(c.Context(), frontFile, backFile, groupName, userNotes, name, mint, mintage)
+	coin, err := h.service.AddCoin(c.Context(), frontFile, backFile, groupName, userNotes, name, mint, mintage, modelName, temperature)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(coin)
 }
+
+func (h *CoinHandler) ListGeminiModels(c *fiber.Ctx) error {
+	models, err := h.service.GetGeminiModels(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to list models"})
+	}
+	return c.JSON(models)
+}
+
 func (h *CoinHandler) ListGroups(c *fiber.Ctx) error {
 	groups, err := h.service.ListGroups(c.Context())
 	if err != nil {
