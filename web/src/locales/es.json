@@ -138,7 +138,8 @@
             "both_images": "Se requieren ambas imágenes (Anverso y Reverso).",
             "upload_failed": "Error al subir la moneda",
             "update_failed": "Error al actualizar la moneda"
-        }
+        },
+        "ai_settings": "Configuración de Gemini"
     },
     "details": {
         "obverse": "Anverso",

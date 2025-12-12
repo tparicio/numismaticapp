@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/antonioparicio/numismaticapp/internal/domain"
 	"github.com/google/generative-ai-go/genai"
@@ -14,11 +16,13 @@ import (
 )
 
 type GeminiService struct {
-	client *genai.Client
+	client       *genai.Client
+	mu           sync.RWMutex
+	cachedModels []domain.GeminiModelInfo
+	lastCache    time.Time
 }
 
 func NewGeminiService(ctx context.Context, apiKey string, _ string) (*GeminiService, error) {
-	// We no longer set a default model here as it's per-request
 	client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create gemini client: %w", err)
@@ -34,6 +38,22 @@ func (s *GeminiService) Close() error {
 }
 
 func (s *GeminiService) ListModels(ctx context.Context) ([]domain.GeminiModelInfo, error) {
+	s.mu.RLock()
+	// Cache for 1 hour
+	if len(s.cachedModels) > 0 && time.Since(s.lastCache) < 1*time.Hour {
+		defer s.mu.RUnlock()
+		return s.cachedModels, nil
+	}
+	s.mu.RUnlock()
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// Double check
+	if len(s.cachedModels) > 0 && time.Since(s.lastCache) < 1*time.Hour {
+		return s.cachedModels, nil
+	}
+
 	iter := s.client.ListModels(ctx)
 	var models []domain.GeminiModelInfo
 	for {
@@ -47,7 +67,6 @@ func (s *GeminiService) ListModels(ctx context.Context) ([]domain.GeminiModelInf
 
 		// Filter for Gemini models that generate content
 		if strings.Contains(m.Name, "gemini") && (strings.Contains(m.SupportedGenerationMethods[0], "generateContent") || len(m.SupportedGenerationMethods) > 0) {
-			// Basic filtering, can be refined. Ideally check for "generateContent" in SupportedGenerationMethods
 			isContent := false
 			for _, method := range m.SupportedGenerationMethods {
 				if method == "generateContent" {
@@ -56,7 +75,6 @@ func (s *GeminiService) ListModels(ctx context.Context) ([]domain.GeminiModelInf
 				}
 			}
 			if isContent {
-				// Clean up name "models/gemini-1.5-flash" -> "gemini-1.5-flash"
 				cleanName := strings.TrimPrefix(m.Name, "models/")
 				models = append(models, domain.GeminiModelInfo{
 					Name:        cleanName,
@@ -65,6 +83,10 @@ func (s *GeminiService) ListModels(ctx context.Context) ([]domain.GeminiModelInf
 			}
 		}
 	}
+
+	s.cachedModels = models
+	s.lastCache = time.Now()
+
 	return models, nil
 }
 

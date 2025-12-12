@@ -9,37 +9,39 @@ import (
 
 // Coin represents a numismatic coin in the collection.
 type Coin struct {
-	ID             uuid.UUID      `json:"id"`
-	Name           string         `json:"name"`
-	Mint           string         `json:"mint"`
-	Mintage        int64          `json:"mintage"`
-	Country        string         `json:"country"`
-	Year           int            `json:"year"`
-	FaceValue      string         `json:"face_value"`
-	Currency       string         `json:"currency"`
-	Material       string         `json:"material"`
-	Description    string         `json:"description"`
-	KMCode         string         `json:"km_code"`
-	NumistaNumber  int            `json:"numista_number"`
-	MinValue       float64        `json:"min_value"`
-	MaxValue       float64        `json:"max_value"`
-	Grade          string         `json:"grade"`
-	TechnicalNotes string         `json:"technical_notes"`
-	GeminiDetails  map[string]any `json:"gemini_details"` // Raw JSON from Gemini
-	Images         []CoinImage    `json:"images"`
-	GroupID        *int           `json:"group_id"`
-	PersonalNotes  string         `json:"personal_notes"`
-	WeightG        float64        `json:"weight_g"`
-	DiameterMM     float64        `json:"diameter_mm"`
-	ThicknessMM    float64        `json:"thickness_mm"`
-	Edge           string         `json:"edge"`
-	Shape          string         `json:"shape"`
-	AcquiredAt     *time.Time     `json:"acquired_at"`
-	SoldAt         *time.Time     `json:"sold_at"`
-	PricePaid      float64        `json:"price_paid"`
-	SoldPrice      float64        `json:"sold_price"`
-	CreatedAt      time.Time      `json:"created_at"`
-	UpdatedAt      time.Time      `json:"updated_at"`
+	ID                uuid.UUID      `json:"id"`
+	Name              string         `json:"name"`
+	Mint              string         `json:"mint"`
+	Mintage           int64          `json:"mintage"`
+	Country           string         `json:"country"`
+	Year              int            `json:"year"`
+	FaceValue         string         `json:"face_value"`
+	Currency          string         `json:"currency"`
+	Material          string         `json:"material"`
+	Description       string         `json:"description"`
+	KMCode            string         `json:"km_code"`
+	NumistaNumber     int            `json:"numista_number"`
+	MinValue          float64        `json:"min_value"`
+	MaxValue          float64        `json:"max_value"`
+	Grade             string         `json:"grade"`
+	TechnicalNotes    string         `json:"technical_notes"`
+	GeminiDetails     map[string]any `json:"gemini_details"` // Raw JSON from Gemini
+	GeminiModel       string         `json:"gemini_model"`
+	GeminiTemperature float64        `json:"gemini_temperature"`
+	Images            []CoinImage    `json:"images"`
+	GroupID           *int           `json:"group_id"`
+	PersonalNotes     string         `json:"personal_notes"`
+	WeightG           float64        `json:"weight_g"`
+	DiameterMM        float64        `json:"diameter_mm"`
+	ThicknessMM       float64        `json:"thickness_mm"`
+	Edge              string         `json:"edge"`
+	Shape             string         `json:"shape"`
+	AcquiredAt        *time.Time     `json:"acquired_at"`
+	SoldAt            *time.Time     `json:"sold_at"`
+	PricePaid         float64        `json:"price_paid"`
+	SoldPrice         float64        `json:"sold_price"`
+	CreatedAt         time.Time      `json:"created_at"`
+	UpdatedAt         time.Time      `json:"updated_at"`
 }
 
 type Group struct {

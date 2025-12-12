@@ -106,3 +106,11 @@ help: ## ❓ Show this help message
 	@echo "$(COLOR_BOLD)Available commands:$(COLOR_RESET)"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(COLOR_YELLOW)%-15s$(COLOR_RESET) %s\n", $$1, $$2}'
 	@echo ""
+
+list-models: ## List available Gemini models using curl
+	@if [ -f .env.local ]; then \
+		export $$(cat .env.local | xargs); \
+		curl -s "https://generativelanguage.googleapis.com/v1beta/models?key=$$GEMINI_API_KEY" | grep '"name":' | sed 's/.*"name": "models\/\([^"]*\)".*/\1/'; \
+	else \
+		echo "Error: .env.local file not found"; \
+	fi

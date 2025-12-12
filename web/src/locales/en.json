@@ -138,7 +138,8 @@
             "both_images": "Both images are required (Front & Back).",
             "upload_failed": "Error uploading coin",
             "update_failed": "Error updating coin"
-        }
+        },
+        "ai_settings": "Gemini Configuration"
     },
     "details": {
         "obverse": "Obverse",

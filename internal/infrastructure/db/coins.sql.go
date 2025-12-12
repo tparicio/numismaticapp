@@ -27,43 +27,48 @@ INSERT INTO coins (
     id, name, mint, mintage, country, year, face_value, currency, material, description, km_code,
     min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes,
     weight_g, diameter_mm, thickness_mm, edge, shape,
-    acquired_at, sold_at, price_paid, sold_price
+    acquired_at, sold_at, price_paid, sold_price, numista_number,
+    gemini_model, gemini_temperature
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
     $12, $13, $14, $15, $16, $17, $18,
     $19, $20, $21, $22, $23,
-    $24, $25, $26, $27
-) RETURNING id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, acquired_at, sold_at, price_paid, sold_price, created_at, updated_at
+    $24, $25, $26, $27, $28,
+    $29, $30
+) RETURNING id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, numista_number, acquired_at, sold_at, price_paid, sold_price, gemini_model, gemini_temperature, created_at, updated_at
 `
 
 type CreateCoinParams struct {
-	ID             pgtype.UUID    `json:"id"`
-	Name           pgtype.Text    `json:"name"`
-	Mint           pgtype.Text    `json:"mint"`
-	Mintage        pgtype.Int8    `json:"mintage"`
-	Country        pgtype.Text    `json:"country"`
-	Year           pgtype.Int4    `json:"year"`
-	FaceValue      pgtype.Text    `json:"face_value"`
-	Currency       pgtype.Text    `json:"currency"`
-	Material       pgtype.Text    `json:"material"`
-	Description    pgtype.Text    `json:"description"`
-	KmCode         pgtype.Text    `json:"km_code"`
-	MinValue       pgtype.Numeric `json:"min_value"`
-	MaxValue       pgtype.Numeric `json:"max_value"`
-	Grade          pgtype.Text    `json:"grade"`
-	TechnicalNotes pgtype.Text    `json:"technical_notes"`
-	GeminiDetails  []byte         `json:"gemini_details"`
-	GroupID        pgtype.Int4    `json:"group_id"`
-	PersonalNotes  pgtype.Text    `json:"personal_notes"`
-	WeightG        pgtype.Numeric `json:"weight_g"`
-	DiameterMm     pgtype.Numeric `json:"diameter_mm"`
-	ThicknessMm    pgtype.Numeric `json:"thickness_mm"`
-	Edge           pgtype.Text    `json:"edge"`
-	Shape          pgtype.Text    `json:"shape"`
-	AcquiredAt     pgtype.Date    `json:"acquired_at"`
-	SoldAt         pgtype.Date    `json:"sold_at"`
-	PricePaid      pgtype.Numeric `json:"price_paid"`
-	SoldPrice      pgtype.Numeric `json:"sold_price"`
+	ID                pgtype.UUID    `json:"id"`
+	Name              pgtype.Text    `json:"name"`
+	Mint              pgtype.Text    `json:"mint"`
+	Mintage           pgtype.Int8    `json:"mintage"`
+	Country           pgtype.Text    `json:"country"`
+	Year              pgtype.Int4    `json:"year"`
+	FaceValue         pgtype.Text    `json:"face_value"`
+	Currency          pgtype.Text    `json:"currency"`
+	Material          pgtype.Text    `json:"material"`
+	Description       pgtype.Text    `json:"description"`
+	KmCode            pgtype.Text    `json:"km_code"`
+	MinValue          pgtype.Numeric `json:"min_value"`
+	MaxValue          pgtype.Numeric `json:"max_value"`
+	Grade             pgtype.Text    `json:"grade"`
+	TechnicalNotes    pgtype.Text    `json:"technical_notes"`
+	GeminiDetails     []byte         `json:"gemini_details"`
+	GroupID           pgtype.Int4    `json:"group_id"`
+	PersonalNotes     pgtype.Text    `json:"personal_notes"`
+	WeightG           pgtype.Numeric `json:"weight_g"`
+	DiameterMm        pgtype.Numeric `json:"diameter_mm"`
+	ThicknessMm       pgtype.Numeric `json:"thickness_mm"`
+	Edge              pgtype.Text    `json:"edge"`
+	Shape             pgtype.Text    `json:"shape"`
+	AcquiredAt        pgtype.Date    `json:"acquired_at"`
+	SoldAt            pgtype.Date    `json:"sold_at"`
+	PricePaid         pgtype.Numeric `json:"price_paid"`
+	SoldPrice         pgtype.Numeric `json:"sold_price"`
+	NumistaNumber     pgtype.Int4    `json:"numista_number"`
+	GeminiModel       pgtype.Text    `json:"gemini_model"`
+	GeminiTemperature pgtype.Numeric `json:"gemini_temperature"`
 }
 
 func (q *Queries) CreateCoin(ctx context.Context, arg CreateCoinParams) (Coin, error) {
@@ -95,6 +100,9 @@ func (q *Queries) CreateCoin(ctx context.Context, arg CreateCoinParams) (Coin, e
 		arg.SoldAt,
 		arg.PricePaid,
 		arg.SoldPrice,
+		arg.NumistaNumber,
+		arg.GeminiModel,
+		arg.GeminiTemperature,
 	)
 	var i Coin
 	err := row.Scan(
@@ -121,10 +129,13 @@ func (q *Queries) CreateCoin(ctx context.Context, arg CreateCoinParams) (Coin, e
 		&i.ThicknessMm,
 		&i.Edge,
 		&i.Shape,
+		&i.NumistaNumber,
 		&i.AcquiredAt,
 		&i.SoldAt,
 		&i.PricePaid,
 		&i.SoldPrice,
+		&i.GeminiModel,
+		&i.GeminiTemperature,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -142,7 +153,7 @@ func (q *Queries) DeleteCoin(ctx context.Context, id pgtype.UUID) error {
 }
 
 const getAllCoins = `-- name: GetAllCoins :many
-SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, acquired_at, sold_at, price_paid, sold_price, created_at, updated_at FROM coins
+SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, numista_number, acquired_at, sold_at, price_paid, sold_price, gemini_model, gemini_temperature, created_at, updated_at FROM coins
 `
 
 func (q *Queries) GetAllCoins(ctx context.Context) ([]Coin, error) {
@@ -178,10 +189,13 @@ func (q *Queries) GetAllCoins(ctx context.Context) ([]Coin, error) {
 			&i.ThicknessMm,
 			&i.Edge,
 			&i.Shape,
+			&i.NumistaNumber,
 			&i.AcquiredAt,
 			&i.SoldAt,
 			&i.PricePaid,
 			&i.SoldPrice,
+			&i.GeminiModel,
+			&i.GeminiTemperature,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -231,7 +245,7 @@ func (q *Queries) GetAverageValue(ctx context.Context) (float64, error) {
 }
 
 const getCoin = `-- name: GetCoin :one
-SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, acquired_at, sold_at, price_paid, sold_price, created_at, updated_at FROM coins
+SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, numista_number, acquired_at, sold_at, price_paid, sold_price, gemini_model, gemini_temperature, created_at, updated_at FROM coins
 WHERE id = $1 LIMIT 1
 `
 
@@ -262,10 +276,13 @@ func (q *Queries) GetCoin(ctx context.Context, id pgtype.UUID) (Coin, error) {
 		&i.ThicknessMm,
 		&i.Edge,
 		&i.Shape,
+		&i.NumistaNumber,
 		&i.AcquiredAt,
 		&i.SoldAt,
 		&i.PricePaid,
 		&i.SoldPrice,
+		&i.GeminiModel,
+		&i.GeminiTemperature,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -367,7 +384,7 @@ func (q *Queries) GetGroupDistribution(ctx context.Context) ([]GetGroupDistribut
 }
 
 const getHeaviestCoin = `-- name: GetHeaviestCoin :one
-SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, acquired_at, sold_at, price_paid, sold_price, created_at, updated_at FROM coins ORDER BY weight_g DESC LIMIT 1
+SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, numista_number, acquired_at, sold_at, price_paid, sold_price, gemini_model, gemini_temperature, created_at, updated_at FROM coins ORDER BY weight_g DESC LIMIT 1
 `
 
 func (q *Queries) GetHeaviestCoin(ctx context.Context) (Coin, error) {
@@ -397,10 +414,13 @@ func (q *Queries) GetHeaviestCoin(ctx context.Context) (Coin, error) {
 		&i.ThicknessMm,
 		&i.Edge,
 		&i.Shape,
+		&i.NumistaNumber,
 		&i.AcquiredAt,
 		&i.SoldAt,
 		&i.PricePaid,
 		&i.SoldPrice,
+		&i.GeminiModel,
+		&i.GeminiTemperature,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -441,7 +461,7 @@ func (q *Queries) GetMaterialDistribution(ctx context.Context) ([]GetMaterialDis
 }
 
 const getOldestCoin = `-- name: GetOldestCoin :one
-SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, acquired_at, sold_at, price_paid, sold_price, created_at, updated_at FROM coins WHERE year > 0 ORDER BY year ASC LIMIT 1
+SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, numista_number, acquired_at, sold_at, price_paid, sold_price, gemini_model, gemini_temperature, created_at, updated_at FROM coins WHERE year > 0 ORDER BY year ASC LIMIT 1
 `
 
 func (q *Queries) GetOldestCoin(ctx context.Context) (Coin, error) {
@@ -471,10 +491,13 @@ func (q *Queries) GetOldestCoin(ctx context.Context) (Coin, error) {
 		&i.ThicknessMm,
 		&i.Edge,
 		&i.Shape,
+		&i.NumistaNumber,
 		&i.AcquiredAt,
 		&i.SoldAt,
 		&i.PricePaid,
 		&i.SoldPrice,
+		&i.GeminiModel,
+		&i.GeminiTemperature,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -482,7 +505,7 @@ func (q *Queries) GetOldestCoin(ctx context.Context) (Coin, error) {
 }
 
 const getRandomCoin = `-- name: GetRandomCoin :one
-SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, acquired_at, sold_at, price_paid, sold_price, created_at, updated_at FROM coins ORDER BY RANDOM() LIMIT 1
+SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, numista_number, acquired_at, sold_at, price_paid, sold_price, gemini_model, gemini_temperature, created_at, updated_at FROM coins ORDER BY RANDOM() LIMIT 1
 `
 
 func (q *Queries) GetRandomCoin(ctx context.Context) (Coin, error) {
@@ -512,10 +535,13 @@ func (q *Queries) GetRandomCoin(ctx context.Context) (Coin, error) {
 		&i.ThicknessMm,
 		&i.Edge,
 		&i.Shape,
+		&i.NumistaNumber,
 		&i.AcquiredAt,
 		&i.SoldAt,
 		&i.PricePaid,
 		&i.SoldPrice,
+		&i.GeminiModel,
+		&i.GeminiTemperature,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -523,7 +549,7 @@ func (q *Queries) GetRandomCoin(ctx context.Context) (Coin, error) {
 }
 
 const getRarestCoins = `-- name: GetRarestCoins :many
-SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, acquired_at, sold_at, price_paid, sold_price, created_at, updated_at FROM coins WHERE mintage > 0 ORDER BY mintage ASC LIMIT $1
+SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, numista_number, acquired_at, sold_at, price_paid, sold_price, gemini_model, gemini_temperature, created_at, updated_at FROM coins WHERE mintage > 0 ORDER BY mintage ASC LIMIT $1
 `
 
 func (q *Queries) GetRarestCoins(ctx context.Context, limit int32) ([]Coin, error) {
@@ -559,10 +585,13 @@ func (q *Queries) GetRarestCoins(ctx context.Context, limit int32) ([]Coin, erro
 			&i.ThicknessMm,
 			&i.Edge,
 			&i.Shape,
+			&i.NumistaNumber,
 			&i.AcquiredAt,
 			&i.SoldAt,
 			&i.PricePaid,
 			&i.SoldPrice,
+			&i.GeminiModel,
+			&i.GeminiTemperature,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -577,7 +606,7 @@ func (q *Queries) GetRarestCoins(ctx context.Context, limit int32) ([]Coin, erro
 }
 
 const getSmallestCoin = `-- name: GetSmallestCoin :one
-SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, acquired_at, sold_at, price_paid, sold_price, created_at, updated_at FROM coins WHERE diameter_mm > 0 ORDER BY diameter_mm ASC LIMIT 1
+SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, numista_number, acquired_at, sold_at, price_paid, sold_price, gemini_model, gemini_temperature, created_at, updated_at FROM coins WHERE diameter_mm > 0 ORDER BY diameter_mm ASC LIMIT 1
 `
 
 func (q *Queries) GetSmallestCoin(ctx context.Context) (Coin, error) {
@@ -607,10 +636,13 @@ func (q *Queries) GetSmallestCoin(ctx context.Context) (Coin, error) {
 		&i.ThicknessMm,
 		&i.Edge,
 		&i.Shape,
+		&i.NumistaNumber,
 		&i.AcquiredAt,
 		&i.SoldAt,
 		&i.PricePaid,
 		&i.SoldPrice,
+		&i.GeminiModel,
+		&i.GeminiTemperature,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -640,7 +672,7 @@ func (q *Queries) GetTotalWeightByMaterial(ctx context.Context, material pgtype.
 }
 
 const listCoins = `-- name: ListCoins :many
-SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, acquired_at, sold_at, price_paid, sold_price, created_at, updated_at FROM coins
+SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, numista_number, acquired_at, sold_at, price_paid, sold_price, gemini_model, gemini_temperature, created_at, updated_at FROM coins
 WHERE 
     ($3::int IS NULL OR group_id = $3)
     AND ($4::int IS NULL OR year = $4)
@@ -709,10 +741,13 @@ func (q *Queries) ListCoins(ctx context.Context, arg ListCoinsParams) ([]Coin, e
 			&i.ThicknessMm,
 			&i.Edge,
 			&i.Shape,
+			&i.NumistaNumber,
 			&i.AcquiredAt,
 			&i.SoldAt,
 			&i.PricePaid,
 			&i.SoldPrice,
+			&i.GeminiModel,
+			&i.GeminiTemperature,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -727,7 +762,7 @@ func (q *Queries) ListCoins(ctx context.Context, arg ListCoinsParams) ([]Coin, e
 }
 
 const listRecentCoins = `-- name: ListRecentCoins :many
-SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, acquired_at, sold_at, price_paid, sold_price, created_at, updated_at FROM coins
+SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, numista_number, acquired_at, sold_at, price_paid, sold_price, gemini_model, gemini_temperature, created_at, updated_at FROM coins
 ORDER BY created_at DESC
 LIMIT 3
 `
@@ -765,10 +800,13 @@ func (q *Queries) ListRecentCoins(ctx context.Context) ([]Coin, error) {
 			&i.ThicknessMm,
 			&i.Edge,
 			&i.Shape,
+			&i.NumistaNumber,
 			&i.AcquiredAt,
 			&i.SoldAt,
 			&i.PricePaid,
 			&i.SoldPrice,
+			&i.GeminiModel,
+			&i.GeminiTemperature,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -783,7 +821,7 @@ func (q *Queries) ListRecentCoins(ctx context.Context) ([]Coin, error) {
 }
 
 const listTopValuableCoins = `-- name: ListTopValuableCoins :many
-SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, acquired_at, sold_at, price_paid, sold_price, created_at, updated_at FROM coins
+SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, numista_number, acquired_at, sold_at, price_paid, sold_price, gemini_model, gemini_temperature, created_at, updated_at FROM coins
 ORDER BY max_value DESC
 LIMIT 3
 `
@@ -821,10 +859,13 @@ func (q *Queries) ListTopValuableCoins(ctx context.Context) ([]Coin, error) {
 			&i.ThicknessMm,
 			&i.Edge,
 			&i.Shape,
+			&i.NumistaNumber,
 			&i.AcquiredAt,
 			&i.SoldAt,
 			&i.PricePaid,
 			&i.SoldPrice,
+			&i.GeminiModel,
+			&i.GeminiTemperature,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -867,39 +908,46 @@ SET
     sold_at = $25,
     price_paid = $26,
     sold_price = $27,
+    sold_price = $27,
+    numista_number = $28,
+    gemini_model = $29,
+    gemini_temperature = $30,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, acquired_at, sold_at, price_paid, sold_price, created_at, updated_at
+RETURNING id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, numista_number, acquired_at, sold_at, price_paid, sold_price, gemini_model, gemini_temperature, created_at, updated_at
 `
 
 type UpdateCoinParams struct {
-	ID             pgtype.UUID    `json:"id"`
-	Name           pgtype.Text    `json:"name"`
-	Mint           pgtype.Text    `json:"mint"`
-	Mintage        pgtype.Int8    `json:"mintage"`
-	Country        pgtype.Text    `json:"country"`
-	Year           pgtype.Int4    `json:"year"`
-	FaceValue      pgtype.Text    `json:"face_value"`
-	Currency       pgtype.Text    `json:"currency"`
-	Material       pgtype.Text    `json:"material"`
-	Description    pgtype.Text    `json:"description"`
-	KmCode         pgtype.Text    `json:"km_code"`
-	MinValue       pgtype.Numeric `json:"min_value"`
-	MaxValue       pgtype.Numeric `json:"max_value"`
-	Grade          pgtype.Text    `json:"grade"`
-	TechnicalNotes pgtype.Text    `json:"technical_notes"`
-	GeminiDetails  []byte         `json:"gemini_details"`
-	GroupID        pgtype.Int4    `json:"group_id"`
-	PersonalNotes  pgtype.Text    `json:"personal_notes"`
-	WeightG        pgtype.Numeric `json:"weight_g"`
-	DiameterMm     pgtype.Numeric `json:"diameter_mm"`
-	ThicknessMm    pgtype.Numeric `json:"thickness_mm"`
-	Edge           pgtype.Text    `json:"edge"`
-	Shape          pgtype.Text    `json:"shape"`
-	AcquiredAt     pgtype.Date    `json:"acquired_at"`
-	SoldAt         pgtype.Date    `json:"sold_at"`
-	PricePaid      pgtype.Numeric `json:"price_paid"`
-	SoldPrice      pgtype.Numeric `json:"sold_price"`
+	ID                pgtype.UUID    `json:"id"`
+	Name              pgtype.Text    `json:"name"`
+	Mint              pgtype.Text    `json:"mint"`
+	Mintage           pgtype.Int8    `json:"mintage"`
+	Country           pgtype.Text    `json:"country"`
+	Year              pgtype.Int4    `json:"year"`
+	FaceValue         pgtype.Text    `json:"face_value"`
+	Currency          pgtype.Text    `json:"currency"`
+	Material          pgtype.Text    `json:"material"`
+	Description       pgtype.Text    `json:"description"`
+	KmCode            pgtype.Text    `json:"km_code"`
+	MinValue          pgtype.Numeric `json:"min_value"`
+	MaxValue          pgtype.Numeric `json:"max_value"`
+	Grade             pgtype.Text    `json:"grade"`
+	TechnicalNotes    pgtype.Text    `json:"technical_notes"`
+	GeminiDetails     []byte         `json:"gemini_details"`
+	GroupID           pgtype.Int4    `json:"group_id"`
+	PersonalNotes     pgtype.Text    `json:"personal_notes"`
+	WeightG           pgtype.Numeric `json:"weight_g"`
+	DiameterMm        pgtype.Numeric `json:"diameter_mm"`
+	ThicknessMm       pgtype.Numeric `json:"thickness_mm"`
+	Edge              pgtype.Text    `json:"edge"`
+	Shape             pgtype.Text    `json:"shape"`
+	AcquiredAt        pgtype.Date    `json:"acquired_at"`
+	SoldAt            pgtype.Date    `json:"sold_at"`
+	PricePaid         pgtype.Numeric `json:"price_paid"`
+	SoldPrice         pgtype.Numeric `json:"sold_price"`
+	NumistaNumber     pgtype.Int4    `json:"numista_number"`
+	GeminiModel       pgtype.Text    `json:"gemini_model"`
+	GeminiTemperature pgtype.Numeric `json:"gemini_temperature"`
 }
 
 func (q *Queries) UpdateCoin(ctx context.Context, arg UpdateCoinParams) (Coin, error) {
@@ -931,6 +979,9 @@ func (q *Queries) UpdateCoin(ctx context.Context, arg UpdateCoinParams) (Coin, e
 		arg.SoldAt,
 		arg.PricePaid,
 		arg.SoldPrice,
+		arg.NumistaNumber,
+		arg.GeminiModel,
+		arg.GeminiTemperature,
 	)
 	var i Coin
 	err := row.Scan(
@@ -957,10 +1008,13 @@ func (q *Queries) UpdateCoin(ctx context.Context, arg UpdateCoinParams) (Coin, e
 		&i.ThicknessMm,
 		&i.Edge,
 		&i.Shape,
+		&i.NumistaNumber,
 		&i.AcquiredAt,
 		&i.SoldAt,
 		&i.PricePaid,
 		&i.SoldPrice,
+		&i.GeminiModel,
+		&i.GeminiTemperature,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
