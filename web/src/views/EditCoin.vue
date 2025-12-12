@@ -6,7 +6,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
         </svg>
       </router-link>
-      <h1 class="text-3xl font-bold">Edit Coin</h1>
+      <h1 class="text-3xl font-bold">{{ $t('form.edit_title') }}</h1>
     </div>
 
     <div v-if="loading" class="flex justify-center py-12">
@@ -17,7 +17,7 @@
       <!-- Images (Read-only for MVP) -->
       <div class="card bg-base-100 shadow-xl">
         <div class="card-body">
-          <h2 class="card-title text-sm uppercase text-base-content/70 mb-4">Images (Cannot be changed)</h2>
+          <h2 class="card-title text-sm uppercase text-base-content/70 mb-4">{{ $t('form.sections.images') }}</h2>
           <div class="flex gap-4 justify-center">
             <div class="avatar">
               <div class="w-24 rounded-xl">
@@ -36,42 +36,42 @@
       <!-- Basic Details -->
       <div class="card bg-base-100 shadow-xl">
         <div class="card-body space-y-4">
-          <h2 class="card-title text-sm uppercase text-base-content/70">Basic Details</h2>
+          <h2 class="card-title text-sm uppercase text-base-content/70">{{ $t('form.sections.basic') }}</h2>
           
           <div class="form-control w-full">
-            <label class="label"><span class="label-text">Name</span></label>
+            <label class="label"><span class="label-text">{{ $t('form.fields.name') }}</span></label>
             <input v-model="form.name" type="text" class="input input-bordered w-full" required />
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="form-control w-full">
-              <label class="label"><span class="label-text">Country</span></label>
+              <label class="label"><span class="label-text">{{ $t('form.fields.country') }}</span></label>
               <input v-model="form.country" type="text" class="input input-bordered w-full" />
             </div>
             <div class="form-control w-full">
-              <label class="label"><span class="label-text">Year</span></label>
+              <label class="label"><span class="label-text">{{ $t('form.fields.year') }}</span></label>
               <input v-model.number="form.year" type="number" class="input input-bordered w-full" />
             </div>
             <div class="form-control w-full">
-              <label class="label"><span class="label-text">Face Value</span></label>
+              <label class="label"><span class="label-text">{{ $t('form.fields.face_value') }}</span></label>
               <input v-model="form.face_value" type="text" class="input input-bordered w-full" />
             </div>
             <div class="form-control w-full">
-              <label class="label"><span class="label-text">Currency</span></label>
+              <label class="label"><span class="label-text">{{ $t('form.fields.currency') }}</span></label>
               <input v-model="form.currency" type="text" class="input input-bordered w-full" />
             </div>
              <div class="form-control w-full">
-              <label class="label"><span class="label-text">Material</span></label>
+              <label class="label"><span class="label-text">{{ $t('form.fields.material') }}</span></label>
               <input v-model="form.material" type="text" class="input input-bordered w-full" />
             </div>
              <div class="form-control w-full">
-              <label class="label"><span class="label-text">Grade</span></label>
+              <label class="label"><span class="label-text">{{ $t('form.fields.grade') }}</span></label>
               <input v-model="form.grade" type="text" class="input input-bordered w-full" />
             </div>
           </div>
 
            <div class="form-control w-full">
-            <label class="label"><span class="label-text">Description</span></label>
+            <label class="label"><span class="label-text">{{ $t('form.fields.description') }}</span></label>
             <textarea v-model="form.description" class="textarea textarea-bordered h-24"></textarea>
           </div>
         </div>
@@ -80,45 +80,45 @@
       <!-- Technical Details -->
       <div class="card bg-base-100 shadow-xl">
         <div class="card-body space-y-4">
-          <h2 class="card-title text-sm uppercase text-base-content/70">Technical Details</h2>
+          <h2 class="card-title text-sm uppercase text-base-content/70">{{ $t('form.sections.technical') }}</h2>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
              <div class="form-control w-full">
-              <label class="label"><span class="label-text">Mint</span></label>
+              <label class="label"><span class="label-text">{{ $t('form.fields.mint') }}</span></label>
               <input v-model="form.mint" type="text" class="input input-bordered w-full" />
             </div>
             <div class="form-control w-full">
-              <label class="label"><span class="label-text">Mintage</span></label>
+              <label class="label"><span class="label-text">{{ $t('form.fields.mintage') }}</span></label>
               <input v-model.number="form.mintage" type="number" class="input input-bordered w-full" />
             </div>
             <div class="form-control w-full">
-              <label class="label"><span class="label-text">KM Code</span></label>
+              <label class="label"><span class="label-text">{{ $t('form.fields.km_code') }}</span></label>
               <input v-model="form.km_code" type="text" class="input input-bordered w-full" />
             </div>
              <div class="form-control w-full">
-              <label class="label"><span class="label-text">Weight (g)</span></label>
+              <label class="label"><span class="label-text">{{ $t('form.fields.weight') }}</span></label>
               <input v-model.number="form.weight_g" type="number" step="0.01" class="input input-bordered w-full" />
             </div>
             <div class="form-control w-full">
-              <label class="label"><span class="label-text">Diameter (mm)</span></label>
+              <label class="label"><span class="label-text">{{ $t('form.fields.diameter') }}</span></label>
               <input v-model.number="form.diameter_mm" type="number" step="0.01" class="input input-bordered w-full" />
             </div>
             <div class="form-control w-full">
-              <label class="label"><span class="label-text">Thickness (mm)</span></label>
+              <label class="label"><span class="label-text">{{ $t('form.fields.thickness') }}</span></label>
               <input v-model.number="form.thickness_mm" type="number" step="0.01" class="input input-bordered w-full" />
             </div>
              <div class="form-control w-full">
-              <label class="label"><span class="label-text">Edge</span></label>
+              <label class="label"><span class="label-text">{{ $t('form.fields.edge') }}</span></label>
               <input v-model="form.edge" type="text" class="input input-bordered w-full" />
             </div>
              <div class="form-control w-full">
-              <label class="label"><span class="label-text">Shape</span></label>
+              <label class="label"><span class="label-text">{{ $t('form.fields.shape') }}</span></label>
               <input v-model="form.shape" type="text" class="input input-bordered w-full" />
             </div>
           </div>
 
            <div class="form-control w-full">
-            <label class="label"><span class="label-text">Technical Notes</span></label>
+            <label class="label"><span class="label-text">{{ $t('form.fields.technical_notes') }}</span></label>
             <textarea v-model="form.technical_notes" class="textarea textarea-bordered h-24"></textarea>
           </div>
         </div>
@@ -127,31 +127,31 @@
        <!-- Valuation & Acquisition -->
       <div class="card bg-base-100 shadow-xl">
         <div class="card-body space-y-4">
-          <h2 class="card-title text-sm uppercase text-base-content/70">Valuation & Acquisition</h2>
+          <h2 class="card-title text-sm uppercase text-base-content/70">{{ $t('form.sections.valuation') }}</h2>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
              <div class="form-control w-full">
-              <label class="label"><span class="label-text">Min Value</span></label>
+              <label class="label"><span class="label-text">{{ $t('form.fields.min_value') }}</span></label>
               <input v-model.number="form.min_value" type="number" step="0.01" class="input input-bordered w-full" />
             </div>
             <div class="form-control w-full">
-              <label class="label"><span class="label-text">Max Value</span></label>
+              <label class="label"><span class="label-text">{{ $t('form.fields.max_value') }}</span></label>
               <input v-model.number="form.max_value" type="number" step="0.01" class="input input-bordered w-full" />
             </div>
              <div class="form-control w-full">
-              <label class="label"><span class="label-text">Price Paid</span></label>
+              <label class="label"><span class="label-text">{{ $t('form.fields.price_paid') }}</span></label>
               <input v-model.number="form.price_paid" type="number" step="0.01" class="input input-bordered w-full" />
             </div>
              <div class="form-control w-full">
-              <label class="label"><span class="label-text">Sold Price</span></label>
+              <label class="label"><span class="label-text">{{ $t('form.fields.sold_price') }}</span></label>
               <input v-model.number="form.sold_price" type="number" step="0.01" class="input input-bordered w-full" />
             </div>
              <div class="form-control w-full">
-              <label class="label"><span class="label-text">Acquired At</span></label>
+              <label class="label"><span class="label-text">{{ $t('form.fields.acquired_at') }}</span></label>
               <input v-model="form.acquired_at" type="date" class="input input-bordered w-full" />
             </div>
              <div class="form-control w-full">
-              <label class="label"><span class="label-text">Sold At</span></label>
+              <label class="label"><span class="label-text">{{ $t('form.fields.sold_at') }}</span></label>
               <input v-model="form.sold_at" type="date" class="input input-bordered w-full" />
             </div>
           </div>
@@ -161,24 +161,24 @@
       <!-- Organization -->
       <div class="card bg-base-100 shadow-xl">
         <div class="card-body space-y-4">
-          <h2 class="card-title text-sm uppercase text-base-content/70">Organization</h2>
+          <h2 class="card-title text-sm uppercase text-base-content/70">{{ $t('form.sections.organization') }}</h2>
           
           <div class="form-control w-full">
             <GroupSelector v-model="form.group_name" />
           </div>
 
           <div class="form-control w-full">
-            <label class="label"><span class="label-text">Personal Notes</span></label>
+            <label class="label"><span class="label-text">{{ $t('form.fields.personal_notes') }}</span></label>
             <textarea v-model="form.personal_notes" class="textarea textarea-bordered h-24"></textarea>
           </div>
         </div>
       </div>
 
       <div class="flex justify-end gap-2">
-        <router-link to="/list" class="btn btn-ghost">Cancel</router-link>
+        <router-link to="/list" class="btn btn-ghost">{{ $t('common.cancel') }}</router-link>
         <button type="submit" class="btn btn-primary" :disabled="saving">
           <span v-if="saving" class="loading loading-spinner"></span>
-          Save Changes
+          {{ $t('common.save') }}
         </button>
       </div>
     </form>

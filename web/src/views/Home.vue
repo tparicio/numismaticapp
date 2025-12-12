@@ -10,7 +10,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
-        Add Coin
+        {{ $t('nav.add_coin') }}
       </router-link>
     </div>
 
@@ -29,16 +29,14 @@
 
       <div class="stats shadow">
         <div class="stat">
-          <div class="stat-figure text-accent">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+          <div class="stat-figure text-secondary">
+             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+            </svg>
           </div>
-          <div class="stat-title">{{ $t('dashboard.stats.top_rarity') }}</div>
-          <div class="stat-value text-accent text-lg overflow-hidden truncate whitespace-nowrap max-w-[10rem]" :title="stats.rarest_coins?.[0]?.name">
-            {{ stats.rarest_coins?.[0]?.name || 'N/A' }}
-          </div>
-          <div class="stat-desc" v-if="stats.rarest_coins?.[0]">
-            {{ formatMintage(stats.rarest_coins[0].mintage) }} {{ $t('dashboard.stats.units') }}
-          </div>
+          <div class="stat-title">{{ $t('dashboard.stats.avg_value') }}</div>
+          <div class="stat-value text-secondary">{{ formatCurrency(stats.average_value) }}</div>
+          <div class="stat-desc">{{ $t('dashboard.stats.per_coin') }}</div>
         </div>
       </div>
       
@@ -52,6 +50,21 @@
           <div class="stat-desc">{{ $t('dashboard.stats.in_collection') }}</div>
         </div>
       </div>
+
+      <div class="stats shadow">
+        <div class="stat">
+          <div class="stat-figure text-accent">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+          </div>
+          <div class="stat-title">{{ $t('dashboard.stats.top_rarity') }}</div>
+          <div class="stat-value text-accent text-lg overflow-hidden truncate whitespace-nowrap max-w-[10rem]" :title="stats.rarest_coins?.[0]?.name">
+            {{ stats.rarest_coins?.[0]?.name || 'N/A' }}
+          </div>
+          <div class="stat-desc" v-if="stats.rarest_coins?.[0]">
+            {{ formatMintage(stats.rarest_coins[0].mintage) }} {{ $t('dashboard.stats.units') }}
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Charts Row 1 -->
@@ -61,7 +74,7 @@
         <div class="card-body">
           <h2 class="card-title">{{ $t('dashboard.charts.value_dist') }}</h2>
           <div class="h-64 relative">
-            <Bar v-if="valueChartData" :data="valueChartData" :options="chartOptions" />
+            <Bar v-if="valueChartData" :data="valueChartData" :options="valueChartOptions" />
           </div>
         </div>
       </div>
@@ -316,6 +329,7 @@
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   Chart as ChartJS,
   Title,
@@ -332,7 +346,10 @@ import MapChart from '../components/MapChart.vue'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement)
 
+
+
 const router = useRouter()
+const { t } = useI18n()
 
 const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
 const activeTab = ref('recent')
@@ -359,13 +376,69 @@ const stats = ref({
   all_coins: []
 })
 
-const chartOptions = {
+const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
-    legend: { display: false }
+    legend: { display: false },
+    tooltip: {
+       callbacks: {
+           label: (context) => {
+               let label = context.dataset.label || '';
+               if (label) {
+                   label += ': ';
+               }
+               if (context.parsed.y !== null) {
+                   // Check if this chart displays currency values (Value Distribution)
+                   // We guess based on the variable name if possible, or we make a specific option for Value Distribution.
+                   // Since this options object is shared, we might need separate options for the Value Chart.
+                   // For now, let's just format as number.
+                   // WAIT, user asked for Currency in charts.
+                   // Only Value Chart needs currency. Grade/Timeline do not.
+                   // I should split chartOptions.
+                   label += context.parsed.y;
+               }
+               return label;
+           }
+       }
+    }
   }
-}
+}))
+
+const valueChartOptions = computed(() => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+       callbacks: {
+           label: (context) => {
+               let label = context.dataset.label || '';
+               if (label) {
+                   label += ': ';
+               }
+               if (context.parsed.y !== null) {
+                   // This IS the value chart but the Y axis is COUNT (coins), not Value.
+                   // The X axis is the bins (0-10, 10-50).
+                   // User said: "reference to value should show € in tooltips and axis labels"
+                   // For Value Distribution: X axis are ranges of currency. Y axis is Count.
+                   // So the TOOLTIP for the BAR represents COUNT.
+                   // But the LABELS on X axis represent CURRENCY.
+                   // The labels are strings "0-10", "10-50". I can format those in the computed data if needed, or just leave them.
+                   // But wait, user said "reference to value should show €".
+                   // Maybe they mean charts where the VALUE is plotted?
+                   // The scatter plot is Grade vs Year.
+                   // The tabs list shows values.
+                   // The Value Distribution X labels are "0-10", "10-50". These imply €.
+                   // Let's add € to these labels in the data computation.
+                   return label + context.parsed.y;
+               }
+               return label;
+           }
+       }
+    }
+  }
+}))
 
 const doughnutOptions = {
   responsive: true,
@@ -409,18 +482,23 @@ const formatMintage = (value) => {
     return value.toString()
 }
 
-const scatterOptions = {
+const scatterOptions = computed(() => ({
     responsive: true,
     maintainAspectRatio: false,
     scales: {
         x: {
             type: 'linear',
             position: 'bottom',
-            title: { display: true, text: 'Year' }
+            title: { display: true, text: t('dashboard.charts.labels.year') },
+            ticks: {
+                callback: function(value, index, values) {
+                    return value.toString().replace(',', '');
+                }
+            }
         },
         y: {
             type: 'linear',
-            title: { display: true, text: 'Grade (0-70)' },
+            title: { display: true, text: t('dashboard.charts.labels.grade') },
             min: 0,
             max: 75
         }
@@ -436,7 +514,7 @@ const scatterOptions = {
             }
         }
     }
-}
+}))
 
 // Chart Data Computed Properties
 
@@ -445,13 +523,15 @@ const valueChartData = computed(() => {
   if (!dist) return null
   
   // Ensure order
-  const labels = ["0-10", "10-50", "50-100", "100-500", "500+"]
-  const data = labels.map(l => dist[l] || 0)
+  // Ensure order & Format Value Ranges with €
+  const rawLabels = ["0-10", "10-50", "50-100", "100-500", "500+"]
+  const data = rawLabels.map(l => dist[l] || 0)
+  const labels = rawLabels.map(l => l.includes('+') ? `${l} €` : `${l} €`.replace('-', ' € - '))
 
   return {
     labels,
     datasets: [{
-      label: 'Coins',
+      label: t('dashboard.charts.labels.coins'),
       backgroundColor: '#7c3aed', // Violeta (Money)
       data
     }]
@@ -503,7 +583,7 @@ const gradeChartData = computed(() => {
   return {
     labels,
     datasets: [{
-      label: 'Coins',
+      label: t('dashboard.charts.labels.coins'),
       backgroundColor: colors,
       data
     }]
@@ -521,7 +601,7 @@ const timelineChartData = computed(() => {
     return {
         labels,
         datasets: [{
-            label: 'Coins per Decade',
+            label: t('dashboard.charts.labels.coins_per_decade'),
             backgroundColor: '#4F46E5', // Indigo
             data
         }]
@@ -547,7 +627,7 @@ const qualityChartData = computed(() => {
 
     return {
         datasets: [{
-            label: 'Quality vs Year',
+            label: t('dashboard.charts.labels.quality_vs_year'),
             backgroundColor: '#f59e0b',
             data
         }]
@@ -585,7 +665,7 @@ const countryChartData = computed(() => {
     return {
         labels,
         datasets: [{
-            label: 'Coins by Country',
+            label: t('dashboard.charts.labels.coins_by_country'),
             backgroundColor: '#0ea5e9',
             data
         }]

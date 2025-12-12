@@ -10,7 +10,120 @@
         "edit": "Editar",
         "delete": "Eliminar",
         "cancel": "Cancelar",
-        "view_details": "Ver Detalles Completos"
+        "save": "Guardar",
+        "update": "Actualizar",
+        "back": "Volver",
+        "view_details": "Ver Detalles Completos",
+        "unknown": "Desconocido"
+    },
+    "list": {
+        "title": "Mi Colección",
+        "search_placeholder": "Buscar...",
+        "all_groups": "Todos los Grupos",
+        "filters": {
+            "year": "Año",
+            "country": "País",
+            "min_price": "Min €",
+            "max_price": "Max €"
+        },
+        "empty_state": "No se encontraron monedas. ¡Empieza añadiendo una!",
+        "add_button": "Añadir Moneda",
+        "actions": "Acciones",
+        "table": {
+            "images": "Imágenes",
+            "name": "Nombre",
+            "mint": "Ceca",
+            "mintage": "Tirada",
+            "country": "País",
+            "value": "Valor",
+            "year": "Año",
+            "currency": "Divisa",
+            "grade": "Estado",
+            "material": "Material",
+            "actions": "Acciones"
+        },
+        "delete_modal": {
+            "title": "Eliminar Moneda",
+            "confirm": "¿Estás seguro de que quieres eliminar",
+            "warning": "Esta acción no se puede deshacer.",
+            "success": "Moneda eliminada correctamente.",
+            "error": "Error al eliminar la moneda."
+        }
+    },
+    "form": {
+        "add_title": "Añadir Nueva Moneda",
+        "edit_title": "Editar Moneda",
+        "drag_drop": {
+            "main": "Toca o Arrastra imágenes aquí",
+            "sub": "Por favor, selecciona exactamente 2 imágenes (Anverso y Reverso)",
+            "front": "Anverso (Obverse)",
+            "back": "Reverso (Reverse)",
+            "swap": "Intercambiar Anverso/Reverso"
+        },
+        "sections": {
+            "images": "Imágenes (No se pueden cambiar)",
+            "basic": "Detalles Básicos",
+            "technical": "Detalles Técnicos",
+            "valuation": "Valoración y Adquisición",
+            "organization": "Organización"
+        },
+        "fields": {
+            "name": "Nombre",
+            "country": "País",
+            "year": "Año",
+            "face_value": "Valor Facial",
+            "currency": "Divisa",
+            "material": "Material",
+            "grade": "Estado de Conservación",
+            "description": "Descripción",
+            "mint": "Ceca (Mint)",
+            "mintage": "Tirada (Mintage)",
+            "km_code": "Código KM",
+            "weight": "Peso (g)",
+            "diameter": "Diámetro (mm)",
+            "thickness": "Grosor (mm)",
+            "edge": "Canto",
+            "shape": "Forma",
+            "technical_notes": "Notas Técnicas",
+            "min_value": "Valor Mín.",
+            "max_value": "Valor Máx.",
+            "price_paid": "Precio Pagado",
+            "sold_price": "Precio de Venta",
+            "acquired_at": "Adquirida el",
+            "sold_at": "Vendida el",
+            "personal_notes": "Notas Personales",
+            "group": "Grupo / Colección"
+        },
+        "placeholders": {
+            "notes": "Añade tus notas personales aquí..."
+        },
+        "processing": "Procesando Moneda...",
+        "ai_analysis": "Analizando imágenes con IA...",
+        "errors": {
+            "images_only": "Por favor selecciona solo archivos de imagen.",
+            "both_images": "Se requieren ambas imágenes (Anverso y Reverso).",
+            "upload_failed": "Error al subir la moneda",
+            "update_failed": "Error al actualizar la moneda"
+        }
+    },
+    "details": {
+        "obverse": "Anverso",
+        "reverse": "Reverso",
+        "sections": {
+            "details": "Detalles",
+            "description": "Descripción",
+            "notes": "Notas"
+        },
+        "labels": {
+            "material": "Material",
+            "km": "Código KM",
+            "mint": "Ceca",
+            "mintage": "Tirada",
+            "est_value": "Valor Est.",
+            "added_on": "Añadida el"
+        },
+        "no_notes": "Sin notas disponibles.",
+        "back_gallery": "Volver a la Galería"
     },
     "dashboard": {
         "title": "Dashboard",
@@ -47,7 +160,15 @@
             "timeline": "Línea Temporal (Décadas)",
             "geo": "Distribución Geográfica",
             "quality": "Matriz de Calidad (Año vs Estado)",
-            "storage": "Almacenamiento"
+            "storage": "Almacenamiento",
+            "labels": {
+                "coins": "Monedas",
+                "coins_per_decade": "Monedas por Década",
+                "coins_by_country": "Monedas por País",
+                "year": "Año",
+                "grade": "Estado (0-70)",
+                "quality_vs_year": "Calidad vs Año"
+            }
         },
         "random": {
             "face_value": "Valor Facial",

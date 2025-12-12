@@ -1,23 +1,23 @@
 <template>
   <div>
     <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-      <h2 class="text-3xl font-bold">My Collection</h2>
+      <h2 class="text-3xl font-bold">{{ $t('list.title') }}</h2>
       
       <div class="flex flex-wrap gap-2 w-full md:w-auto items-center">
         <!-- Search -->
-        <input type="text" v-model="filters.query" placeholder="Search..." class="input input-bordered w-full md:w-48 input-sm" />
+        <input type="text" v-model="filters.query" :placeholder="$t('list.search_placeholder')" class="input input-bordered w-full md:w-48 input-sm" />
         
         <!-- Group Filter -->
         <select v-model="filters.group_id" class="select select-bordered select-sm w-full md:w-40">
-          <option value="">All Groups</option>
+          <option value="">{{ $t('list.all_groups') }}</option>
           <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
         </select>
 
         <!-- Advanced Filters (Simple for now) -->
-        <input type="number" v-model="filters.year" placeholder="Year" class="input input-bordered input-sm w-24" />
-        <input type="text" v-model="filters.country" placeholder="Country" class="input input-bordered input-sm w-32" />
-        <input type="number" v-model="filters.min_price" placeholder="Min €" class="input input-bordered input-sm w-20" />
-        <input type="number" v-model="filters.max_price" placeholder="Max €" class="input input-bordered input-sm w-20" />
+        <input type="number" v-model="filters.year" :placeholder="$t('list.filters.year')" class="input input-bordered input-sm w-24" />
+        <input type="text" v-model="filters.country" :placeholder="$t('list.filters.country')" class="input input-bordered input-sm w-32" />
+        <input type="number" v-model="filters.min_price" :placeholder="$t('list.filters.min_price')" class="input input-bordered input-sm w-20" />
+        <input type="number" v-model="filters.max_price" :placeholder="$t('list.filters.max_price')" class="input input-bordered input-sm w-20" />
 
         <div class="join">
             <button class="join-item btn btn-sm" :class="{ 'btn-active': viewMode === 'grid' }" @click="viewMode = 'grid'">
@@ -35,8 +35,8 @@
     </div>
 
     <div v-else-if="coins.length === 0" class="text-center p-10 bg-base-100 rounded-box">
-      <p>No coins found. Start by adding one!</p>
-      <router-link to="/add" class="btn btn-primary mt-4">Add Coin</router-link>
+      <p>{{ $t('list.empty_state') }}</p>
+      <router-link to="/add" class="btn btn-primary mt-4">{{ $t('list.add_button') }}</router-link>
     </div>
 
     <!-- Grid View -->
@@ -99,17 +99,17 @@
       <table class="table table-zebra w-full">
         <thead>
           <tr>
-            <th>Images</th>
-            <th>Name</th>
-            <th>Mint</th>
-            <th>Mintage</th>
-            <th>Country</th>
-            <th>Value</th>
-            <th>Year</th>
-            <th>Currency</th>
-            <th>Grade</th>
-            <th>Material</th>
-            <th>Actions</th>
+            <th>{{ $t('list.table.images') }}</th>
+            <th>{{ $t('list.table.name') }}</th>
+            <th>{{ $t('list.table.mint') }}</th>
+            <th>{{ $t('list.table.mintage') }}</th>
+            <th>{{ $t('list.table.country') }}</th>
+            <th>{{ $t('list.table.value') }}</th>
+            <th>{{ $t('list.table.year') }}</th>
+            <th>{{ $t('list.table.currency') }}</th>
+            <th>{{ $t('list.table.grade') }}</th>
+            <th>{{ $t('list.table.material') }}</th>
+            <th>{{ $t('list.table.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -159,13 +159,13 @@
     <!-- Delete Modal -->
     <dialog id="delete_modal" class="modal" :class="{ 'modal-open': deleteModalOpen }">
       <div class="modal-box">
-        <h3 class="font-bold text-lg text-error">Delete Coin</h3>
-        <p class="py-4">Are you sure you want to delete <span class="font-bold">{{ coinToDelete?.name || 'this coin' }}</span>? This action cannot be undone.</p>
+        <h3 class="font-bold text-lg text-error">{{ $t('list.delete_modal.title') }}</h3>
+        <p class="py-4">{{ $t('list.delete_modal.confirm') }} <span class="font-bold">{{ coinToDelete?.name || $t('common.unknown') }}</span>? {{ $t('list.delete_modal.warning') }}</p>
         <div class="modal-action">
-          <button class="btn" @click="deleteModalOpen = false">Cancel</button>
+          <button class="btn" @click="deleteModalOpen = false">{{ $t('common.cancel') }}</button>
           <button class="btn btn-error" @click="deleteCoin" :disabled="deleting">
             <span v-if="deleting" class="loading loading-spinner"></span>
-            Delete
+            {{ $t('common.delete') }}
           </button>
         </div>
       </div>

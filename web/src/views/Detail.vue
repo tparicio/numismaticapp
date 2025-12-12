@@ -15,7 +15,7 @@
                     </div>
                     <img :src="getThumbnailUrl(coin, 'front')" class="rounded-full shadow-lg max-w-xs hover:scale-105 transition-transform duration-300" alt="Front" />
                 </figure>
-                <div class="mt-4 font-bold text-lg">Obverse</div>
+                <div class="mt-4 font-bold text-lg">{{ $t('details.obverse') }}</div>
             </div>
 
             <!-- Back -->
@@ -28,7 +28,7 @@
                     </div>
                     <img :src="getThumbnailUrl(coin, 'back')" class="rounded-full shadow-lg max-w-xs hover:scale-105 transition-transform duration-300" alt="Back" />
                 </figure>
-                <div class="mt-4 font-bold text-lg">Reverse</div>
+                <div class="mt-4 font-bold text-lg">{{ $t('details.reverse') }}</div>
             </div>
         </div>
       </div>
@@ -47,54 +47,54 @@
             </div>
         </div>
 
-        <div class="divider">Details</div>
+        <div class="divider">{{ $t('details.sections.details') }}</div>
 
         <div class="grid grid-cols-2 gap-4">
             <div>
-                <span class="font-bold block text-sm text-gray-500">Material</span>
+                <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.material') }}</span>
                 <span>{{ coin.material }}</span>
             </div>
             <div>
-                <span class="font-bold block text-sm text-gray-500">KM Code</span>
+                <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.km') }}</span>
                 <span>{{ coin.km_code || 'N/A' }}</span>
             </div>
             <div>
-                <span class="font-bold block text-sm text-gray-500">Mint (Ceca)</span>
+                <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.mint') }}</span>
                 <span>{{ coin.mint || 'N/A' }}</span>
             </div>
             <div>
-                <span class="font-bold block text-sm text-gray-500">Mintage (Tirada)</span>
+                <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.mintage') }}</span>
                 <span>{{ formatMintage(coin.mintage) }}</span>
             </div>
             <div>
-                <span class="font-bold block text-sm text-gray-500">Est. Value</span>
+                <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.est_value') }}</span>
                 <span>{{ coin.min_value }} - {{ coin.max_value }}</span>
             </div>
              <div>
-                <span class="font-bold block text-sm text-gray-500">Added On</span>
+                <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.added_on') }}</span>
                 <span>{{ new Date(coin.created_at).toLocaleDateString() }}</span>
             </div>
         </div>
 
-        <div class="divider">Description</div>
+        <div class="divider">{{ $t('details.sections.description') }}</div>
         <p class="text-justify">{{ coin.description }}</p>
 
-        <div class="divider">Notes</div>
-        <p class="text-sm italic">{{ coin.notes || 'No notes available.' }}</p>
+        <div class="divider">{{ $t('details.sections.notes') }}</div>
+        <p class="text-sm italic">{{ coin.notes || $t('details.no_notes') }}</p>
         
         <div class="card-actions justify-end mt-8 gap-2">
-            <router-link to="/list" class="btn btn-ghost">Back to Gallery</router-link>
+            <router-link to="/list" class="btn btn-ghost">{{ $t('details.back_gallery') }}</router-link>
             <router-link :to="`/edit/${coin.id}`" class="btn btn-info">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-1">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                 </svg>
-                Edit
+                {{ $t('common.edit') }}
             </router-link>
             <button @click="deleteModalOpen = true" class="btn btn-error">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-1">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
                 </svg>
-                Delete
+                {{ $t('common.delete') }}
             </button>
         </div>
       </div>
@@ -107,13 +107,13 @@
   <!-- Delete Modal -->
   <dialog id="delete_modal" class="modal" :class="{ 'modal-open': deleteModalOpen }">
     <div class="modal-box">
-      <h3 class="font-bold text-lg text-error">Delete Coin</h3>
-      <p class="py-4">Are you sure you want to delete <span class="font-bold">{{ coin?.name || 'this coin' }}</span>? This action cannot be undone.</p>
+      <h3 class="font-bold text-lg text-error">{{ $t('list.delete_modal.title') }}</h3>
+      <p class="py-4">{{ $t('list.delete_modal.confirm') }} <span class="font-bold">{{ coin?.name || $t('common.unknown') }}</span>? {{ $t('list.delete_modal.warning') }}</p>
       <div class="modal-action">
-        <button class="btn" @click="deleteModalOpen = false">Cancel</button>
+        <button class="btn" @click="deleteModalOpen = false">{{ $t('common.cancel') }}</button>
         <button class="btn btn-error" @click="deleteCoin" :disabled="deleting">
           <span v-if="deleting" class="loading loading-spinner"></span>
-          Delete
+          {{ $t('common.delete') }}
         </button>
       </div>
     </div>

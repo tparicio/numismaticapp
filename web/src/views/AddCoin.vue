@@ -1,7 +1,7 @@
 <template>
   <div class="card bg-base-100 shadow-xl max-w-2xl mx-auto">
     <div class="card-body">
-      <h2 class="card-title text-2xl mb-4">Add New Coin</h2>
+      <h2 class="card-title text-2xl mb-4">{{ $t('form.add_title') }}</h2>
       
       <form @submit.prevent="uploadCoin" class="space-y-6">
         
@@ -27,21 +27,21 @@
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 mx-auto text-base-content/50">
               <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
             </svg>
-            <p class="font-bold text-lg">Tap or Drag & Drop images here</p>
-            <p class="text-sm opacity-70">Please select exactly 2 images (Front & Back)</p>
+            <p class="font-bold text-lg">{{ $t('form.drag_drop.main') }}</p>
+            <p class="text-sm opacity-70">{{ $t('form.drag_drop.sub') }}</p>
           </div>
 
           <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <!-- Front Preview -->
             <div class="relative group">
-              <div class="badge badge-primary absolute top-2 left-2 z-10">Front (Obverse)</div>
+              <div class="badge badge-primary absolute top-2 left-2 z-10">{{ $t('form.drag_drop.front') }}</div>
               <img :src="frontPreview" class="w-full h-48 object-cover rounded-lg shadow-md" />
               <button type="button" @click.stop="removeFile('front')" class="btn btn-circle btn-xs btn-error absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
             </div>
 
             <!-- Back Preview -->
             <div class="relative group">
-              <div class="badge badge-secondary absolute top-2 left-2 z-10">Back (Reverse)</div>
+              <div class="badge badge-secondary absolute top-2 left-2 z-10">{{ $t('form.drag_drop.back') }}</div>
               <img :src="backPreview" class="w-full h-48 object-cover rounded-lg shadow-md" />
               <button type="button" @click.stop="removeFile('back')" class="btn btn-circle btn-xs btn-error absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
             </div>
@@ -49,7 +49,7 @@
 
           <!-- Swap Button -->
           <div v-if="frontFile && backFile" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
-             <button type="button" @click.stop="swapImages" class="btn btn-circle btn-primary shadow-lg tooltip flex items-center justify-center" data-tip="Swap Front/Back">
+             <button type="button" @click.stop="swapImages" class="btn btn-circle btn-primary shadow-lg tooltip flex items-center justify-center" :data-tip="$t('form.drag_drop.swap')">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
                 </svg>
@@ -68,22 +68,22 @@
         <!-- User Notes -->
         <div class="form-control w-full">
           <label class="label">
-            <span class="label-text">My Notes</span>
+            <span class="label-text">{{ $t('form.fields.personal_notes') }}</span>
           </label>
-          <textarea v-model="userNotes" class="textarea textarea-bordered h-24" placeholder="Add your personal notes here..."></textarea>
+          <textarea v-model="userNotes" class="textarea textarea-bordered h-24" :placeholder="$t('form.placeholders.notes')"></textarea>
         </div>
 
         <div class="alert alert-info shadow-lg" v-if="uploading">
           <div>
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current flex-shrink-0 w-6 h-6 animate-spin"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <span>Processing images... (AI Analysis is running)</span>
+            <span>{{ $t('form.ai_analysis') }}</span>
           </div>
         </div>
 
         <div class="card-actions justify-end mt-6">
           <button type="submit" class="btn btn-primary w-full sm:w-auto" :disabled="uploading || !frontFile || !backFile">
             <span v-if="uploading" class="loading loading-spinner"></span>
-            {{ uploading ? 'Processing Coin...' : 'Add Coin' }}
+            {{ uploading ? $t('form.processing') : $t('nav.add_coin') }}
           </button>
         </div>
       </form>
@@ -96,8 +96,10 @@ import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
 import GroupSelector from '../components/GroupSelector.vue'
+import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
+const { t } = useI18n()
 const fileInput = ref(null)
 const frontFile = ref(null)
 const backFile = ref(null)
@@ -138,7 +140,7 @@ const processFiles = (files) => {
   const newFiles = Array.from(files).filter(f => f.type.startsWith('image/'))
   
   if (newFiles.length === 0) {
-      if (files.length > 0) error.value = "Please select image files only."
+      if (files.length > 0) error.value = t('form.errors.images_only')
       return
   }
 
@@ -154,7 +156,7 @@ const processFiles = (files) => {
           error.value = "Both slots are full. Remove one to add another, or select 2 files to replace both."
       }
   } else {
-      error.value = "Please select exactly 2 images (Front & Back)."
+      error.value = t('form.errors.both_images')
   }
 }
 
@@ -193,7 +195,7 @@ const swapImages = () => {
 
 const uploadCoin = async () => {
   if (!frontFile.value || !backFile.value) {
-      error.value = "Both Front and Back images are required."
+      error.value = t('form.errors.both_images')
       return
   }
 
@@ -221,7 +223,7 @@ const uploadCoin = async () => {
     router.push(`/coin/${res.data.id}`)
   } catch (e) {
     console.error(e)
-    error.value = 'Error uploading coin: ' + (e.response?.data?.error || e.message)
+    error.value = t('form.errors.upload_failed') + ': ' + (e.response?.data?.error || e.message)
   } finally {
     uploading.value = false
   }

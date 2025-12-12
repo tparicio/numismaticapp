@@ -10,7 +10,120 @@
         "edit": "Edit",
         "delete": "Delete",
         "cancel": "Cancel",
-        "view_details": "View Full Details"
+        "save": "Save",
+        "update": "Update",
+        "back": "Back",
+        "view_details": "View Full Details",
+        "unknown": "Unknown"
+    },
+    "list": {
+        "title": "My Collection",
+        "search_placeholder": "Search...",
+        "all_groups": "All Groups",
+        "filters": {
+            "year": "Year",
+            "country": "Country",
+            "min_price": "Min €",
+            "max_price": "Max €"
+        },
+        "empty_state": "No coins found. Start by adding one!",
+        "add_button": "Add Coin",
+        "actions": "Actions",
+        "table": {
+            "images": "Images",
+            "name": "Name",
+            "mint": "Mint",
+            "mintage": "Mintage",
+            "country": "Country",
+            "value": "Value",
+            "year": "Year",
+            "currency": "Currency",
+            "grade": "Grade",
+            "material": "Material",
+            "actions": "Actions"
+        },
+        "delete_modal": {
+            "title": "Delete Coin",
+            "confirm": "Are you sure you want to delete",
+            "warning": "This action cannot be undone.",
+            "success": "Coin deleted successfully.",
+            "error": "Failed to delete coin."
+        }
+    },
+    "form": {
+        "add_title": "Add New Coin",
+        "edit_title": "Edit Coin",
+        "drag_drop": {
+            "main": "Tap or Drag & Drop images here",
+            "sub": "Please select exactly 2 images (Front & Back)",
+            "front": "Front (Obverse)",
+            "back": "Back (Reverse)",
+            "swap": "Swap Front/Back"
+        },
+        "sections": {
+            "images": "Images (Cannot be changed)",
+            "basic": "Basic Details",
+            "technical": "Technical Details",
+            "valuation": "Valuation & Acquisition",
+            "organization": "Organization"
+        },
+        "fields": {
+            "name": "Name",
+            "country": "Country",
+            "year": "Year",
+            "face_value": "Face Value",
+            "currency": "Currency",
+            "material": "Material",
+            "grade": "Grade",
+            "description": "Description",
+            "mint": "Mint",
+            "mintage": "Mintage",
+            "km_code": "KM Code",
+            "weight": "Weight (g)",
+            "diameter": "Diameter (mm)",
+            "thickness": "Thickness (mm)",
+            "edge": "Edge",
+            "shape": "Shape",
+            "technical_notes": "Technical Notes",
+            "min_value": "Min Value",
+            "max_value": "Max Value",
+            "price_paid": "Price Paid",
+            "sold_price": "Sold Price",
+            "acquired_at": "Acquired At",
+            "sold_at": "Sold At",
+            "personal_notes": "Personal Notes",
+            "group": "Group / Collection"
+        },
+        "placeholders": {
+            "notes": "Add your personal notes here..."
+        },
+        "processing": "Processing Coin...",
+        "ai_analysis": "Analyzing images with AI...",
+        "errors": {
+            "images_only": "Please select image files only.",
+            "both_images": "Both images are required (Front & Back).",
+            "upload_failed": "Error uploading coin",
+            "update_failed": "Error updating coin"
+        }
+    },
+    "details": {
+        "obverse": "Obverse",
+        "reverse": "Reverse",
+        "sections": {
+            "details": "Details",
+            "description": "Description",
+            "notes": "Notes"
+        },
+        "labels": {
+            "material": "Material",
+            "km": "KM Code",
+            "mint": "Mint",
+            "mintage": "Mintage",
+            "est_value": "Est. Value",
+            "added_on": "Added On"
+        },
+        "no_notes": "No notes available.",
+        "back_gallery": "Back to Gallery"
     },
     "dashboard": {
         "title": "Dashboard",
@@ -47,7 +160,15 @@
             "timeline": "Timeline (Decades)",
             "geo": "Geographic Distribution",
             "quality": "Quality Matrix (Year vs Grade)",
-            "storage": "Storage"
+            "storage": "Storage",
+            "labels": {
+                "coins": "Coins",
+                "coins_per_decade": "Coins per Decade",
+                "coins_by_country": "Coins by Country",
+                "year": "Year",
+                "grade": "Grade (0-70)",
+                "quality_vs_year": "Quality vs Year"
+            }
         },
         "random": {
             "face_value": "Face Value",
