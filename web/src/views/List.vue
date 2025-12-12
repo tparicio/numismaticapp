@@ -191,8 +191,8 @@ const groups = ref([])
 const loading = ref(true)
 const viewMode = ref('grid')
 const router = useRouter()
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'
-const STORAGE_URL = 'http://localhost:8080' // Base URL for static files
+const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
+const STORAGE_URL = '' // Base URL for static files (relative)
 
 const viewerOpen = ref(false)
 const viewerImage = ref('')

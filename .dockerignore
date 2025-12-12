@@ -1,0 +1,28 @@
+# Secrets and Environment Config
+.env
+.env.*
+!.env.example
+
+# Version Control
+.git/
+
+# IDEs
+.idea/
+.vscode/
+
+# Build Artifacts
+bin/
+tmp/
+coverage.out
+
+# Dependencies
+node_modules/
+vendor/
+
+# Local Storage
+storage/
+var/
+
+# OS Files
+.DS_Store
+Thumbs.db

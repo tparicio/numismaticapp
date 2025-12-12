@@ -137,8 +137,8 @@ import { formatMintage } from '../utils/formatters'
 const route = useRoute()
 const router = useRouter()
 const coin = ref(null)
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'
-const STORAGE_URL = 'http://localhost:8080'
+const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
+const STORAGE_URL = ''
 
 const viewerOpen = ref(false)
 const viewerImage = ref('')

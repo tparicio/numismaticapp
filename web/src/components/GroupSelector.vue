@@ -75,7 +75,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'
+const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
 const groups = ref([])
 const showModal = ref(false)
 const newGroupName = ref('')

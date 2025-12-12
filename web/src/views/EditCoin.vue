@@ -193,7 +193,7 @@ import GroupSelector from '../components/GroupSelector.vue'
 
 const route = useRoute()
 const router = useRouter()
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'
+const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
 
 const loading = ref(true)
 const saving = ref(false)

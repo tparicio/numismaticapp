@@ -328,7 +328,7 @@ import MapChart from '../components/MapChart.vue'
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement)
 
 const router = useRouter()
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'
+const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
 
 const stats = ref({
   total_coins: 0,

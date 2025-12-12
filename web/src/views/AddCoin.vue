@@ -109,7 +109,7 @@ const uploading = ref(false)
 const isDragging = ref(false)
 const error = ref(null)
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1'
+const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
 
 onMounted(async () => {
   // Preselect last used group

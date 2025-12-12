@@ -2,9 +2,11 @@
 .PHONY: help run stop logs lint test generate clean tidy get
 
 # Variables
-DOCKER_COMPOSE = docker compose -f docker-compose.yml
+DOCKER_COMPOSE = docker compose -f deployment/docker/docker-compose.yml
 DOCKER_RUN_GO = docker run --rm -v $$(pwd):/app -w /app golang:1.25-bookworm
 DOCKER_RUN_NODE = docker run --rm -v $$(pwd)/web:/app -w /app node:20-alpine
+DOCKER_IMAGE ?= tparicio/numismaticapp
+DOCKER_TAG ?= latest
 
 # Colors
 COLOR_RESET = \033[0m
@@ -36,9 +38,18 @@ restart: ## 🔄 Restart the application (rebuilds app to apply migrations)
 	$(DOCKER_COMPOSE) up -d --build app
 	@echo "$(COLOR_GREEN)✅ Application restarted.$(COLOR_RESET)"
 
-logs: ## 📋 View container logs (follow mode)
 	@echo "$(COLOR_BLUE)📋 Tailing logs... (Ctrl+C to exit)$(COLOR_RESET)"
 	$(DOCKER_COMPOSE) logs -f
+
+docker-build: ## 🐳 Build Docker image for production
+	@echo "$(COLOR_BLUE)� Building Docker image $(DOCKER_IMAGE):$(DOCKER_TAG)...$(COLOR_RESET)"
+	docker build -f deployment/docker/Dockerfile -t $(DOCKER_IMAGE):$(DOCKER_TAG) .
+	@echo "$(COLOR_GREEN)✅ Image built: $(DOCKER_IMAGE):$(DOCKER_TAG)$(COLOR_RESET)"
+
+docker-push: ## 🚀 Push Docker image to registry
+	@echo "$(COLOR_BLUE)🚀 Pushing Docker image $(DOCKER_IMAGE):$(DOCKER_TAG)...$(COLOR_RESET)"
+	docker push $(DOCKER_IMAGE):$(DOCKER_TAG)
+	@echo "$(COLOR_GREEN)✅ Image pushed!$(COLOR_RESET)"
 
 ## 🛠️  Development
 
