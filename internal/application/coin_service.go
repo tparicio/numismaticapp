@@ -360,6 +360,8 @@ func (s *CoinService) GetDashboardStats(ctx context.Context) (*domain.DashboardS
 	if err == nil {
 		stats.AllCoins = make([]domain.Coin, len(allCoins))
 		stats.CenturyDistribution = make(map[string]int)
+		var totalSilver, totalGold float64
+
 		for i, c := range allCoins {
 			stats.AllCoins[i] = *c
 			if c.Year > 0 {
@@ -367,7 +369,18 @@ func (s *CoinService) GetDashboardStats(ctx context.Context) (*domain.DashboardS
 				key := fmt.Sprintf("S. %s", toRoman(century))
 				stats.CenturyDistribution[key]++
 			}
+
+			// Calculate weights in memory to allow exclusion of Nordic Gold
+			mat := strings.ToLower(c.Material)
+			if strings.Contains(mat, "silver") {
+				totalSilver += c.WeightG
+			}
+			if strings.Contains(mat, "gold") && !strings.Contains(mat, "nordic gold") {
+				totalGold += c.WeightG
+			}
 		}
+		stats.TotalSilverWeight = totalSilver
+		stats.TotalGoldWeight = totalGold
 	}
 
 	stats.OldestCoin, _ = s.repo.GetOldestCoin(ctx)
@@ -382,8 +395,7 @@ func (s *CoinService) GetDashboardStats(ctx context.Context) (*domain.DashboardS
 
 	stats.GroupDistribution, _ = s.repo.GetGroupDistribution(ctx)
 
-	stats.TotalSilverWeight, _ = s.repo.GetTotalWeightByMaterial(ctx, "%Silver%")
-	stats.TotalGoldWeight, _ = s.repo.GetTotalWeightByMaterial(ctx, "%Gold%")
+	// Previously fetched weights here, now calculated above
 
 	if heaviest, err := s.repo.GetHeaviestCoin(ctx); err == nil && heaviest != nil {
 		stats.HeaviestCoin = heaviest

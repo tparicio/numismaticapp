@@ -142,7 +142,9 @@
         <div class="card-body">
             <h2 class="card-title">Geographic Distribution</h2>
             <div class="h-64 relative">
-                <Bar v-if="countryChartData" :data="countryChartData" :options="chartOptions" />
+            <div class="h-96 relative w-full rounded-box overflow-hidden border border-base-200">
+                <MapChart v-if="stats.country_distribution" :data="stats.country_distribution" />
+            </div>
             </div>
         </div>
     </div>
@@ -321,6 +323,7 @@ import {
   PointElement
 } from 'chart.js'
 import { Bar, Doughnut, Scatter } from 'vue-chartjs'
+import MapChart from '../components/MapChart.vue'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement)
 

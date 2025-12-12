@@ -12,6 +12,8 @@
         "axios": "^1.6.0",
         "chart.js": "^4.5.1",
         "daisyui": "^4.0.0",
+        "leaflet": "^1.9.4",
+        "@vue-leaflet/vue-leaflet": "^0.10.1",
         "vue": "^3.3.0",
         "vue-chartjs": "^5.3.3",
         "vue-router": "^4.2.0"

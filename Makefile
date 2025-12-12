@@ -2,7 +2,7 @@
 .PHONY: help run stop logs lint test generate clean tidy get
 
 # Variables
-DOCKER_COMPOSE = docker compose -f deployment/docker/docker-compose.yml
+DOCKER_COMPOSE = docker compose -f docker-compose.yml
 DOCKER_RUN_GO = docker run --rm -v $$(pwd):/app -w /app golang:1.25-bookworm
 DOCKER_RUN_NODE = docker run --rm -v $$(pwd)/web:/app -w /app node:20-alpine
 
