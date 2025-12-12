@@ -9,7 +9,8 @@
         "loading": "Loading...",
         "edit": "Edit",
         "delete": "Delete",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "view_details": "View Full Details"
     },
     "dashboard": {
         "title": "Dashboard",
@@ -20,7 +21,20 @@
             "avg_value": "Average Value",
             "per_coin": "Per coin",
             "total_coins": "Total Coins",
-            "in_collection": "In collection"
+            "in_collection": "In collection",
+            "top_rarity": "Top Rarity",
+            "units": "units",
+            "oldest": "Oldest Gem",
+            "heaviest": "Heaviest:",
+            "smallest": "Smallest:",
+            "silver_reserve": "Silver Reserve",
+            "gold_reserve": "Gold Reserve",
+            "pure_silver": "Pure Silver (.999 approx)",
+            "pure_gold": "Pure Gold"
+        },
+        "lists": {
+            "top_rarity": "Top Rarity (Lowest Mintage)",
+            "trivia": "Trivia & Physical Stats"
         },
         "tabs": {
             "recent": "Recent",
@@ -31,7 +45,17 @@
             "materials": "Materials",
             "grades": "Grades",
             "timeline": "Timeline (Decades)",
-            "geo": "Geographic Distribution"
+            "geo": "Geographic Distribution",
+            "quality": "Quality Matrix (Year vs Grade)",
+            "storage": "Storage"
+        },
+        "random": {
+            "face_value": "Face Value",
+            "mint": "Mint",
+            "mintage": "Mintage",
+            "km_code": "KM Code",
+            "collection": "Collection",
+            "no_desc": "No description available."
         }
     }
 }

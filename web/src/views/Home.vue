@@ -32,12 +32,12 @@
           <div class="stat-figure text-accent">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
           </div>
-          <div class="stat-title">Top Rarity</div>
+          <div class="stat-title">{{ $t('dashboard.stats.top_rarity') }}</div>
           <div class="stat-value text-accent text-lg overflow-hidden truncate whitespace-nowrap max-w-[10rem]" :title="stats.rarest_coins?.[0]?.name">
             {{ stats.rarest_coins?.[0]?.name || 'N/A' }}
           </div>
           <div class="stat-desc" v-if="stats.rarest_coins?.[0]">
-            {{ formatMintage(stats.rarest_coins[0].mintage) }} units
+            {{ formatMintage(stats.rarest_coins[0].mintage) }} {{ $t('dashboard.stats.units') }}
           </div>
         </div>
       </div>
@@ -87,6 +87,7 @@
             <Bar v-if="gradeChartData" :data="gradeChartData" :options="chartOptions" />
           </div>
         </div>
+      </div>
       </div>
 
 
@@ -164,7 +165,7 @@
                 <div v-if="stats.oldest_coin" class="alert alert-info mt-4">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     <div>
-                        <h3 class="font-bold">Oldest Gem</h3>
+                        <h3 class="font-bold">{{ $t('dashboard.stats.oldest') }}</h3>
                         <div class="text-xs">{{ stats.oldest_coin.year }}: {{ stats.oldest_coin.name }}</div>
                     </div>
                 </div>
@@ -174,7 +175,7 @@
         <!-- Quality Matrix (Year vs Grade) -->
         <div class="card bg-base-100 shadow-xl">
             <div class="card-body">
-                <h2 class="card-title">Quality Matrix (Year vs Grade)</h2>
+                <h2 class="card-title">{{ $t('dashboard.charts.quality') }}</h2>
                 <div class="h-64 relative">
                     <Scatter v-if="qualityChartData" :data="qualityChartData" :options="scatterOptions" />
                 </div>
@@ -186,7 +187,7 @@
         <!-- Storage Distribution -->
         <div class="card bg-base-100 shadow-xl">
             <div class="card-body">
-                <h2 class="card-title">Storage</h2>
+                <h2 class="card-title">{{ $t('dashboard.charts.storage') }}</h2>
                 <div class="h-64 relative flex justify-center">
                     <Doughnut v-if="storageChartData" :data="storageChartData" :options="doughnutOptions" />
                 </div>
@@ -196,7 +197,7 @@
         <!-- Rarest Coins -->
         <div class="card bg-base-100 shadow-xl">
             <div class="card-body">
-                <h2 class="card-title text-sm uppercase text-base-content/70">Top Rarity (Lowest Mintage)</h2>
+                <h2 class="card-title text-sm uppercase text-base-content/70">{{ $t('dashboard.lists.top_rarity') }}</h2>
                 <div class="divide-y divide-base-200">
                     <div v-for="coin in stats.rarest_coins" :key="coin.id" 
                          class="flex items-center gap-3 py-3 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
@@ -214,26 +215,26 @@
         <!-- Trivia & Physical Stats -->
         <div class="card bg-base-100 shadow-xl">
             <div class="card-body">
-                <h2 class="card-title text-sm uppercase text-base-content/70">Trivia & Physical Stats</h2>
+                <h2 class="card-title text-sm uppercase text-base-content/70">{{ $t('dashboard.lists.trivia') }}</h2>
                 <div class="space-y-4">
                     <div class="stats stats-vertical shadow w-full">
                         <div class="stat">
-                            <div class="stat-title">Silver Reserve</div>
+                            <div class="stat-title">{{ $t('dashboard.stats.silver_reserve') }}</div>
                             <div class="stat-value text-primary text-2xl">{{ stats.total_silver_weight.toFixed(1) }}g</div>
-                            <div class="stat-desc">Pure Silver (.999 approx)</div>
+                            <div class="stat-desc">{{ $t('dashboard.stats.pure_silver') }}</div>
                         </div>
                         <div class="stat">
-                            <div class="stat-title">Gold Reserve</div>
+                            <div class="stat-title">{{ $t('dashboard.stats.gold_reserve') }}</div>
                             <div class="stat-value text-warning text-2xl">{{ stats.total_gold_weight.toFixed(1) }}g</div>
-                            <div class="stat-desc">Pure Gold</div>
+                            <div class="stat-desc">{{ $t('dashboard.stats.pure_gold') }}</div>
                         </div>
                     </div>
                     
                     <div v-if="stats.heaviest_coin" class="text-sm">
-                        <span class="font-bold">Heaviest:</span> {{ stats.heaviest_coin.name }} ({{ stats.heaviest_coin.weight_g }}g)
+                        <span class="font-bold">{{ $t('dashboard.stats.heaviest') }}</span> {{ stats.heaviest_coin.name }} ({{ stats.heaviest_coin.weight_g }}g)
                     </div>
                     <div v-if="stats.smallest_coin" class="text-sm">
-                        <span class="font-bold">Smallest:</span> {{ stats.smallest_coin.name }} ({{ stats.smallest_coin.diameter_mm }}mm)
+                        <span class="font-bold">{{ $t('dashboard.stats.smallest') }}</span> {{ stats.smallest_coin.name }} ({{ stats.smallest_coin.diameter_mm }}mm)
                     </div>
                 </div>
             </div>
@@ -273,34 +274,34 @@
 
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div>
-                    <div class="opacity-50">Face Value</div>
+                    <div class="opacity-50">{{ $t('dashboard.random.face_value') }}</div>
                     <div class="font-bold">{{ stats.random_coin.face_value }} {{ stats.random_coin.currency }}</div>
                 </div>
                 <div>
-                    <div class="opacity-50">Mint</div>
+                    <div class="opacity-50">{{ $t('dashboard.random.mint') }}</div>
                     <div class="font-bold">{{ stats.random_coin.mint || '-' }}</div>
                 </div>
                 <div>
-                    <div class="opacity-50">Mintage</div>
+                    <div class="opacity-50">{{ $t('dashboard.random.mintage') }}</div>
                     <div class="font-bold">{{ formatMintage(stats.random_coin.mintage) }}</div>
                 </div>
                 <div>
-                    <div class="opacity-50">KM Code</div>
+                    <div class="opacity-50">{{ $t('dashboard.random.km_code') }}</div>
                     <div class="font-bold">{{ stats.random_coin.km_code || '-' }}</div>
                 </div>
                 <div v-if="stats.random_coin.group_name">
-                    <div class="opacity-50">Collection</div>
+                    <div class="opacity-50">{{ $t('dashboard.random.collection') }}</div>
                     <div class="badge badge-outline mt-1">{{ stats.random_coin.group_name }}</div>
                 </div>
             </div>
 
             <p class="mt-4 text-base-content/80 italic border-l-4 border-primary pl-4 py-2 bg-base-200/50 rounded-r">
-                "{{ stats.random_coin.description || 'No description available.' }}"
+                "{{ stats.random_coin.description || $t('dashboard.random.no_desc') }}"
             </p>
 
             <div class="card-actions justify-end mt-4">
                 <button class="btn btn-primary gap-2" @click="router.push(`/coin/${stats.random_coin.id}`)">
-                    View Full Details
+                    {{ $t('common.view_details') }}
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                     </svg>

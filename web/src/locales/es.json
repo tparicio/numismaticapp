@@ -9,7 +9,8 @@
         "loading": "Cargando...",
         "edit": "Editar",
         "delete": "Eliminar",
-        "cancel": "Cancelar"
+        "cancel": "Cancelar",
+        "view_details": "Ver Detalles Completos"
     },
     "dashboard": {
         "title": "Dashboard",
@@ -20,7 +21,20 @@
             "avg_value": "Valor Medio",
             "per_coin": "Por moneda",
             "total_coins": "Total Monedas",
-            "in_collection": "En colección"
+            "in_collection": "En colección",
+            "top_rarity": "Mayor Rareza",
+            "units": "unidades",
+            "oldest": "Joya Más Antigua",
+            "heaviest": "Más Pesada:",
+            "smallest": "Más Pequeña:",
+            "silver_reserve": "Reserva de Plata",
+            "gold_reserve": "Reserva de Oro",
+            "pure_silver": "Plata Pura (.999 aprox)",
+            "pure_gold": "Oro Puro"
+        },
+        "lists": {
+            "top_rarity": "Top Rareza (Menor Tirada)",
+            "trivia": "Curiosidades y Estadísticas"
         },
         "tabs": {
             "recent": "Recientes",
@@ -31,7 +45,17 @@
             "materials": "Materiales",
             "grades": "Estados de Conservación",
             "timeline": "Línea Temporal (Décadas)",
-            "geo": "Distribución Geográfica"
+            "geo": "Distribución Geográfica",
+            "quality": "Matriz de Calidad (Año vs Estado)",
+            "storage": "Almacenamiento"
+        },
+        "random": {
+            "face_value": "Valor Facial",
+            "mint": "Ceca",
+            "mintage": "Tirada",
+            "km_code": "Código KM",
+            "collection": "Colección",
+            "no_desc": "Sin descripción disponible."
         }
     }
 }

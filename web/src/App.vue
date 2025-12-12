@@ -2,7 +2,10 @@
   <div class="min-h-screen bg-base-200">
     <div class="navbar bg-base-100 shadow-lg">
       <div class="flex-1">
-        <router-link to="/" class="btn btn-ghost normal-case text-xl">{{ $t('nav.title') }}</router-link>
+        <router-link to="/" class="btn btn-ghost normal-case text-xl flex items-center gap-2 font-['Cinzel']">
+            <img src="/icon.png" alt="Logo" class="w-8 h-8" />
+            <span><span class="font-bold">Numismatic</span><span class="font-normal opacity-80">App</span></span>
+        </router-link>
       </div>
       <div class="flex-none gap-2">
         <ul class="menu menu-horizontal px-1">
