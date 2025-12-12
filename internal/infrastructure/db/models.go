@@ -53,54 +53,6 @@ func (ns NullCoinSide) Value() (driver.Value, error) {
 	return string(ns.CoinSide), nil
 }
 
-type GradeType string
-
-const (
-	GradeTypeMC    GradeType = "MC"
-	GradeTypeRC    GradeType = "RC"
-	GradeTypeBC    GradeType = "BC"
-	GradeTypeMBC   GradeType = "MBC"
-	GradeTypeEBC   GradeType = "EBC"
-	GradeTypeSC    GradeType = "SC"
-	GradeTypeFDC   GradeType = "FDC"
-	GradeTypePROOF GradeType = "PROOF"
-)
-
-func (e *GradeType) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = GradeType(s)
-	case string:
-		*e = GradeType(s)
-	default:
-		return fmt.Errorf("unsupported scan type for GradeType: %T", src)
-	}
-	return nil
-}
-
-type NullGradeType struct {
-	GradeType GradeType `json:"grade_type"`
-	Valid     bool      `json:"valid"` // Valid is true if GradeType is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullGradeType) Scan(value interface{}) error {
-	if value == nil {
-		ns.GradeType, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.GradeType.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullGradeType) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.GradeType), nil
-}
-
 type ImageType string
 
 const (
@@ -159,7 +111,7 @@ type Coin struct {
 	KmCode         pgtype.Text        `json:"km_code"`
 	MinValue       pgtype.Numeric     `json:"min_value"`
 	MaxValue       pgtype.Numeric     `json:"max_value"`
-	Grade          NullGradeType      `json:"grade"`
+	Grade          pgtype.Text        `json:"grade"`
 	TechnicalNotes pgtype.Text        `json:"technical_notes"`
 	GeminiDetails  []byte             `json:"gemini_details"`
 	GroupID        pgtype.Int4        `json:"group_id"`

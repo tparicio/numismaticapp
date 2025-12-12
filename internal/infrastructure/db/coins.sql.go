@@ -50,7 +50,7 @@ type CreateCoinParams struct {
 	KmCode         pgtype.Text    `json:"km_code"`
 	MinValue       pgtype.Numeric `json:"min_value"`
 	MaxValue       pgtype.Numeric `json:"max_value"`
-	Grade          NullGradeType  `json:"grade"`
+	Grade          pgtype.Text    `json:"grade"`
 	TechnicalNotes pgtype.Text    `json:"technical_notes"`
 	GeminiDetails  []byte         `json:"gemini_details"`
 	GroupID        pgtype.Int4    `json:"group_id"`
@@ -310,8 +310,8 @@ ORDER BY count DESC
 `
 
 type GetGradeDistributionRow struct {
-	Grade NullGradeType `json:"grade"`
-	Count int64         `json:"count"`
+	Grade pgtype.Text `json:"grade"`
+	Count int64       `json:"count"`
 }
 
 func (q *Queries) GetGradeDistribution(ctx context.Context) ([]GetGradeDistributionRow, error) {
@@ -886,7 +886,7 @@ type UpdateCoinParams struct {
 	KmCode         pgtype.Text    `json:"km_code"`
 	MinValue       pgtype.Numeric `json:"min_value"`
 	MaxValue       pgtype.Numeric `json:"max_value"`
-	Grade          NullGradeType  `json:"grade"`
+	Grade          pgtype.Text    `json:"grade"`
 	TechnicalNotes pgtype.Text    `json:"technical_notes"`
 	GeminiDetails  []byte         `json:"gemini_details"`
 	GroupID        pgtype.Int4    `json:"group_id"`

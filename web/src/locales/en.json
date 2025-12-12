@@ -16,6 +16,40 @@
         "view_details": "View Full Details",
         "unknown": "Unknown"
     },
+    "grades": {
+        "PROOF": {
+            "name": "PROOF",
+            "desc": "Special striking with mirror fields and frosted reliefs, for collectors."
+        },
+        "FDC": {
+            "name": "FDC (Fleur de Coin)",
+            "desc": "Perfect coin, uncirculated, full original luster."
+        },
+        "SC": {
+            "name": "UNC (Uncirculated)",
+            "desc": "No wear, original luster, may have minor bag marks."
+        },
+        "EBC": {
+            "name": "XF (Extremely Fine)",
+            "desc": "Very slight wear on highest points, some luster remains."
+        },
+        "MBC": {
+            "name": "VF (Very Fine)",
+            "desc": "Circulated, moderate wear but attractive, main details visible."
+        },
+        "BC": {
+            "name": "VG (Very Good)",
+            "desc": "Considerable wear, major legends and details readable."
+        },
+        "RC": {
+            "name": "G (Good)",
+            "desc": "Heavily worn, legends and date barely readable."
+        },
+        "MC": {
+            "name": "POOR",
+            "desc": "Smooth, barely identifiable."
+        }
+    },
     "list": {
         "title": "My Collection",
         "search_placeholder": "Search...",

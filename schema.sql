@@ -2,8 +2,6 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TYPE image_type AS ENUM ('original', 'crop', 'thumbnail', 'sample');
 CREATE TYPE coin_side AS ENUM ('front', 'back');
-CREATE TYPE grade_type AS ENUM ('MC', 'RC', 'BC', 'MBC', 'EBC', 'SC', 'FDC', 'PROOF');
-
 CREATE TABLE coins (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255),
@@ -18,7 +16,7 @@ CREATE TABLE coins (
     km_code VARCHAR(50),
     min_value DECIMAL(10, 2),
     max_value DECIMAL(10, 2),
-    grade grade_type,
+    grade VARCHAR(50),
     technical_notes TEXT,
     gemini_details JSONB,
     group_id INT REFERENCES groups(id),

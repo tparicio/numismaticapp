@@ -66,7 +66,21 @@
             </div>
              <div class="form-control w-full">
               <label class="label"><span class="label-text">{{ $t('form.fields.grade') }}</span></label>
-              <input v-model="form.grade" type="text" class="input input-bordered w-full" />
+              <div class="join w-full">
+                <select v-model="baseGrade" class="select select-bordered join-item w-2/3">
+                    <option value="">Select Grade</option>
+                    <option v-for="g in BASE_GRADES" :key="g" :value="g">
+                        {{ g }} - {{ $t(`grades.${g}.name`) }}
+                    </option>
+                </select>
+                <select v-model="gradeModifier" class="select select-bordered join-item w-1/3">
+                    <option value="">(Standard)</option>
+                    <option value="+">+</option>
+                    <option value="++">++</option>
+                    <option value="-">-</option>
+                    <option value="--">--</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -190,6 +204,10 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import GroupSelector from '../components/GroupSelector.vue'
+import { BASE_GRADES } from '../utils/grades'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const route = useRoute()
 const router = useRouter()
@@ -198,6 +216,9 @@ const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
 const loading = ref(true)
 const saving = ref(false)
 const coin = ref(null)
+
+const baseGrade = ref('')
+const gradeModifier = ref('')
 
 const form = ref({
   name: '',
@@ -273,6 +294,21 @@ onMounted(async () => {
         group_name: '' // Will be populated below if exists
     }
     
+    // Parse grade
+    if (form.value.grade) {
+        const grade = form.value.grade
+        // Try to find base grade
+        const found = BASE_GRADES.find(bg => grade.includes(bg))
+        if (found) {
+            baseGrade.value = found
+            gradeModifier.value = grade.replace(found, '').trim()
+        } else {
+            // Fallback for custom strings
+            baseGrade.value = ''
+            gradeModifier.value = ''
+        }
+    }
+    
     // Fetch group details if assigned
      if (c.group_id) {
          try {
@@ -310,6 +346,7 @@ const submit = async () => {
   try {
     const payload = {
         ...form.value,
+        grade: baseGrade.value ? `${baseGrade.value}${gradeModifier.value}` : '',
         acquired_at: parseDateForSubmit(form.value.acquired_at),
         sold_at: parseDateForSubmit(form.value.sold_at)
     }

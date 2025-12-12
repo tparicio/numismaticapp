@@ -130,7 +130,13 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { useRoute, useRouter } from 'vue-router'
-import { GRADES } from '../constants/grades'
+import { useRoute, useRouter } from 'vue-router'
+import { normalizeGrade } from '../utils/grades'
+import ImageViewer from '../components/ImageViewer.vue'
+import { formatMintage } from '../utils/formatters'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 import ImageViewer from '../components/ImageViewer.vue'
 import { formatMintage } from '../utils/formatters'
 
@@ -202,9 +208,9 @@ const openViewer = (side) => {
 }
 
 const getGradeDescription = (code) => {
-    if (!code) return 'No grade assigned'
-    const g = GRADES.find(g => g.code === code)
-    return g ? g.description : 'Unknown grade'
+    if (!code) return t('common.unknown')
+    const base = normalizeGrade(code)
+    return t(`grades.${base}.desc`)
 }
 
 onMounted(async () => {

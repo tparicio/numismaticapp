@@ -46,7 +46,7 @@ func (r *PostgresCoinRepository) Save(ctx context.Context, coin *domain.Coin) er
 		KmCode:         toNullString(coin.KMCode),
 		MinValue:       toNumeric(coin.MinValue),
 		MaxValue:       toNumeric(coin.MaxValue),
-		Grade:          toNullGradeType(coin.Grade),
+		Grade:          toNullString(coin.Grade),
 		TechnicalNotes: toNullString(coin.TechnicalNotes),
 		GeminiDetails:  geminiDetailsBytes,
 		GroupID:        toNullInt4Ptr(coin.GroupID),
@@ -199,7 +199,7 @@ func (r *PostgresCoinRepository) GetGradeDistribution(ctx context.Context) (map[
 	}
 	dist := make(map[string]int)
 	for _, row := range rows {
-		dist[string(row.Grade.GradeType)] = int(row.Count)
+		dist[row.Grade.String] = int(row.Count)
 	}
 	return dist, nil
 }
@@ -375,7 +375,7 @@ func (r *PostgresCoinRepository) Update(ctx context.Context, coin *domain.Coin) 
 		KmCode:         toNullString(coin.KMCode),
 		MinValue:       toNumeric(coin.MinValue),
 		MaxValue:       toNumeric(coin.MaxValue),
-		Grade:          toNullGradeType(coin.Grade),
+		Grade:          toNullString(coin.Grade),
 		TechnicalNotes: toNullString(coin.TechnicalNotes),
 		GeminiDetails:  geminiDetailsBytes,
 		GroupID:        toNullInt4Ptr(coin.GroupID),
@@ -519,7 +519,7 @@ func toDomainCoin(row db.Coin) (*domain.Coin, error) {
 		KMCode:         row.KmCode.String,
 		MinValue:       minVal.Float64,
 		MaxValue:       maxVal.Float64,
-		Grade:          string(row.Grade.GradeType),
+		Grade:          row.Grade.String,
 		TechnicalNotes: row.TechnicalNotes.String,
 		GeminiDetails:  geminiDetails,
 		GroupID:        groupID,
@@ -606,13 +606,6 @@ func toNullInt4Ptr(i *int) pgtype.Int4 {
 	return pgtype.Int4{
 		Int32: int32(*i),
 		Valid: true,
-	}
-}
-
-func toNullGradeType(s string) db.NullGradeType {
-	return db.NullGradeType{
-		GradeType: db.GradeType(s),
-		Valid:     s != "",
 	}
 }
 

@@ -16,6 +16,40 @@
         "view_details": "Ver Detalles Completos",
         "unknown": "Desconocido"
     },
+    "grades": {
+        "PROOF": {
+            "name": "PROOF (Prueba)",
+            "desc": "Acuñación especial con fondo espejo y relieves mate, destinada a coleccionistas."
+        },
+        "FDC": {
+            "name": "FDC (Flor de Cuño)",
+            "desc": "Moneda perfecta, sin circular, con todo su lustre original."
+        },
+        "SC": {
+            "name": "SC (Sin Circular)",
+            "desc": "Sin desgaste, lustre original, puede tener mínimos contactos de bolsa."
+        },
+        "EBC": {
+            "name": "EBC (Excelente)",
+            "desc": "Muy poca circulación, ligero desgaste en puntos altos, buen lustre."
+        },
+        "MBC": {
+            "name": "MBC (Muy Buena)",
+            "desc": "Circulada, desgaste medio pero atractivo, detalles principales visibles."
+        },
+        "BC": {
+            "name": "BC (Bien Conservada)",
+            "desc": "Desgaste considerable, leyendas y detalles mayores legibles."
+        },
+        "RC": {
+            "name": "RC (Regular)",
+            "desc": "Muy desgastada, leyendas y fecha apenas legibles."
+        },
+        "MC": {
+            "name": "MC (Mala)",
+            "desc": "Lisa, apenas identificable."
+        }
+    },
     "list": {
         "title": "Mi Colección",
         "search_placeholder": "Buscar...",

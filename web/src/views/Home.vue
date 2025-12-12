@@ -97,7 +97,7 @@
         <div class="card-body">
           <h2 class="card-title">{{ $t('dashboard.charts.grades') }}</h2>
           <div class="h-64 relative">
-            <Bar v-if="gradeChartData" :data="gradeChartData" :options="chartOptions" />
+            <Bar v-if="gradeChartData" :data="gradeChartData" :options="gradeChartOptions" />
           </div>
         </div>
       </div>
@@ -342,7 +342,9 @@ import {
   PointElement
 } from 'chart.js'
 import { Bar, Doughnut, Scatter } from 'vue-chartjs'
+
 import MapChart from '../components/MapChart.vue'
+import { GRADE_ORDER, getGradeColor, getGradeValue } from '../utils/grades'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement)
 
@@ -565,20 +567,12 @@ const gradeChartData = computed(() => {
   const dist = stats.value.grade_distribution
   if (!dist) return null
   
-  // Custom sort order for grades if possible, otherwise rely on backend or simple sort
-  const gradeOrder = ['RC', 'BC', 'MBC', 'EBC', 'SC', 'FDC', 'PROOF']
-  const labels = Object.keys(dist).sort((a, b) => {
-      return gradeOrder.indexOf(a) - gradeOrder.indexOf(b)
-  })
+  // Use all base grades to ensure strict ordering
+  const labels = [...GRADE_ORDER]
   
-  const data = labels.map(l => dist[l])
+  const data = labels.map(l => dist[l] || 0)
   
-  const colors = labels.map(label => {
-      if (['RC', 'BC'].includes(label)) return '#BEF264' // Low
-      if (['MBC', 'EBC'].includes(label)) return '#22C55E' // Mid
-      if (['SC', 'FDC', 'PROOF'].includes(label)) return '#15803D' // High
-      return '#22C55E' // Default
-  })
+  const colors = labels.map(label => getGradeColor(label))
 
   return {
     labels,
@@ -589,6 +583,29 @@ const gradeChartData = computed(() => {
     }]
   }
 })
+
+const gradeChartOptions = computed(() => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+        callbacks: {
+            title: (context) => {
+                const label = context[0].label
+                return `${label} - ${t('grades.' + label + '.name')}`
+            },
+            label: (context) => {
+                 return `${t('dashboard.charts.labels.coins')}: ${context.parsed.y}`
+            },
+            afterBody: (context) => {
+                const label = context[0].label
+                return t('grades.' + label + '.desc')
+            }
+        }
+    }
+  }
+}))
 
 const timelineChartData = computed(() => {
     const dist = stats.value.decade_distribution
@@ -612,15 +629,13 @@ const qualityChartData = computed(() => {
     const coins = stats.value.all_coins
     if (!coins || coins.length === 0) return null
 
-    const gradeMap = {
-        'MC': 10, 'RC': 20, 'BC': 30, 'MBC': 40, 'EBC': 50, 'SC': 60, 'FDC': 65, 'PROOF': 70
-    }
+
 
     const data = coins
-        .filter(c => c.year > 0 && c.grade && gradeMap[c.grade])
+        .filter(c => c.year > 0 && c.grade && getGradeValue(c.grade) > 0)
         .map(c => ({
             x: c.year,
-            y: gradeMap[c.grade],
+            y: getGradeValue(c.grade),
             name: c.name,
             grade: c.grade
         }))
