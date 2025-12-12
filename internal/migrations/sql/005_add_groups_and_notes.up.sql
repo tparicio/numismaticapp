@@ -1,9 +1,0 @@
-CREATE TABLE groups (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL UNIQUE,
-    description TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
-ALTER TABLE coins ADD COLUMN group_id INT REFERENCES groups(id);
-ALTER TABLE coins ADD COLUMN user_notes TEXT;

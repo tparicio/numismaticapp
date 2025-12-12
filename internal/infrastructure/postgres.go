@@ -60,6 +60,7 @@ func (r *PostgresCoinRepository) Save(ctx context.Context, coin *domain.Coin) er
 		SoldAt:         toNullDate(coin.SoldAt),
 		PricePaid:      toNumeric(coin.PricePaid),
 		SoldPrice:      toNumeric(coin.SoldPrice),
+		NumistaNumber:  toNullInt4(coin.NumistaNumber),
 	}
 
 	result, err := r.q.CreateCoin(ctx, params)
@@ -389,6 +390,7 @@ func (r *PostgresCoinRepository) Update(ctx context.Context, coin *domain.Coin) 
 		SoldAt:         toNullDate(coin.SoldAt),
 		PricePaid:      toNumeric(coin.PricePaid),
 		SoldPrice:      toNumeric(coin.SoldPrice),
+		NumistaNumber:  toNullInt4(coin.NumistaNumber),
 	}
 
 	result, err := r.q.UpdateCoin(ctx, params)
@@ -517,6 +519,7 @@ func toDomainCoin(row db.Coin) (*domain.Coin, error) {
 		Material:       row.Material.String,
 		Description:    row.Description.String,
 		KMCode:         row.KmCode.String,
+		NumistaNumber:  int(row.NumistaNumber.Int32),
 		MinValue:       minVal.Float64,
 		MaxValue:       maxVal.Float64,
 		Grade:          row.Grade.String,

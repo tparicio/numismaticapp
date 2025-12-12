@@ -48,37 +48,49 @@ func (s *GeminiService) AnalyzeCoin(ctx context.Context, frontImagePath, backIma
 	}
 
 	prompt := `
-	Analiza estas imágenes de una moneda (anverso y reverso). 
-	Devuelve UNICAMENTE un objeto JSON válido (sin markdown, sin texto adicional) con la siguiente estructura:
+	Actúa como un experto numismático y analista de imagen. Tu tarea es extraer datos técnicos, calcular la corrección de rotación de una moneda y buscar referencias visuales comparativas.
+
+	INSTRUCCIONES DE VISIÓN Y ORIENTACIÓN (CRÍTICO):
+	1. Ignora el cartón, la cápsula de plástico o el fondo. Céntrate solo en el disco metálico.
+	2. Identifica la "parte superior" lógica del diseño (cabeza, escudo, texto).
+	3. Imagina un reloj superpuesto. Si la parte superior está a las 3 en punto (derecha) -> Ángulo -90. A las 9 (izquierda) -> 90. A las 6 (abajo) -> 180.
+	4. Calcula el ángulo exacto para dejar la moneda vertical.
+
+	INSTRUCCIONES DE BÚSQUEDA DE REFERENCIA:
+	1. Identifica el Código KM (Krause) de la moneda.
+	2. Busca el número identificador de Numista para esta moneda (Numista Number).
+
+	INSTRUCCIONES DE SALIDA:
+	Genera UNICAMENTE un objeto JSON válido. Sin markdown.
+
+	Estructura JSON requerida:
 	{
-		"name": "Título descriptivo (ej: 1 Peseta S.F. (1939) Segarra de Gaia)",
-		"country": "País de origen",
-		"year": 1999,
-		"face_value": "Valor facial (ej: 1 Euro)",
-		"currency": "Moneda (ej: Euro)",
-		"material": "Material (ej: Oro, Plata, Cobre)",
-		"description": "Descripción visual detallada",
-		"km_code": "Código KM# si es identificable",
-		"min_value": 10.5,
-		"max_value": 20.0,
-		"grade": "Estado de conservación estimado (ej: EBC, MBC)",
-		"notes": "Notas técnicas o de conservación",
+		"_debug_orientation_front": "Descripción de la orientación visual del anverso",
 		"vertical_correction_angle_front": 0.0,
+		"_debug_orientation_back": "Descripción de la orientación visual del reverso",
 		"vertical_correction_angle_back": 0.0,
+		"name": "Título descriptivo (ej: 25 Pesetas - Mundial 82)",
+		"country": "País",
+		"year": 1980,
+		"face_value": "Valor facial",
+		"currency": "Unidad monetaria",
+		"material": "Material",
+		"description": "Descripción visual",
+		"km_code": "Código KM#",
+		"numista_number": 0,
+		"min_value": 0.0,
+		"max_value": 0.0,
+		"grade": "Estado estimado",
+		"reference_source_name": "Nombre de la fuente (ej: Numista, uCoin)",
+		"notes": "Notas",
 		"weight_g": 0.0,
 		"diameter_mm": 0.0,
 		"thickness_mm": 0.0,
-		"edge": "Descripción del canto (estriado, liso, leyenda...)",
-		"shape": "Forma (redonda, cuadrada...)",
-		"mint": "Ceca o marca de ceca",
+		"edge": "Canto",
+		"shape": "Forma",
+		"mint": "Ceca",
 		"mintage": 0
 	}
-	
-	IMPORTANTE: 
-	1. 'vertical_correction_angle_front' y 'vertical_correction_angle_back' deben ser el ángulo de rotación en grados (positivo o negativo) necesario para que la imagen correspondiente quede perfectamente vertical.
-	2. Los campos numéricos (weight_g, diameter_mm, thickness_mm, mintage) deben ser estimaciones si no se pueden determinar con exactitud, o 0 si son totalmente desconocidos.
-	3. TODO el texto debe estar en ESPAÑOL.
-	4. El campo 'name' debe ser un título conciso pero descriptivo de la moneda.
 	`
 
 	resp, err := s.model.GenerateContent(ctx,

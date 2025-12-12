@@ -143,6 +143,11 @@
     "details": {
         "obverse": "Anverso",
         "reverse": "Reverso",
+        "toggles": {
+            "processed": "Procesadas",
+            "original": "Original",
+            "samples": "Muestras"
+        },
         "sections": {
             "details": "Detalles",
             "description": "Descripción",

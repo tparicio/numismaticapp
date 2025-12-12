@@ -1,9 +1,29 @@
 <template>
   <div v-if="coin" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
     <!-- Images Section -->
-    <!-- Images Section -->
     <div class="card bg-base-100 shadow-xl">
       <div class="card-body">
+        
+        <!-- Image Source Toggles -->
+        <div class="flex justify-center mb-6">
+            <div class="join">
+                <button 
+                    class="btn join-item" 
+                    :class="{ 'btn-primary': activeImageSource === 'processed' }"
+                    @click="activeImageSource = 'processed'"
+                >
+                    {{ $t('details.toggles.processed') }}
+                </button>
+                <button 
+                    class="btn join-item" 
+                    :class="{ 'btn-primary': activeImageSource === 'original' }"
+                    @click="activeImageSource = 'original'"
+                >
+                    {{ $t('details.toggles.original') }}
+                </button>
+            </div>
+        </div>
+
         <div class="flex flex-col sm:flex-row justify-center gap-8 items-center">
             <!-- Front -->
             <div class="text-center">
@@ -13,7 +33,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                         </svg>
                     </div>
-                    <img :src="getThumbnailUrl(coin, 'front')" class="rounded-full shadow-lg max-w-xs hover:scale-105 transition-transform duration-300" alt="Front" />
+                    <img :src="getCurrentImageUrl('front')" class="rounded-full shadow-lg max-w-xs hover:scale-105 transition-transform duration-300" alt="Front" @error="handleImageError" />
                 </figure>
                 <div class="mt-4 font-bold text-lg">{{ $t('details.obverse') }}</div>
             </div>
@@ -26,7 +46,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                         </svg>
                     </div>
-                    <img :src="getThumbnailUrl(coin, 'back')" class="rounded-full shadow-lg max-w-xs hover:scale-105 transition-transform duration-300" alt="Back" />
+                    <img :src="getCurrentImageUrl('back')" class="rounded-full shadow-lg max-w-xs hover:scale-105 transition-transform duration-300" alt="Back" @error="handleImageError" />
                 </figure>
                 <div class="mt-4 font-bold text-lg">{{ $t('details.reverse') }}</div>
             </div>
@@ -56,7 +76,20 @@
             </div>
             <div>
                 <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.km') }}</span>
-                <span>{{ coin.km_code || 'N/A' }}</span>
+                <span class="flex items-center gap-2">
+                    {{ coin.km_code || 'N/A' }}
+                    <a v-if="getNumistaUrl()" 
+                       :href="getNumistaUrl()" 
+                       target="_blank" 
+                       class="btn btn-xs btn-outline btn-info gap-1"
+                       title="Ver en Numista"
+                    >
+                        N
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                        </svg>
+                    </a>
+                </span>
             </div>
             <div>
                 <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.mint') }}</span>
@@ -130,15 +163,12 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { useRoute, useRouter } from 'vue-router'
-import { useRoute, useRouter } from 'vue-router'
 import { normalizeGrade } from '../utils/grades'
 import ImageViewer from '../components/ImageViewer.vue'
 import { formatMintage } from '../utils/formatters'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-import ImageViewer from '../components/ImageViewer.vue'
-import { formatMintage } from '../utils/formatters'
 
 const route = useRoute()
 const router = useRouter()
@@ -148,6 +178,7 @@ const STORAGE_URL = ''
 
 const viewerOpen = ref(false)
 const viewerImage = ref('')
+const activeImageSource = ref('processed') // processed, original
 
 // Delete Modal State
 const deleteModalOpen = ref(false)
@@ -169,41 +200,46 @@ const deleteCoin = async () => {
 }
 
 const getImageUrl = (path) => {
-    if (!path) return 'https://via.placeholder.com/150'
+    if (!path) return '/broken_coin.png'
     if (path.includes('storage/')) {
         return `${STORAGE_URL}/storage/${path.split('storage/')[1]}`
     }
     return path
 }
 
-const getThumbnailUrl = (coin, side) => {
-    if (!coin) return ''
-    // Try to find thumbnail in images array
-    if (coin.images && coin.images.length > 0) {
-        const thumb = coin.images.find(img => img.image_type === 'thumbnail' && img.side === side)
-        if (thumb) {
-            return getImageUrl(thumb.path)
-        }
+const getNumistaUrl = () => {
+    if (coin.value && coin.value.numista_number) {
+        return `https://es.numista.com/${coin.value.numista_number}`
     }
-    // Fallback
-    return side === 'front' ? getImageUrl(coin.sample_image_url_front) : getImageUrl(coin.sample_image_url_back)
+    return null
 }
 
-const getFullResUrl = (coin, side) => {
-    if (!coin) return ''
-    // Try to find processed crop first, then original
-    if (coin.images && coin.images.length > 0) {
-        const processed = coin.images.find(img => img.image_type === 'crop' && img.side === side)
-        if (processed) return getImageUrl(processed.path)
+const getCurrentImageUrl = (side) => {
+    if (!coin.value) return '/broken_coin.png'
+    
+    // Try to find specific image type in images array
+    if (coin.value.images && coin.value.images.length > 0) {
+        let typeToFind = 'crop'
+        if (activeImageSource.value === 'original') {
+            typeToFind = 'original'
+        }
         
-        const original = coin.images.find(img => img.image_type === 'original' && img.side === side)
-        if (original) return getImageUrl(original.path)
+        const img = coin.value.images.find(img => img.image_type === typeToFind && img.side === side)
+        if (img) {
+            return getImageUrl(img.path)
+        }
     }
-    return side === 'front' ? getImageUrl(coin.sample_image_url_front) : getImageUrl(coin.sample_image_url_back)
+
+    // Fallback logic
+    return '/broken_coin.png'
+}
+
+const handleImageError = (e) => {
+    e.target.src = '/broken_coin.png'
 }
 
 const openViewer = (side) => {
-    viewerImage.value = getFullResUrl(coin.value, side)
+    viewerImage.value = getCurrentImageUrl(side)
     viewerOpen.value = true
 }
 

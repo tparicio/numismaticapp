@@ -20,6 +20,7 @@ type Coin struct {
 	Material       string         `json:"material"`
 	Description    string         `json:"description"`
 	KMCode         string         `json:"km_code"`
+	NumistaNumber  int            `json:"numista_number"`
 	MinValue       float64        `json:"min_value"`
 	MaxValue       float64        `json:"max_value"`
 	Grade          string         `json:"grade"`
@@ -122,6 +123,8 @@ type ImageService interface {
 	CropToContent(image []byte) ([]byte, error)
 	// GenerateThumbnail creates a smaller version of the image preserving aspect ratio and transparency.
 	GenerateThumbnail(imagePath string, width int) (string, error)
+	// Rotate rotates the image at the given path by the specified angle.
+	Rotate(imagePath string, angle float64) error
 }
 
 // AIService defines the interface for AI analysis.
@@ -139,6 +142,7 @@ type CoinAnalysisResult struct {
 	Material                     string         `json:"material"`
 	Description                  string         `json:"description"`
 	KMCode                       string         `json:"km_code"`
+	NumistaNumber                int            `json:"numista_number"`
 	MinValue                     float64        `json:"min_value"`
 	MaxValue                     float64        `json:"max_value"`
 	Grade                        string         `json:"grade"`
@@ -153,5 +157,6 @@ type CoinAnalysisResult struct {
 	Shape                        string         `json:"shape"`
 	Mint                         string         `json:"mint"`
 	Mintage                      int64          `json:"mintage"`
+	ReferenceSourceName          string         `json:"reference_source_name"`
 	RawDetails                   map[string]any `json:"raw_details"`
 }

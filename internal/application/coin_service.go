@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
+	"net/http"
 	"strings"
 	"time"
 
@@ -142,6 +143,17 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 			RawDetails:  map[string]any{"error": err.Error()},
 		}
 	}
+	// 4.1 Apply Rotation Correction
+	if analysis.VerticalCorrectionAngleFront != 0 {
+		if err := s.imageService.Rotate(processedFrontPath, analysis.VerticalCorrectionAngleFront); err != nil {
+			fmt.Printf("⚠️ Failed to rotate front image: %v\n", err)
+		}
+	}
+	if analysis.VerticalCorrectionAngleBack != 0 {
+		if err := s.imageService.Rotate(processedBackPath, analysis.VerticalCorrectionAngleBack); err != nil {
+			fmt.Printf("⚠️ Failed to rotate back image: %v\n", err)
+		}
+	}
 
 	// Handle Group
 	var groupID *int
@@ -169,6 +181,7 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 		Material:       analysis.Material,
 		Description:    analysis.Description,
 		KMCode:         analysis.KMCode,
+		NumistaNumber:  analysis.NumistaNumber,
 		MinValue:       analysis.MinValue,
 		MaxValue:       analysis.MaxValue,
 		Grade:          normalizeGrade(analysis.Grade),
@@ -226,6 +239,20 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 	if err := addImage(processedBackPath, "crop", "back", backFile.Filename); err != nil {
 		return nil, err
 	}
+
+	// Add Reference Images - Removed as per new requirement
+	/*
+		if analysis.ReferenceImageFrontURL != "" {
+			if path, err := s.downloadAndSaveImage(coinID, analysis.ReferenceImageFrontURL, "sample_front.jpg"); err == nil {
+				_ = addImage(path, "sample", "front", "reference_front.jpg")
+			}
+		}
+		if analysis.ReferenceImageBackURL != "" {
+			if path, err := s.downloadAndSaveImage(coinID, analysis.ReferenceImageBackURL, "sample_back.jpg"); err == nil {
+				_ = addImage(path, "sample", "back", "reference_back.jpg")
+			}
+		}
+	*/
 
 	// 5. Generate Thumbnails
 	// Front
@@ -599,4 +626,27 @@ func (s *CoinService) UpdateCoin(ctx context.Context, id uuid.UUID, params Updat
 func (s *CoinService) DeleteCoin(ctx context.Context, id uuid.UUID) error {
 	// Optional: Delete images from storage (omitted for MVP safety)
 	return s.repo.Delete(ctx, id)
+}
+
+func (s *CoinService) downloadAndSaveImage(coinID uuid.UUID, url, filename string) (string, error) {
+	// Basic implementation: fetch URL, save to storage
+	// We need http client
+
+	// START TEMPORARY FIX: Add import at top or use full package name if possible.
+	// Go doesn't allow random imports. I must add "net/http" to imports.
+	// Since I can't easily edit imports reliably with multi_replace without context,
+	// I will assume "net/http" is available or handle it.
+	// Actually, I'll just use http.Get
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("bad status: %s", resp.Status)
+	}
+
+	return s.storage.SaveFile(coinID, filename, resp.Body)
 }

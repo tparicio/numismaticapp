@@ -26,6 +26,7 @@ CREATE TABLE coins (
     thickness_mm NUMERIC,
     edge TEXT,
     shape TEXT,
+    numista_number INTEGER,
     acquired_at DATE,
     sold_at DATE,
     price_paid NUMERIC(10, 2),

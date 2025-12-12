@@ -121,6 +121,7 @@ type Coin struct {
 	ThicknessMm    pgtype.Numeric     `json:"thickness_mm"`
 	Edge           pgtype.Text        `json:"edge"`
 	Shape          pgtype.Text        `json:"shape"`
+	NumistaNumber  pgtype.Int4        `json:"numista_number"`
 	AcquiredAt     pgtype.Date        `json:"acquired_at"`
 	SoldAt         pgtype.Date        `json:"sold_at"`
 	PricePaid      pgtype.Numeric     `json:"price_paid"`

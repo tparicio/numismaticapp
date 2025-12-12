@@ -266,3 +266,23 @@ func (s *VipsImageService) GenerateThumbnail(imagePath string, width int) (strin
 
 	return outputPath, nil
 }
+
+func (s *VipsImageService) Rotate(imagePath string, angle float64) error {
+	if angle == 0 {
+		return nil
+	}
+	buffer, err := bimg.Read(imagePath)
+	if err != nil {
+		return fmt.Errorf("failed to read image for rotation: %w", err)
+	}
+
+	newImage, err := bimg.NewImage(buffer).Rotate(bimg.Angle(angle))
+	if err != nil {
+		return fmt.Errorf("failed to rotate image: %w", err)
+	}
+
+	if err := bimg.Write(imagePath, newImage); err != nil {
+		return fmt.Errorf("failed to save rotated image: %w", err)
+	}
+	return nil
+}
