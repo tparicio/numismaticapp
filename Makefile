@@ -41,15 +41,23 @@ restart: ## 🔄 Restart the application (rebuilds app to apply migrations)
 	@echo "$(COLOR_BLUE)📋 Tailing logs... (Ctrl+C to exit)$(COLOR_RESET)"
 	$(DOCKER_COMPOSE) logs -f
 
-docker-build: ## 🐳 Build Docker image for production
-	@echo "$(COLOR_BLUE)� Building Docker image $(DOCKER_IMAGE):$(DOCKER_TAG)...$(COLOR_RESET)"
+docker-init: ## 🛠️  Initialize Docker Buildx for multi-arch builds
+	@echo "$(COLOR_BLUE)🛠️  Initializing Docker Buildx...$(COLOR_RESET)"
+	docker buildx create --use || true
+	@echo "$(COLOR_GREEN)✅ Buildx initialized.$(COLOR_RESET)"
+
+docker-build: ## 🐳 Build Docker image locally (AMD64)
+	@echo "$(COLOR_BLUE)🐳 Building Docker image $(DOCKER_IMAGE):$(DOCKER_TAG)...$(COLOR_RESET)"
 	docker build -f deployment/docker/Dockerfile -t $(DOCKER_IMAGE):$(DOCKER_TAG) .
 	@echo "$(COLOR_GREEN)✅ Image built: $(DOCKER_IMAGE):$(DOCKER_TAG)$(COLOR_RESET)"
 
-docker-push: ## 🚀 Push Docker image to registry
-	@echo "$(COLOR_BLUE)🚀 Pushing Docker image $(DOCKER_IMAGE):$(DOCKER_TAG)...$(COLOR_RESET)"
-	docker push $(DOCKER_IMAGE):$(DOCKER_TAG)
-	@echo "$(COLOR_GREEN)✅ Image pushed!$(COLOR_RESET)"
+docker-push: ## 🚀 Build & Push Multi-Arch (AMD64/ARM64) Image to DockerHub
+	@echo "$(COLOR_BLUE)🚀 Building and Pushing multi-arch image $(DOCKER_IMAGE):$(DOCKER_TAG)...$(COLOR_RESET)"
+	docker buildx build --platform linux/amd64,linux/arm64 \
+		-t $(DOCKER_IMAGE):$(DOCKER_TAG) \
+		-f deployment/docker/Dockerfile \
+		--push .
+	@echo "$(COLOR_GREEN)✅ Multi-arch image pushed!$(COLOR_RESET)"
 
 ## 🛠️  Development
 
