@@ -59,6 +59,8 @@ docker-push: ## 🚀 Build & Push Multi-Arch (AMD64/ARM64) Image to DockerHub
 		--push .
 	@echo "$(COLOR_GREEN)✅ Multi-arch image pushed!$(COLOR_RESET)"
 
+deploy: docker-init docker-push ## 🚀 Initialize buildx and push multi-arch image
+
 ## 🛠️  Development
 
 lint: ## 🔍 Run linters (Go & Vue)
