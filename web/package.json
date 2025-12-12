@@ -13,6 +13,8 @@
         "axios": "^1.6.0",
         "chart.js": "^4.5.1",
         "daisyui": "^4.0.0",
+        "highcharts": "^12.4.0",
+        "highcharts-vue": "^2.0.1",
         "leaflet": "^1.9.4",
         "vue": "^3.3.0",
         "vue-chartjs": "^5.3.3",

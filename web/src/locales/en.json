@@ -222,11 +222,14 @@
             "km_code": "KM Code",
             "collection": "Collection",
             "no_desc": "No description available."
-        }
-    },
-    "widgets": {
-        "storage_stats": {
-            "title": "Storage Statistics"
+        },
+        "map": {
+            "legend_title": "COINS"
+        },
+        "widgets": {
+            "storage_stats": {
+                "title": "Storage Statistics"
+            }
         }
     }
 }

@@ -101,7 +101,7 @@
           </div>
         </div>
       </div>
-      </div>
+
 
       <!-- Rarest Coins -->
       <div class="card bg-base-100 shadow-xl lg:col-span-1">
