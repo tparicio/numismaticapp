@@ -1,53 +1,80 @@
-# Database Schema Documentation
+# Database Documentation
+
+The application uses **PostgreSQL** as its relational database. The schema is designed to support the core entity `Coin` and its related data like `Images` and `Groups`.
+
+## ER Diagram
+
+```mermaid
+erDiagram
+    COINS ||--o{ COIN_IMAGES : has
+    GROUPS ||--o{ COINS : contains
+
+    COINS {
+        UUID id PK
+        VARCHAR name
+        UUID group_id FK
+        VARCHAR mint
+        BIGINT mintage
+        VARCHAR country
+        INTEGER year
+        VARCHAR face_value
+        VARCHAR currency
+        VARCHAR material
+        TEXT description
+        VARCHAR km_code
+        DECIMAL min_value
+        DECIMAL max_value
+        VARCHAR grade
+        JSONB gemini_details
+        TEXT personal_notes
+        DATE acquired_at
+        DATE sold_at
+        NUMERIC price_paid
+        NUMERIC sold_price
+    }
+
+    GROUPS {
+        SERIAL id PK
+        VARCHAR name
+        TEXT description
+    }
+
+    COIN_IMAGES {
+        UUID id PK
+        UUID coin_id FK
+        ENUM image_type "original, crop, thumbnail, sample"
+        ENUM side "front, back"
+        VARCHAR path
+        VARCHAR mime_type
+    }
+```
 
 ## Tables
 
 ### `coins`
-
-Stores the main information about each coin in the collection.
-
-| Column | Type | Description |
-| :--- | :--- | :--- |
-| `id` | UUID | Primary Key |
-| `country` | VARCHAR(255) | Country of origin |
-| `year` | INTEGER | Year of minting |
-| `face_value` | VARCHAR(100) | Face value (e.g., "1 Dollar") |
-| `currency` | VARCHAR(100) | Currency unit |
-| `material` | VARCHAR(100) | Material composition |
-| `description` | TEXT | Detailed description |
-| `km_code` | VARCHAR(50) | Krause-Mishler catalog code |
-| `min_value` | DECIMAL(10, 2) | Estimated minimum value |
-| `max_value` | DECIMAL(10, 2) | Estimated maximum value |
-| `grade` | VARCHAR(50) | Condition grade |
-| `sample_image_url_front` | TEXT | URL/Path to the front sample image |
-| `sample_image_url_back` | TEXT | URL/Path to the back sample image |
-| `notes` | TEXT | User notes |
-| `gemini_details` | JSONB | Raw JSON data from Gemini analysis |
-| `created_at` | TIMESTAMP | Creation timestamp |
-| `updated_at` | TIMESTAMP | Last update timestamp |
+The central table storing all numismatic data.
+- **Primary Key**: `id` (UUID v4)
+- **JSONB**: `gemini_details` stores the raw analysis result from the AI model, allowing for schema-less flexibility for AI data.
+- **Indexes**: `country`, `year` for faster filtering.
 
 ### `coin_images`
+Stores metadata about the images associated with a coin.
+- **Types**:
+    - `original`: The raw upload.
+    - `crop`: The background-removed, circular crop.
+    - `thumbnail`: A smaller version for list views.
+    - `sample`: Reference images (unused currently).
 
-Stores metadata for all images associated with a coin (originals and processed).
+### `groups`
+Simple categorization for coins (e.g., "My Gold Collection", "Swap List").
 
-| Column | Type | Description |
-| :--- | :--- | :--- |
-| `id` | UUID | Primary Key |
-| `coin_id` | UUID | Foreign Key to `coins.id` |
-| `image_type` | ENUM | Type of image: `original_front`, `original_back`, `processed_front`, `processed_back` |
-| `path` | VARCHAR(255) | File system path to the image |
-| `extension` | VARCHAR(10) | File extension (e.g., "jpg") |
-| `size` | BIGINT | File size in bytes |
-| `width` | INTEGER | Image width in pixels |
-| `height` | INTEGER | Image height in pixels |
-| `mime_type` | VARCHAR(50) | MIME type (e.g., "image/jpeg") |
-| `created_at` | TIMESTAMP | Creation timestamp |
-| `updated_at` | TIMESTAMP | Last update timestamp |
+## Data Access Strategy
+
+We use **sqlc** to generate type-safe Go code from SQL queries.
+- **Queries Location**: `internal/infrastructure/db/queries/`
+- **Generated Code**: `internal/infrastructure/db/`
+- **Migration**: Schema is defined in `schema.sql`.
 
 ## Enums
-
-### `image_type`
-- `original_front`
-- `original_back`
-- `processed_front`
-- `processed_back`
+- `image_type`: Ensures data integrity for image categorization.
+- `coin_side`: `front` (obverse) or `back` (reverse).

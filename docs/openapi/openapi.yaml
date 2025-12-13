@@ -1,0 +1,735 @@
+openapi: 3.0.0
+info:
+  title: Numismatic App API
+  description: API for managing a coin collection, including AI analysis and statistics.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local Development Server
+
+tags:
+  - name: Coins
+    description: Operations about coins
+  - name: Groups
+    description: Operations about coin groups
+  - name: Dashboard
+    description: Statistics and dashboard data
+  - name: AI
+    description: AI analysis operations
+  - name: Health
+    description: Health check endpoint
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health Check
+      description: Returns the health status of the API.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /coins:
+    get:
+      tags:
+        - Coins
+      summary: List Coins
+      description: Retrieve a list of coins with optional filtering and pagination.
+      parameters:
+        - name: limit
+          in: query
+          description: Number of coins to return (default 10)
+          schema:
+            type: integer
+            default: 10
+        - name: offset
+          in: query
+          description: Number of coins to skip (default 0)
+          schema:
+            type: integer
+            default: 0
+        - name: group_id
+          in: query
+          description: Filter by Group ID
+          schema:
+            type: integer
+        - name: year
+          in: query
+          description: Filter by Year
+          schema:
+            type: integer
+        - name: country
+          in: query
+          description: Filter by Country
+          schema:
+            type: string
+        - name: q
+          in: query
+          description: General search query
+          schema:
+            type: string
+        - name: min_price
+          in: query
+          description: Filter by minimum price
+          schema:
+            type: number
+            format: double
+        - name: max_price
+          in: query
+          description: Filter by maximum price
+          schema:
+            type: number
+            format: double
+        - name: sort_by
+          in: query
+          description: Field to sort by
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: Sort order (asc or desc)
+          schema:
+            type: string
+            enum: [asc, desc]
+      responses:
+        '200':
+          description: A list of coins
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Coin'
+        '500':
+          description: Internal Server Error
+
+    post:
+      tags:
+        - Coins
+      summary: Add a new Coin
+      description: Create a new coin record with images and optional AI analysis.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - front_image
+                - back_image
+              properties:
+                front_image:
+                  type: string
+                  format: binary
+                  description: Image file of the front of the coin
+                back_image:
+                  type: string
+                  format: binary
+                  description: Image file of the back of the coin
+                group_name:
+                  type: string
+                  description: Name of the group to assign or create
+                user_notes:
+                  type: string
+                  description: Personal notes for the coin
+                name:
+                  type: string
+                  description: Name of the coin override
+                mint:
+                  type: string
+                  description: Mint mark override
+                mintage:
+                  type: integer
+                  description: Mintage number override
+                model_name:
+                  type: string
+                  description: Specific AI model to use for analysis
+                temperature:
+                  type: number
+                  format: float
+                  description: Temperature for AI analysis (default 0.4)
+      responses:
+        '201':
+          description: Coin created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Coin'
+        '400':
+          description: Bad Request (missing images)
+        '500':
+          description: Internal Server Error
+
+  /coins/{id}:
+    get:
+      tags:
+        - Coins
+      summary: Get a Coin
+      description: Retrieve detailed information about a specific coin.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the coin
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Detailed coin information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Coin'
+        '400':
+          description: Invalid UUID
+        '404':
+          description: Coin not found
+
+    put:
+      tags:
+        - Coins
+      summary: Update a Coin
+      description: Update information for an existing coin.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the coin
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCoinParams'
+      responses:
+        '200':
+          description: Coin updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Coin'
+        '400':
+          description: Invalid request or UUID
+        '500':
+          description: Internal Server Error
+
+    delete:
+      tags:
+        - Coins
+      summary: Delete a Coin
+      description: Remove a coin from the collection.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the coin
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Coin deleted successfully
+        '400':
+          description: Invalid UUID
+        '500':
+          description: Internal Server Error
+
+  /coins/{id}/analyze:
+    post:
+      tags:
+        - Coins
+        - AI
+      summary: Re-analyze a Coin
+      description: Trigger a new AI analysis for an existing coin.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: UUID of the coin
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                model_name:
+                  type: string
+                temperature:
+                  type: number
+                  format: float
+      responses:
+        '200':
+          description: Coin re-analyzed and updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Coin'
+        '400':
+          description: Invalid request
+        '500':
+          description: Internal Server Error
+
+  /groups:
+    get:
+      tags:
+        - Groups
+      summary: List Groups
+      description: Retrieve all coin groups.
+      responses:
+        '200':
+          description: List of groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Group'
+        '500':
+          description: Internal Server Error
+
+    post:
+      tags:
+        - Groups
+      summary: Create Group
+      description: Create a new coin group.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '201':
+          description: Group created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Server Error
+
+  /groups/{id}:
+    put:
+      tags:
+        - Groups
+      summary: Update Group
+      description: Update an existing coin group.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the group
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Group updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Server Error
+
+    delete:
+      tags:
+        - Groups
+      summary: Delete Group
+      description: Delete a coin group.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the group
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Group deleted
+        '400':
+          description: Invalid ID
+        '500':
+          description: Internal Server Error
+
+  /gemini/models:
+    get:
+      tags:
+        - AI
+      summary: List Gemini Models
+      description: Retrieve available AI models for analysis.
+      responses:
+        '200':
+          description: List of models
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GeminiModelInfo'
+        '500':
+          description: Internal Server Error
+
+  /dashboard:
+    get:
+      tags:
+        - Dashboard
+      summary: Dashboard Stats
+      description: Get aggregated statistics for the dashboard.
+      responses:
+        '200':
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardStats'
+        '500':
+          description: Internal Server Error
+
+components:
+  schemas:
+    Coin:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        mint:
+          type: string
+        mintage:
+          type: integer
+          format: int64
+        country:
+          type: string
+        year:
+          type: integer
+        face_value:
+          type: string
+        currency:
+          type: string
+        material:
+          type: string
+        description:
+          type: string
+        km_code:
+          type: string
+        numista_number:
+          type: integer
+        min_value:
+          type: number
+          format: double
+        max_value:
+          type: number
+          format: double
+        grade:
+          type: string
+        technical_notes:
+          type: string
+        gemini_details:
+          type: object
+          additionalProperties: true
+        gemini_model:
+          type: string
+        gemini_temperature:
+          type: number
+          format: double
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoinImage'
+        group_id:
+          type: integer
+          nullable: true
+        personal_notes:
+          type: string
+        weight_g:
+          type: number
+          format: double
+        diameter_mm:
+          type: number
+          format: double
+        thickness_mm:
+          type: number
+          format: double
+        edge:
+          type: string
+        shape:
+          type: string
+        acquired_at:
+          type: string
+          format: date-time
+          nullable: true
+        sold_at:
+          type: string
+          format: date-time
+          nullable: true
+        price_paid:
+          type: number
+          format: double
+        sold_price:
+          type: number
+          format: double
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CoinImage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        coin_id:
+          type: string
+          format: uuid
+        image_type:
+          type: string
+          description: original, crop, thumbnail, sample
+        side:
+          type: string
+          description: front, back
+        path:
+          type: string
+        extension:
+          type: string
+        size:
+          type: integer
+          format: int64
+        width:
+          type: integer
+        height:
+          type: integer
+        mime_type:
+          type: string
+        original_filename:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Group:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    UpdateCoinParams:
+      type: object
+      properties:
+        name:
+          type: string
+        mint:
+          type: string
+        mintage:
+          type: integer
+          format: int64
+        country:
+          type: string
+        year:
+          type: integer
+        face_value:
+          type: string
+        currency:
+          type: string
+        material:
+          type: string
+        description:
+          type: string
+        km_code:
+          type: string
+        min_value:
+          type: number
+          format: double
+        max_value:
+          type: number
+          format: double
+        grade:
+          type: string
+        technical_notes:
+          type: string
+        personal_notes:
+          type: string
+        weight_g:
+          type: number
+          format: double
+        diameter_mm:
+          type: number
+          format: double
+        thickness_mm:
+          type: number
+          format: double
+        edge:
+          type: string
+        shape:
+          type: string
+        acquired_at:
+          type: string
+          format: date-time
+          nullable: true
+        sold_at:
+          type: string
+          format: date-time
+          nullable: true
+        price_paid:
+          type: number
+          format: double
+        sold_price:
+          type: number
+          format: double
+        group_name:
+          type: string
+
+    GeminiModelInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+
+    DashboardStats:
+      type: object
+      properties:
+        total_coins:
+          type: integer
+          format: int64
+        total_value:
+          type: number
+          format: double
+        average_value:
+          type: number
+          format: double
+        top_valuable_coins:
+          type: array
+          items:
+            $ref: '#/components/schemas/Coin'
+        recent_coins:
+          type: array
+          items:
+            $ref: '#/components/schemas/Coin'
+        material_distribution:
+          type: object
+          additionalProperties:
+            type: integer
+        grade_distribution:
+          type: object
+          additionalProperties:
+            type: integer
+        value_distribution:
+          type: object
+          additionalProperties:
+            type: integer
+        country_distribution:
+          type: object
+          additionalProperties:
+            type: integer
+        century_distribution:
+          type: object
+          additionalProperties:
+            type: integer
+        decade_distribution:
+          type: object
+          additionalProperties:
+            type: integer
+        oldest_coin:
+          $ref: '#/components/schemas/Coin'
+        rarest_coins:
+          type: array
+          items:
+            $ref: '#/components/schemas/Coin'
+        group_distribution:
+          type: object
+          additionalProperties:
+            type: integer
+        total_silver_weight:
+          type: number
+          format: double
+        total_gold_weight:
+          type: number
+          format: double
+        heaviest_coin:
+          $ref: '#/components/schemas/Coin'
+        smallest_coin:
+          $ref: '#/components/schemas/Coin'
+        random_coin:
+          $ref: '#/components/schemas/Coin'
+        all_coins:
+          type: array
+          items:
+            $ref: '#/components/schemas/Coin'
+        group_stats:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupStat'
+
+    GroupStat:
+      type: object
+      properties:
+        group_id:
+          type: integer
+        group_name:
+          type: string
+        count:
+          type: integer
+          format: int64
+        min_value:
+          type: number
+          format: double
+        max_value:
+          type: number
+          format: double
