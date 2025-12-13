@@ -178,7 +178,7 @@ func TestAddCoin_Flows(t *testing.T) {
 	})
 
 	t.Run("AI Err", func(t *testing.T) {
-		service, _, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, _ := setupTest(t)
+
 		service, mockRepo, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, mockNumistaClient := setupTest(t)
 		ctx := context.Background()
 		// Storage succeeds
