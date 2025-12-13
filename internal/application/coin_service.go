@@ -3,6 +3,7 @@ package application
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/antonioparicio/numismaticapp/internal/domain"
+	"github.com/antonioparicio/numismaticapp/internal/infrastructure/numista" // Add import
 	"github.com/google/uuid"
 )
 
@@ -29,12 +31,13 @@ type StorageService interface {
 }
 
 type CoinService struct {
-	repo         domain.CoinRepository
-	groupRepo    domain.GroupRepository
-	imageService domain.ImageService
-	aiService    domain.AIService
-	storage      StorageService
-	bgRemover    domain.BackgroundRemover
+	repo          domain.CoinRepository
+	groupRepo     domain.GroupRepository
+	imageService  domain.ImageService
+	aiService     domain.AIService
+	storage       StorageService
+	bgRemover     domain.BackgroundRemover
+	numistaClient *numista.Client
 }
 
 func NewCoinService(
@@ -44,14 +47,16 @@ func NewCoinService(
 	aiService domain.AIService,
 	storage StorageService,
 	bgRemover domain.BackgroundRemover,
+	numistaClient *numista.Client,
 ) *CoinService {
 	return &CoinService{
-		repo:         repo,
-		groupRepo:    groupRepo,
-		imageService: imageService,
-		aiService:    aiService,
-		storage:      storage,
-		bgRemover:    bgRemover,
+		repo:          repo,
+		groupRepo:     groupRepo,
+		imageService:  imageService,
+		aiService:     aiService,
+		storage:       storage,
+		bgRemover:     bgRemover,
+		numistaClient: numistaClient,
 	}
 }
 
@@ -249,8 +254,154 @@ func (s *CoinService) AddCoin(ctx context.Context, frontData io.Reader, frontFil
 		return nil, fmt.Errorf("failed to save coin to db: %w", err)
 	}
 
+	// 7. Trigger Numista Enrichment (Async)
+	// We check if API key is present in client (it's checked in SearchTypes but we can check here to avoid goroutine)
+	if s.numistaClient != nil && s.numistaClient.APIKey != "" {
+		go func(id uuid.UUID) {
+			// Create a new context as correct async pattern usually requires independent context or long running one
+			// passing ctx might be cancelled when request ends.
+			// Ideally use background with timeout
+			bgCtx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+			defer cancel()
+			if err := s.EnrichCoinWithNumista(bgCtx, id); err != nil {
+				slog.Error("Failed to enrich coin with Numista", "coin_id", id, "error", err)
+			} else {
+				slog.Info("Successfully enriched coin with Numista", "coin_id", id)
+			}
+		}(coin.ID)
+	}
+
 	return coin, nil
 }
+
+func (s *CoinService) EnrichCoinWithNumista(ctx context.Context, coinID uuid.UUID) error {
+	// 1. Get Coin
+	coin, err := s.repo.GetByID(ctx, coinID)
+	if err != nil {
+		return fmt.Errorf("failed to get coin: %w", err)
+	}
+
+	// 2. Search Numista
+	query := fmt.Sprintf("%s %s %s", coin.FaceValue, coin.Currency, coin.Name)
+	// Fallback/Cleanup query if needed
+	query = strings.TrimSpace(query)
+	issuer := coin.Country
+	yearStr := ""
+	if coin.Year > 0 {
+		yearStr = fmt.Sprintf("%d", coin.Year)
+	}
+
+	result, err := s.numistaClient.SearchTypes(ctx, query, "coin", yearStr, issuer)
+	if err != nil {
+		return fmt.Errorf("numista search failed: %w", err)
+	}
+
+	if result == nil {
+		slog.Info("Numista returned no results", "coin_id", coinID)
+		return nil
+	}
+
+	// 3. Update Coin in DB
+	// We need a way to update arbitrary JSONB or just these fields.
+	// Since we don't have partial update easily exposed in service/repo without fetching/saving,
+	// and we already have fetched 'coin' (but it might be stale if updated concurrently?),
+	// actually for this specific flow 'coin' is fresh or we just overwrite Numista fields.
+	// Let's use repo.Update but valid to assume we only touch numista fields.
+	// For existing simple repo, we'll update the struct and save.
+
+	// Store full JSON
+	detailsJSON, err := json.Marshal(result)
+	if err != nil {
+		return fmt.Errorf("failed to marshal numista details: %w", err)
+	}
+	// We need to decode it back to generic map or use RawMessage for JSONB if our domain supports it.
+	// Domain uses map[string]any for GeminiDetails but we added NumistaDetails as JSONB (map[string]any in Go usually).
+	var detailsMap map[string]any
+	if err := json.Unmarshal(detailsJSON, &detailsMap); err != nil {
+		return fmt.Errorf("failed to unmarshal numista details to map: %w", err)
+	}
+
+	coin.NumistaNumber = result.ID
+	coin.NumistaDetails = detailsMap // Need to ensure domain.Coin has this field!
+
+	if err := s.repo.Update(ctx, coin); err != nil {
+		return fmt.Errorf("failed to update coin with numista details: %w", err)
+	}
+
+	// 4. Download Images
+	// Helper to download and save
+	saveNumistaImage := func(url, side string) error {
+		if url == "" {
+			return nil
+		}
+		// Download
+		resp, err := http.Get(url)
+		if err != nil {
+			return fmt.Errorf("failed to download image %s: %w", url, err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return fmt.Errorf("bad status downloading image: %s", resp.Status)
+		}
+
+		// Save as sample_{side}.jpg
+		// Requirement: observe/reverse. user said "observe"
+		targetFilename := fmt.Sprintf("sample_%s.jpg", side)
+		path, err := s.storage.SaveFile(coinID, targetFilename, resp.Body)
+		if err != nil {
+			return fmt.Errorf("failed to save image to storage: %w", err)
+		}
+
+		// Add record to DB
+		w, h, size, mime, err := s.imageService.GetMetadata(path)
+		if err != nil {
+			slog.Warn("Failed to get metadata for numista image", "error", err)
+			w, h, size, mime = 0, 0, 0, "image/jpeg"
+		}
+
+		// Map side "observe" -> "front" (or keep as is if enum allows, but Enum is front/backup)
+		// We have to map specific numista terminology to our domain
+		dbSide := "front"
+		if side == "reverse" {
+			dbSide = "back"
+		}
+		// "observe" maps to "front".
+
+		imgRecord := domain.CoinImage{
+			ID:               uuid.New(),
+			CoinID:           coinID,
+			ImageType:        "sample",
+			Side:             dbSide,
+			Path:             path,
+			Extension:        "jpg",
+			Size:             size,
+			Width:            w,
+			Height:           h,
+			MimeType:         mime,
+			OriginalFilename: targetFilename,
+		}
+
+		if err := s.repo.AddImage(ctx, imgRecord); err != nil {
+			return fmt.Errorf("failed to save image record: %w", err)
+		}
+		return nil
+	}
+
+	if err := saveNumistaImage(result.ObverseThumbnail, "observe"); err != nil {
+		slog.Warn("Failed to save obverse image", "error", err)
+	}
+	if err := saveNumistaImage(result.ReverseThumbnail, "reverse"); err != nil {
+		slog.Warn("Failed to save reverse image", "error", err)
+	}
+
+	return nil
+}
+
+// Helper to bridge side string to enum if needed in internal logic,
+// but for SaveFile we pass filename explicitly.
+// Inside saveNumistaImage logic above I need to fix Side.
+// Let's rewrite saveNumistaImage slightly to take filename and dbSide.
 
 func (s *CoinService) ListCoins(ctx context.Context, filter domain.CoinFilter) ([]*domain.Coin, error) {
 	return s.repo.List(ctx, filter)

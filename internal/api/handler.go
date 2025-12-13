@@ -292,3 +292,17 @@ func (h *CoinHandler) ReanalyzeCoin(c *fiber.Ctx) error {
 
 	return c.JSON(coin)
 }
+
+func (h *CoinHandler) ReprocessNumista(c *fiber.Ctx) error {
+	idStr := c.Params("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid uuid"})
+	}
+
+	if err := h.service.EnrichCoinWithNumista(c.Context(), id); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}

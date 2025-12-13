@@ -10,6 +10,7 @@ import (
 	"github.com/antonioparicio/numismaticapp/internal/infrastructure"
 	"github.com/antonioparicio/numismaticapp/internal/infrastructure/gemini"
 	"github.com/antonioparicio/numismaticapp/internal/infrastructure/image"
+	"github.com/antonioparicio/numismaticapp/internal/infrastructure/numista"
 	"github.com/antonioparicio/numismaticapp/internal/infrastructure/storage"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -71,8 +72,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Initialize Numista Client
+	numistaKey := os.Getenv("NUMISTA_API_KEY")
+	numistaClient := numista.NewClient(numistaKey)
+
 	// Initialize Application Services
-	coinService := application.NewCoinService(coinRepo, groupRepo, imageService, geminiClient, storageService, rembgClient)
+	coinService := application.NewCoinService(coinRepo, groupRepo, imageService, geminiClient, storageService, rembgClient, numistaClient)
 
 	// 5. API
 	app := fiber.New(fiber.Config{

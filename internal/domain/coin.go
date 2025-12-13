@@ -21,6 +21,7 @@ type Coin struct {
 	Description       string         `json:"description"`
 	KMCode            string         `json:"km_code"`
 	NumistaNumber     int            `json:"numista_number"`
+	NumistaDetails    map[string]any `json:"numista_details"`
 	MinValue          float64        `json:"min_value"`
 	MaxValue          float64        `json:"max_value"`
 	Grade             string         `json:"grade"`
@@ -106,6 +107,7 @@ type CoinRepository interface {
 	GetSmallestCoin(ctx context.Context) (*Coin, error)
 	GetRandomCoin(ctx context.Context) (*Coin, error)
 	GetAllCoins(ctx context.Context) ([]*Coin, error)
+	AddImage(ctx context.Context, image CoinImage) error
 }
 
 // GroupRepository defines the interface for persisting groups.

@@ -21,6 +21,14 @@
                 >
                     {{ $t('details.toggles.original') }}
                 </button>
+                <button 
+                    v-if="hasNumistaImages"
+                    class="btn join-item" 
+                    :class="{ 'btn-primary': activeImageSource === 'sample' }"
+                    @click="activeImageSource = 'sample'"
+                >
+                    Numista
+                </button>
             </div>
         </div>
 
@@ -128,6 +136,15 @@
                        <span class="whitespace-nowrap">{{ $t('common.reprocess') || 'Reprocesar' }}</span>
                    </button>
                </div>
+               <div class="tooltip" :data-tip="$t('details.sync_numista_tooltip') || 'Sincronizar con Numista'">
+                   <button @click="syncNumista" class="btn btn-xs btn-outline btn-secondary flex flex-row items-center gap-1 flex-nowrap" :disabled="syncing">
+                       <span v-if="syncing" class="loading loading-spinner loading-xs"></span>
+                       <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 flex-shrink-0">
+                           <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                       </svg>
+                       <span class="whitespace-nowrap">Numista</span>
+                   </button>
+               </div>
            </div>
            <div v-if="coin.gemini_details && coin.gemini_details.error" class="mt-1 text-error">
                Warning: {{ coin.gemini_details.error }}
@@ -217,7 +234,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { useRoute, useRouter } from 'vue-router'
 import { normalizeGrade } from '../utils/grades'
@@ -248,7 +265,35 @@ const reprocessing = ref(false)
 const selectedModel = ref('gemini-2.5-flash')
 const temperature = ref(0.4)
 const availableModels = ref([])
+const availableModels = ref([])
 const aiSettingsOpen = ref(true)
+
+// Numista Sync State
+const syncing = ref(false)
+const hasNumistaImages = computed(() => {
+    if (!coin.value || !coin.value.images) return false
+    return coin.value.images.some(img => img.image_type === 'sample')
+})
+
+const syncNumista = async () => {
+    if (!coin.value) return
+    syncing.value = true
+    try {
+        await axios.post(`${API_URL}/coins/${coin.value.id}/reprocess-numista`)
+        // Refresh coin data
+        const res = await axios.get(`${API_URL}/coins/${coin.value.id}`)
+        coin.value = res.data
+        // Switch to sample images if found
+        if (hasNumistaImages.value) {
+            activeImageSource.value = 'sample'
+        }
+    } catch (e) {
+        console.error("Failed to sync with Numista", e)
+        alert('Failed to sync: ' + (e.response?.data?.error || e.message))
+    } finally {
+        syncing.value = false
+    }
+}
 
 const openReprocessModal = async () => {
     reprocessModalOpen.value = true
@@ -324,6 +369,8 @@ const getCurrentImageUrl = (side) => {
         let typeToFind = 'crop'
         if (activeImageSource.value === 'original') {
             typeToFind = 'original'
+        } else if (activeImageSource.value === 'sample') {
+            typeToFind = 'sample'
         }
         
         const img = coin.value.images.find(img => img.image_type === typeToFind && img.side === side)

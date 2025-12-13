@@ -97,6 +97,25 @@ func (r *PostgresCoinRepository) Save(ctx context.Context, coin *domain.Coin) er
 	return nil
 }
 
+func (r *PostgresCoinRepository) AddImage(ctx context.Context, img domain.CoinImage) error {
+	imgParams := db.CreateCoinImageParams{
+		CoinID:           pgtype.UUID{Bytes: img.CoinID, Valid: true},
+		ImageType:        db.ImageType(img.ImageType),
+		Side:             db.CoinSide(img.Side),
+		Path:             img.Path,
+		Extension:        img.Extension,
+		Size:             img.Size,
+		Width:            int32(img.Width),
+		Height:           int32(img.Height),
+		MimeType:         img.MimeType,
+		OriginalFilename: toNullString(img.OriginalFilename),
+	}
+	if _, err := r.q.CreateCoinImage(ctx, imgParams); err != nil {
+		return fmt.Errorf("failed to save coin image: %w", err)
+	}
+	return nil
+}
+
 func (r *PostgresCoinRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Coin, error) {
 	row, err := r.q.GetCoin(ctx, pgtype.UUID{Bytes: id, Valid: true})
 	if err != nil {
@@ -394,6 +413,11 @@ func (r *PostgresCoinRepository) Update(ctx context.Context, coin *domain.Coin) 
 		return fmt.Errorf("failed to marshal gemini details: %w", err)
 	}
 
+	numistaDetailsBytes, err := json.Marshal(coin.NumistaDetails)
+	if err != nil {
+		return fmt.Errorf("failed to marshal numista details: %w", err)
+	}
+
 	params := db.UpdateCoinParams{
 		ID:                pgtype.UUID{Bytes: coin.ID, Valid: true},
 		Name:              toNullString(coin.Name),
@@ -423,6 +447,7 @@ func (r *PostgresCoinRepository) Update(ctx context.Context, coin *domain.Coin) 
 		PricePaid:         toNumeric(coin.PricePaid),
 		SoldPrice:         toNumeric(coin.SoldPrice),
 		NumistaNumber:     toNullInt4(coin.NumistaNumber),
+		NumistaDetails:    numistaDetailsBytes,
 		GeminiModel:       toNullString(coin.GeminiModel),
 		GeminiTemperature: toNumeric(coin.GeminiTemperature),
 	}
@@ -513,6 +538,13 @@ func toDomainCoin(row db.Coin) (*domain.Coin, error) {
 		}
 	}
 
+	var numistaDetails map[string]any
+	if len(row.NumistaDetails) > 0 {
+		if err := json.Unmarshal(row.NumistaDetails, &numistaDetails); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal numista details: %w", err)
+		}
+	}
+
 	// Helper to convert numeric to float64 (simplified for this example)
 	// In production, handle pgtype.Numeric carefully
 	minVal, _ := row.MinValue.Float64Value()
@@ -555,6 +587,7 @@ func toDomainCoin(row db.Coin) (*domain.Coin, error) {
 		Description:       row.Description.String,
 		KMCode:            row.KmCode.String,
 		NumistaNumber:     int(row.NumistaNumber.Int32),
+		NumistaDetails:    numistaDetails,
 		MinValue:          minVal.Float64,
 		MaxValue:          maxVal.Float64,
 		Grade:             row.Grade.String,

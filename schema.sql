@@ -19,6 +19,7 @@ CREATE TABLE coins (
     grade VARCHAR(50),
     technical_notes TEXT,
     gemini_details JSONB,
+    numista_details JSONB,
     group_id INT REFERENCES groups(id),
     personal_notes TEXT,
     weight_g NUMERIC,
