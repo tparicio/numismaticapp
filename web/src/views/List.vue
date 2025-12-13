@@ -19,6 +19,26 @@
         <input type="number" v-model="filters.min_price" :placeholder="$t('list.filters.min_price')" class="input input-bordered input-sm w-20" />
         <input type="number" v-model="filters.max_price" :placeholder="$t('list.filters.max_price')" class="input input-bordered input-sm w-20" />
 
+        <!-- Sort -->
+        <select v-model="filters.sort_by" class="select select-bordered select-sm w-full md:w-32">
+          <option value="">{{ $t('list.sort.label') }}</option>
+          <option value="year">{{ $t('list.sort.year') }}</option>
+          <option value="min_value">{{ $t('list.sort.min_value') }}</option>
+          <option value="max_value">{{ $t('list.sort.max_value') }}</option>
+          <option value="created_at">{{ $t('list.sort.created_at') }}</option>
+          <option value="country">{{ $t('list.sort.country') }}</option>
+          <option value="name">{{ $t('list.sort.name') }}</option>
+        </select>
+        
+        <button class="btn btn-sm btn-square" @click="toggleOrder" :title="filters.order === 'asc' ? 'Ascending' : 'Descending'">
+            <svg v-if="filters.order === 'asc'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0l-3.75-3.75M17.25 21L21 17.25" />
+            </svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h5.25m5.25-.75L17.25 9m0 0L21 12.75M17.25 9v12" />
+            </svg>
+        </button>
+
         <div class="join">
             <button class="join-item btn btn-sm" :class="{ 'btn-active': viewMode === 'grid' }" @click="viewMode = 'grid'">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
@@ -205,8 +225,14 @@ const filters = ref({
     year: route.query.year || '',
     country: route.query.country || '',
     min_price: route.query.min_price || '',
-    max_price: route.query.max_price || ''
+    max_price: route.query.max_price || '',
+    sort_by: route.query.sort_by || '',
+    order: route.query.order || 'desc'
 })
+
+const toggleOrder = () => {
+    filters.value.order = filters.value.order === 'asc' ? 'desc' : 'asc'
+}
 
 // Debounce helper
 let timeout = null
@@ -242,6 +268,8 @@ const fetchCoins = async () => {
         if (filters.value.country) params.append('country', filters.value.country)
         if (filters.value.min_price) params.append('min_price', filters.value.min_price)
         if (filters.value.max_price) params.append('max_price', filters.value.max_price)
+        if (filters.value.sort_by) params.append('sort_by', filters.value.sort_by)
+        if (filters.value.order) params.append('order', filters.value.order)
 
         const res = await axios.get(`${API_URL}/coins?${params.toString()}`)
         coins.value = res.data

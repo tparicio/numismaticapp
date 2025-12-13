@@ -30,7 +30,26 @@ WHERE
     )
     AND (sqlc.narg('min_price')::float8 IS NULL OR min_value >= sqlc.narg('min_price')::float8)
     AND (sqlc.narg('max_price')::float8 IS NULL OR max_value <= sqlc.narg('max_price')::float8)
-ORDER BY created_at DESC
+ORDER BY
+    CASE WHEN sqlc.narg('sort_by')::text = 'year' AND sqlc.narg('sort_order')::text = 'asc' THEN year END ASC,
+    CASE WHEN sqlc.narg('sort_by')::text = 'year' AND sqlc.narg('sort_order')::text = 'desc' THEN year END DESC,
+    
+    CASE WHEN sqlc.narg('sort_by')::text = 'min_value' AND sqlc.narg('sort_order')::text = 'asc' THEN min_value END ASC,
+    CASE WHEN sqlc.narg('sort_by')::text = 'min_value' AND sqlc.narg('sort_order')::text = 'desc' THEN min_value END DESC,
+    
+    CASE WHEN sqlc.narg('sort_by')::text = 'max_value' AND sqlc.narg('sort_order')::text = 'asc' THEN max_value END ASC,
+    CASE WHEN sqlc.narg('sort_by')::text = 'max_value' AND sqlc.narg('sort_order')::text = 'desc' THEN max_value END DESC,
+    
+    CASE WHEN sqlc.narg('sort_by')::text = 'created_at' AND sqlc.narg('sort_order')::text = 'asc' THEN created_at END ASC,
+    CASE WHEN sqlc.narg('sort_by')::text = 'created_at' AND sqlc.narg('sort_order')::text = 'desc' THEN created_at END DESC,
+    
+    CASE WHEN sqlc.narg('sort_by')::text = 'country' AND sqlc.narg('sort_order')::text = 'asc' THEN country END ASC,
+    CASE WHEN sqlc.narg('sort_by')::text = 'country' AND sqlc.narg('sort_order')::text = 'desc' THEN country END DESC,
+    
+    CASE WHEN sqlc.narg('sort_by')::text = 'name' AND sqlc.narg('sort_order')::text = 'asc' THEN name END ASC,
+    CASE WHEN sqlc.narg('sort_by')::text = 'name' AND sqlc.narg('sort_order')::text = 'desc' THEN name END DESC,
+    
+    created_at DESC
 LIMIT $1 OFFSET $2;
 
 -- name: CountCoins :one

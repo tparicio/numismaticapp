@@ -65,6 +65,15 @@
             "min_price": "Min €",
             "max_price": "Max €"
         },
+        "sort": {
+            "label": "Sort by",
+            "year": "Year",
+            "min_value": "Min Value",
+            "max_value": "Max Value",
+            "created_at": "Date Added",
+            "country": "Country",
+            "name": "Name"
+        },
         "empty_state": "No coins found. Start by adding one!",
         "add_button": "Add Coin",
         "actions": "Actions",
@@ -221,7 +230,8 @@
             "mintage": "Mintage",
             "km_code": "KM Code",
             "collection": "Collection",
-            "no_desc": "No description available."
+            "no_desc": "No description available.",
+            "kicker": "FEATURED COIN"
         },
         "map": {
             "legend_title": "COINS"

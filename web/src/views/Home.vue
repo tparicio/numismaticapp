@@ -244,53 +244,61 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Storage Distribution -->
-        <div class="card bg-base-100 shadow-xl">
+        <!-- Combined Storage Distribution & Stats -->
+        <div class="card bg-base-100 shadow-xl lg:col-span-3">
             <div class="card-body">
                 <h2 class="card-title">{{ $t('dashboard.charts.storage') }}</h2>
-                <div class="h-64 relative flex justify-center">
-                    <Doughnut v-if="storageChartData" :data="storageChartData" :options="doughnutOptions" />
-                </div>
-            </div>
-        </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                    <!-- Chart Column (Left ~33%) -->
+                    <div class="h-64 relative flex justify-center md:col-span-1">
+                        <Doughnut v-if="storageChartData" :data="storageChartData" :options="storageChartOptions" />
+                    </div>
 
-        <!-- Storage Stats Widget -->
-        <div class="card bg-base-100 shadow-xl overflow-hidden lg:col-span-2" v-if="stats.group_stats && stats.group_stats.length > 0">
-            <div class="card-body p-0">
-                <div class="p-4 border-b border-base-200 flex justify-between items-center">
-                     <h2 class="card-title text-lg">{{ $t('dashboard.widgets.storage_stats.title') || 'Estadísticas de Almacenamiento' }}</h2>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="table w-full">
-                        <thead>
-                            <tr>
-                                <th>{{ $t('common.name') || 'Nombre' }}</th>
-                                <th class="text-center">{{ $t('common.count') || 'Cantidad' }}</th>
-                                <th class="text-right">{{ $t('common.value_range') || 'Rango de Valor' }}</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="group in stats.group_stats" :key="group.group_id" 
-                                class="hover:bg-base-200 cursor-pointer transition-colors"
-                                @click="router.push({ path: '/list', query: { group_id: group.group_id } })">
-                                <td class="font-bold">{{ group.group_name }}</td>
-                                <td class="text-center">
-                                    <div class="badge badge-secondary badge-outline">{{ group.count }}</div>
-                                </td>
-                                <td class="text-right font-mono text-sm">
-                                    <span class="text-success">{{ formatCurrency(group.min_value) }}</span>
-                                    <span class="mx-1 text-base-content/50">-</span>
-                                    <span class="text-primary font-bold">{{ formatCurrency(group.max_value) }}</span>
-                                </td>
-                                <td class="text-right">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 ml-auto opacity-50">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                                    </svg>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <!-- Table Column (Right ~66%) -->
+                    <div class="md:col-span-2 overflow-x-auto" v-if="stats.group_stats && stats.group_stats.length > 0">
+                         <table class="table w-full">
+                            <thead>
+                                <tr>
+                                    <th>{{ $t('common.name') || 'Nombre' }}</th>
+                                    <th class="text-center">{{ $t('common.count') || 'Cantidad' }}</th>
+                                    <th class="text-right">{{ $t('common.value_range') || 'Rango de Valor' }}</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(group, index) in stats.group_stats" :key="group.group_id" 
+                                    class="cursor-pointer transition-colors duration-200"
+                                    :class="{
+                                        'bg-base-200': hoveredStorage === group.group_name,
+                                        'opacity-50': hoveredStorage && hoveredStorage !== group.group_name
+                                    }"
+                                    @mouseenter="hoveredStorage = group.group_name"
+                                    @mouseleave="hoveredStorage = null"
+                                    @click="router.push({ path: '/list', query: { group_id: group.group_id } })">
+                                    <td class="font-bold flex items-center gap-2">
+                                        <!-- Color Indicator -->
+                                        <div class="w-3 h-3 rounded-full" 
+                                             :style="{ backgroundColor: storageChartData.datasets[0].backgroundColor[index] ? storageChartData.datasets[0].backgroundColor[index].replace('40', '') : '#ccc' }">
+                                        </div>
+                                        {{ group.group_name }}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="badge badge-secondary badge-outline">{{ group.count }}</div>
+                                    </td>
+                                    <td class="text-right font-mono text-sm">
+                                        <span class="text-success">{{ formatCurrency(group.min_value) }}</span>
+                                        <span class="mx-1 text-base-content/50">-</span>
+                                        <span class="text-primary font-bold">{{ formatCurrency(group.max_value) }}</span>
+                                    </td>
+                                    <td class="text-right">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 ml-auto opacity-50">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                                        </svg>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -322,6 +330,10 @@
         <div class="card-body">
             <div class="flex justify-between items-start">
                 <div>
+                    <!-- Kicker -->
+                    <div class="text-[0.65rem] uppercase tracking-widest text-base-content/50 font-bold mb-1">
+                        {{ $t('dashboard.random.kicker') || 'MONEDA DESTACADA' }}
+                    </div>
                     <h2 class="card-title text-3xl font-bold mb-1">{{ stats.random_coin.name }}</h2>
                     <div class="text-lg opacity-70 flex items-center gap-2">
                         <span class="font-semibold">{{ stats.random_coin.country }}</span>
@@ -362,7 +374,7 @@
             </p>
 
             <div class="card-actions justify-end mt-4">
-                <button class="btn btn-primary gap-2" @click="router.push(`/coin/${stats.random_coin.id}`)">
+                <button class="btn btn-ghost border-primary/20 text-primary hover:bg-primary/10 gap-2" @click="router.push(`/coin/${stats.random_coin.id}`)">
                     {{ $t('common.view_details') }}
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
@@ -699,24 +711,77 @@ const qualityChartData = computed(() => {
     }
 })
 
+const hoveredStorage = ref(null)
+
 const storageChartData = computed(() => {
     const dist = stats.value.group_distribution
     if (!dist) return null
 
     const labels = Object.keys(dist)
     const data = Object.values(dist)
-    const colors = [
+    // Base colors
+    const baseColors = [
         '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#6366f1'
     ]
+    
+    // Create background colors based on hover state
+    // If hoveredStorage is set (Group Name), dim others
+    const bgColors = labels.map((label, index) => {
+        const color = baseColors[index % baseColors.length]
+        if (hoveredStorage.value && hoveredStorage.value !== label) {
+            return color + '40' // Add transparency (hex alpha) to dim
+        }
+        return color
+    })
+
+    const borderColors = labels.map((label, index) => {
+         // Highlight border if active
+        if (hoveredStorage.value === label) return '#ffffff'
+        return 'transparent'
+    })
+
+    const borderWidths = labels.map((label, index) => {
+        if (hoveredStorage.value === label) return 2
+        return 0
+    })
 
     return {
         labels,
         datasets: [{
-            backgroundColor: colors,
-            data
+            backgroundColor: bgColors,
+            borderColor: borderColors,
+            borderWidth: borderWidths,
+            data,
+            hoverOffset: 10
         }]
     }
 })
+
+const storageChartOptions = computed(() => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: { display: false }, // We use the custom table as legend
+        tooltip: {
+            enabled: false // Disable default tooltip to rely on table? Or keep it? User didn't say disable. Keep for now.
+             // Actually user said "Left... Donut... Right... Table... acting as explicit legend".
+             // Let's keep tooltip for precise numbers on chart.
+        }
+    },
+    onHover: (event, elements) => {
+        if (elements && elements.length > 0) {
+            // Chart.js 3/4 structure
+            const index = elements[0].index
+            const dist = stats.value.group_distribution
+            if (dist) {
+                const labels = Object.keys(dist)
+                hoveredStorage.value = labels[index]
+            }
+        } else {
+            hoveredStorage.value = null
+        }
+    }
+}))
 
 const countryChartData = computed(() => {
     const dist = stats.value.country_distribution

@@ -69,14 +69,16 @@ type CoinImage struct {
 
 // CoinFilter defines available filters for listing coins.
 type CoinFilter struct {
-	Limit    int
-	Offset   int
-	GroupID  *int
-	Year     *int
-	Country  *string
-	Query    *string
-	MinPrice *float64
-	MaxPrice *float64
+	Limit     int
+	Offset    int
+	GroupID   *int
+	Year      *int
+	Country   *string
+	Query     *string
+	MinPrice  *float64
+	MaxPrice  *float64
+	SortBy    *string
+	SortOrder *string
 }
 
 // CoinRepository defines the interface for persisting coins.

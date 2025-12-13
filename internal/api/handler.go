@@ -179,6 +179,13 @@ func (h *CoinHandler) ListCoins(c *fiber.Ctx) error {
 		}
 	}
 
+	if sb := c.Query("sort_by"); sb != "" {
+		filter.SortBy = &sb
+	}
+	if so := c.Query("order"); so != "" {
+		filter.SortOrder = &so
+	}
+
 	coins, err := h.service.ListCoins(c.Context(), filter)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})

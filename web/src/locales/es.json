@@ -65,6 +65,15 @@
             "min_price": "Min €",
             "max_price": "Max €"
         },
+        "sort": {
+            "label": "Ordenar por",
+            "year": "Año",
+            "min_value": "Valor Mínimo",
+            "max_value": "Valor Máximo",
+            "created_at": "Fecha Añadido",
+            "country": "País",
+            "name": "Nombre"
+        },
         "empty_state": "No se encontraron monedas. ¡Empieza añadiendo una!",
         "add_button": "Añadir Moneda",
         "actions": "Acciones",
@@ -226,7 +235,8 @@
             "mintage": "Tirada",
             "km_code": "Código KM",
             "collection": "Colección",
-            "no_desc": "Sin descripción disponible."
+            "no_desc": "Sin descripción disponible.",
+            "kicker": "MONEDA DESTACADA"
         },
         "map": {
             "legend_title": "MONEDAS"

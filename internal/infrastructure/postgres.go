@@ -121,14 +121,16 @@ func (r *PostgresCoinRepository) GetByID(ctx context.Context, id uuid.UUID) (*do
 
 func (r *PostgresCoinRepository) List(ctx context.Context, filter domain.CoinFilter) ([]*domain.Coin, error) {
 	params := db.ListCoinsParams{
-		Limit:    int32(filter.Limit),
-		Offset:   int32(filter.Offset),
-		GroupID:  toNullInt4Ptr(filter.GroupID),
-		Year:     toNullInt4Ptr(filter.Year),
-		Country:  toNullStringPtr(filter.Country),
-		Query:    toNullStringPtr(filter.Query),
-		MinPrice: toNullFloat8Ptr(filter.MinPrice),
-		MaxPrice: toNullFloat8Ptr(filter.MaxPrice),
+		Limit:     int32(filter.Limit),
+		Offset:    int32(filter.Offset),
+		GroupID:   toNullInt4Ptr(filter.GroupID),
+		Year:      toNullInt4Ptr(filter.Year),
+		Country:   toNullStringPtr(filter.Country),
+		Query:     toNullStringPtr(filter.Query),
+		MinPrice:  toNullFloat8Ptr(filter.MinPrice),
+		MaxPrice:  toNullFloat8Ptr(filter.MaxPrice),
+		SortBy:    toNullStringPtr(filter.SortBy),
+		SortOrder: toNullStringPtr(filter.SortOrder),
 	}
 
 	rows, err := r.q.ListCoins(ctx, params)

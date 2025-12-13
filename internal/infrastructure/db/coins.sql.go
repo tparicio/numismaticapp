@@ -731,19 +731,40 @@ WHERE
     )
     AND ($7::float8 IS NULL OR min_value >= $7::float8)
     AND ($8::float8 IS NULL OR max_value <= $8::float8)
-ORDER BY created_at DESC
+ORDER BY
+    CASE WHEN $9::text = 'year' AND $10::text = 'asc' THEN year END ASC,
+    CASE WHEN $9::text = 'year' AND $10::text = 'desc' THEN year END DESC,
+    
+    CASE WHEN $9::text = 'min_value' AND $10::text = 'asc' THEN min_value END ASC,
+    CASE WHEN $9::text = 'min_value' AND $10::text = 'desc' THEN min_value END DESC,
+    
+    CASE WHEN $9::text = 'max_value' AND $10::text = 'asc' THEN max_value END ASC,
+    CASE WHEN $9::text = 'max_value' AND $10::text = 'desc' THEN max_value END DESC,
+    
+    CASE WHEN $9::text = 'created_at' AND $10::text = 'asc' THEN created_at END ASC,
+    CASE WHEN $9::text = 'created_at' AND $10::text = 'desc' THEN created_at END DESC,
+    
+    CASE WHEN $9::text = 'country' AND $10::text = 'asc' THEN country END ASC,
+    CASE WHEN $9::text = 'country' AND $10::text = 'desc' THEN country END DESC,
+    
+    CASE WHEN $9::text = 'name' AND $10::text = 'asc' THEN name END ASC,
+    CASE WHEN $9::text = 'name' AND $10::text = 'desc' THEN name END DESC,
+    
+    created_at DESC
 LIMIT $1 OFFSET $2
 `
 
 type ListCoinsParams struct {
-	Limit    int32         `json:"limit"`
-	Offset   int32         `json:"offset"`
-	GroupID  pgtype.Int4   `json:"group_id"`
-	Year     pgtype.Int4   `json:"year"`
-	Country  pgtype.Text   `json:"country"`
-	Query    pgtype.Text   `json:"query"`
-	MinPrice pgtype.Float8 `json:"min_price"`
-	MaxPrice pgtype.Float8 `json:"max_price"`
+	Limit     int32         `json:"limit"`
+	Offset    int32         `json:"offset"`
+	GroupID   pgtype.Int4   `json:"group_id"`
+	Year      pgtype.Int4   `json:"year"`
+	Country   pgtype.Text   `json:"country"`
+	Query     pgtype.Text   `json:"query"`
+	MinPrice  pgtype.Float8 `json:"min_price"`
+	MaxPrice  pgtype.Float8 `json:"max_price"`
+	SortBy    pgtype.Text   `json:"sort_by"`
+	SortOrder pgtype.Text   `json:"sort_order"`
 }
 
 func (q *Queries) ListCoins(ctx context.Context, arg ListCoinsParams) ([]Coin, error) {
@@ -756,6 +777,8 @@ func (q *Queries) ListCoins(ctx context.Context, arg ListCoinsParams) ([]Coin, e
 		arg.Query,
 		arg.MinPrice,
 		arg.MaxPrice,
+		arg.SortBy,
+		arg.SortOrder,
 	)
 	if err != nil {
 		return nil, err
