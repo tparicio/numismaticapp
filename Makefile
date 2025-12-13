@@ -109,8 +109,9 @@ test-unit: ## Run unit tests
 
 test-unit-coverage: ## Run unit tests with coverage
 	@echo "$(COLOR_BLUE)🧪 Running unit tests with coverage...$(COLOR_RESET)"
-	go test -v -coverprofile=coverage.out ./...
-	go tool cover -func=coverage.out
+	@mkdir -p reports/tests
+	go test -v -coverprofile=reports/tests/coverage.out ./...
+	go tool cover -func=reports/tests/coverage.out
 
 ## 📦 Dependencies
 tidy: ## Run go mod tidy (in Docker)

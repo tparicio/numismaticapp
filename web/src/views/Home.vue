@@ -555,7 +555,7 @@ const scatterOptions = computed(() => ({
             position: 'bottom',
             title: { display: true, text: t('dashboard.charts.labels.year') },
             ticks: {
-                callback: function(value, index, values) {
+                callback: function(value) {
                     return value.toString().replace(',', '');
                 }
             }
@@ -734,13 +734,13 @@ const storageChartData = computed(() => {
         return color
     })
 
-    const borderColors = labels.map((label, index) => {
+    const borderColors = labels.map((label) => {
          // Highlight border if active
         if (hoveredStorage.value === label) return '#ffffff'
         return 'transparent'
     })
 
-    const borderWidths = labels.map((label, index) => {
+    const borderWidths = labels.map((label) => {
         if (hoveredStorage.value === label) return 2
         return 0
     })
@@ -783,22 +783,5 @@ const storageChartOptions = computed(() => ({
     }
 }))
 
-const countryChartData = computed(() => {
-    const dist = stats.value.country_distribution
-    if (!dist) return null
 
-    // Sort by count desc
-    const sorted = Object.entries(dist).sort((a, b) => b[1] - a[1])
-    const labels = sorted.map(e => e[0])
-    const data = sorted.map(e => e[1])
-
-    return {
-        labels,
-        datasets: [{
-            label: t('dashboard.charts.labels.coins_by_country'),
-            backgroundColor: '#0ea5e9',
-            data
-        }]
-    }
-})
 </script>

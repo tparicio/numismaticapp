@@ -205,9 +205,7 @@ import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import GroupSelector from '../components/GroupSelector.vue'
 import { BASE_GRADES } from '../utils/grades'
-import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n()
 
 const route = useRoute()
 const router = useRouter()

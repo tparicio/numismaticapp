@@ -128,10 +128,7 @@ const temperature = ref(0.1)
 
 const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
 
-const selectedModelDescription = computed(() => {
-  const model = availableModels.value.find(m => m.name === selectedModel.value)
-  return model ? model.description : ''
-})
+
 
 onMounted(async () => {
   // Preselect last used group
