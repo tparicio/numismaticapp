@@ -29,6 +29,7 @@ type Coin struct {
 	GeminiDetails     map[string]any `json:"gemini_details"` // Raw JSON from Gemini
 	GeminiModel       string         `json:"gemini_model"`
 	GeminiTemperature float64        `json:"gemini_temperature"`
+	NumistaSearch     string         `json:"numista_search"`
 	Images            []CoinImage    `json:"images"`
 	GroupID           *int           `json:"group_id"`
 	PersonalNotes     string         `json:"personal_notes"`

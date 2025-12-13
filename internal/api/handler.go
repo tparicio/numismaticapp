@@ -87,6 +87,34 @@ func (h *CoinHandler) ListGroups(c *fiber.Ctx) error {
 	return c.JSON(groups)
 }
 
+type RotateCoinRequest struct {
+	Side  string  `json:"side"`
+	Angle float64 `json:"angle"`
+}
+
+func (h *CoinHandler) RotateCoin(c *fiber.Ctx) error {
+	idStr := c.Params("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid UUID"})
+	}
+
+	var req RotateCoinRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "cannot parse body"})
+	}
+
+	if req.Side != "front" && req.Side != "back" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "side must be front or back"})
+	}
+
+	if err := h.service.RotateCoinImage(c.Context(), id, req.Side, req.Angle); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
 type CreateGroupRequest struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`

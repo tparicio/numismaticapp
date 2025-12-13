@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"image"
+	"image/color"
 	"image/draw"
 	"image/png"
 
 	"github.com/antonioparicio/numismaticapp/internal/domain"
+	"github.com/disintegration/imaging"
 	"github.com/h2non/bimg"
 )
 
@@ -25,15 +27,39 @@ func (p *VipsProcessor) ToPNG(image []byte) ([]byte, error) {
 	return newImage, nil
 }
 
-func (p *VipsProcessor) Rotate(image []byte, angle float64) ([]byte, error) {
+func (p *VipsProcessor) Rotate(imageBytes []byte, angle float64) ([]byte, error) {
 	if angle == 0 {
-		return image, nil
+		return imageBytes, nil
 	}
-	newImage, err := bimg.NewImage(image).Rotate(bimg.Angle(angle))
+
+	// 1. Decode bytes to standard Go image
+	img, format, err := image.Decode(bytes.NewReader(imageBytes))
 	if err != nil {
-		return nil, fmt.Errorf("failed to rotate image: %w", err)
+		return nil, fmt.Errorf("failed to decode image for rotation: %w", err)
 	}
-	return newImage, nil
+
+	// 2. Define background color for "holes" left by rotation.
+	// Use Transparent for PNG.
+	bgColor := color.Transparent
+
+	// 3. Rotate (imaging rotates CCW, bimg sometimes varies)
+	rotatedImg := imaging.Rotate(img, angle, bgColor)
+
+	// 4. Encode back to bytes
+	var buf bytes.Buffer
+
+	// Force PNG to maintain transparency of corners
+	if format == "jpeg" || format == "jpg" {
+		err = png.Encode(&buf, rotatedImg)
+	} else {
+		err = png.Encode(&buf, rotatedImg)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to encode rotated image: %w", err)
+	}
+
+	return buf.Bytes(), nil
 }
 
 func (p *VipsProcessor) CropToContent(data []byte) ([]byte, error) {

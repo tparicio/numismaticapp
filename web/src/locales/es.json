@@ -12,6 +12,8 @@
         "cancel": "Cancelar",
         "save": "Guardar",
         "update": "Actualizar",
+        "apply": "Aplicar",
+        "rotation": "Rotación",
         "back": "Volver",
         "view_details": "Ver Detalles Completos",
         "unknown": "Desconocido",
@@ -166,7 +168,8 @@
         "sections": {
             "details": "Detalles",
             "description": "Descripción",
-            "notes": "Notas"
+            "notes": "Notas",
+            "view_sample": "Ver Muestra"
         },
         "labels": {
             "material": "Material",

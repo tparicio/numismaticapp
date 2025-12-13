@@ -34,6 +34,7 @@ CREATE TABLE coins (
     sold_price NUMERIC(10, 2),
     gemini_model VARCHAR(100),
     gemini_temperature NUMERIC(3, 2),
+    numista_search TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

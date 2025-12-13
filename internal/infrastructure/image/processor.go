@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"image"
+	"image/color"
 	"image/draw"
 	"image/png"
 	"log/slog"
 
+	"github.com/disintegration/imaging"
 	"github.com/h2non/bimg"
 )
 
@@ -272,18 +274,40 @@ func (s *VipsImageService) Rotate(imagePath string, angle float64) error {
 	if angle == 0 {
 		return nil
 	}
+	// 1. Read file
 	buffer, err := bimg.Read(imagePath)
 	if err != nil {
 		return fmt.Errorf("failed to read image for rotation: %w", err)
 	}
 
-	newImage, err := bimg.NewImage(buffer).Rotate(bimg.Angle(angle))
+	// 2. Decode bytes to standard Go image
+	img, format, err := image.Decode(bytes.NewReader(buffer))
 	if err != nil {
-		return fmt.Errorf("failed to rotate image: %w", err)
+		return fmt.Errorf("failed to decode image for rotation: %w", err)
 	}
 
-	if err := bimg.Write(imagePath, newImage); err != nil {
+	slog.Info("Rotating image with imaging", "path", imagePath, "angle", angle, "format", format)
+
+	// 3. Define background color (Transparent)
+	bgColor := color.Transparent
+
+	// 4. Rotate (imaging rotates CCW, but UI likely sends CW, so we invert)
+	rotatedImg := imaging.Rotate(img, -angle, bgColor)
+
+	// 5. Encode back to bytes (Force PNG)
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, rotatedImg); err != nil {
+		return fmt.Errorf("failed to encode rotated image: %w", err)
+	}
+
+	// 6. Write back to file
+	// We use bimg.Write/os.WriteFile logic. bimg.Write is basically ioutil.WriteFile.
+	// Since we used bimg.Read, let's use bimg.Write which is imported, or standard os.
+	// Note: bimg.Write takes []byte.
+	if err := bimg.Write(imagePath, buf.Bytes()); err != nil {
 		return fmt.Errorf("failed to save rotated image: %w", err)
 	}
+
+	slog.Info("Rotation complete", "path", imagePath)
 	return nil
 }

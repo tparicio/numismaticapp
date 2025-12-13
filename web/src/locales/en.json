@@ -12,6 +12,8 @@
         "cancel": "Cancel",
         "save": "Save",
         "update": "Update",
+        "apply": "Apply",
+        "rotation": "Rotation",
         "back": "Back",
         "view_details": "View Full Details",
         "unknown": "Unknown",
@@ -161,7 +163,8 @@
         "sections": {
             "details": "Details",
             "description": "Description",
-            "notes": "Notes"
+            "notes": "Notes",
+            "view_sample": "View Sample"
         },
         "labels": {
             "material": "Material",

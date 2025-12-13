@@ -368,9 +368,8 @@ func (s *CoinService) EnrichCoinWithNumista(ctx context.Context, coinID uuid.UUI
 		return fmt.Errorf("failed to get coin: %w", err)
 	}
 
-	// 2. Search Numista
+	// 2. Search Numista (Top 10)
 	query := fmt.Sprintf("%s %s %s", coin.FaceValue, coin.Currency, coin.Name)
-	// Fallback/Cleanup query if needed
 	query = strings.TrimSpace(query)
 	issuer := coin.Country
 	yearStr := ""
@@ -378,116 +377,51 @@ func (s *CoinService) EnrichCoinWithNumista(ctx context.Context, coinID uuid.UUI
 		yearStr = fmt.Sprintf("%d", coin.Year)
 	}
 
-	result, err := s.numistaClient.SearchTypes(ctx, query, "coin", yearStr, issuer)
+	// Search requesting 10 results
+	searchResult, err := s.numistaClient.SearchTypes(ctx, query, "coin", yearStr, issuer, 10)
 	if err != nil {
 		return fmt.Errorf("numista search failed: %w", err)
 	}
 
-	if result == nil {
+	if searchResult == nil {
 		slog.Info("Numista returned no results", "coin_id", coinID)
 		return nil
 	}
 
-	// 3. Update Coin in DB
-	// We need a way to update arbitrary JSONB or just these fields.
-	// Since we don't have partial update easily exposed in service/repo without fetching/saving,
-	// and we already have fetched 'coin' (but it might be stale if updated concurrently?),
-	// actually for this specific flow 'coin' is fresh or we just overwrite Numista fields.
-	// Let's use repo.Update but valid to assume we only touch numista fields.
-	// For existing simple repo, we'll update the struct and save.
-
-	// Store full JSON
-	detailsJSON, err := json.Marshal(result)
+	// 3. Save full search response
+	searchJSON, err := json.Marshal(searchResult)
 	if err != nil {
-		return fmt.Errorf("failed to marshal numista details: %w", err)
-	}
-	// We need to decode it back to generic map or use RawMessage for JSONB if our domain supports it.
-	// Domain uses map[string]any for GeminiDetails but we added NumistaDetails as JSONB (map[string]any in Go usually).
-	var detailsMap map[string]any
-	if err := json.Unmarshal(detailsJSON, &detailsMap); err != nil {
-		return fmt.Errorf("failed to unmarshal numista details to map: %w", err)
+		slog.Warn("Failed to marshal numista search result", "error", err)
+	} else {
+		coin.NumistaSearch = string(searchJSON)
 	}
 
-	coin.NumistaNumber = result.ID
-	coin.NumistaDetails = detailsMap // Need to ensure domain.Coin has this field!
-
-	if err := s.repo.Update(ctx, coin); err != nil {
-		return fmt.Errorf("failed to update coin with numista details: %w", err)
-	}
-
-	// 4. Download Images
-	// Helper to download and save
-	saveNumistaImage := func(url, side string) error {
-		if url == "" {
-			return nil
-		}
-
-		// Download with User-Agent to avoid 403
-		req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
-		if err != nil {
-			return fmt.Errorf("failed to create request: %w", err)
-		}
-		req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			return fmt.Errorf("failed to download image %s: %w", url, err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			return fmt.Errorf("bad status downloading image: %s", resp.Status)
-		}
-
-		// Save as sample_{side}.jpg
-		// Requirement: observe/reverse. user said "observe"
-		targetFilename := fmt.Sprintf("sample_%s.jpg", side)
-		path, err := s.storage.SaveFile(coinID, targetFilename, resp.Body)
-		if err != nil {
-			return fmt.Errorf("failed to save image to storage: %w", err)
-		}
-
-		// Add record to DB
-		w, h, size, mime, err := s.imageService.GetMetadata(path)
-		if err != nil {
-			slog.Warn("Failed to get metadata for numista image", "error", err)
-			w, h, size, mime = 0, 0, 0, "image/jpeg"
-		}
-
-		// Map side "observe" -> "front" (or keep as is if enum allows, but Enum is front/backup)
-		// We have to map specific numista terminology to our domain
-		dbSide := "front"
-		if side == "reverse" {
-			dbSide = "back"
-		}
-		// "observe" maps to "front".
-
-		imgRecord := domain.CoinImage{
-			ID:               uuid.New(),
-			CoinID:           coinID,
-			ImageType:        "sample",
-			Side:             dbSide,
-			Path:             path,
-			Extension:        "jpg",
-			Size:             size,
-			Width:            w,
-			Height:           h,
-			MimeType:         mime,
-			OriginalFilename: targetFilename,
-		}
-
-		if err := s.repo.AddImage(ctx, imgRecord); err != nil {
-			return fmt.Errorf("failed to save image record: %w", err)
+	// If no types found, just save the search result and exit
+	if searchResult.Count == 0 || len(searchResult.Types) == 0 {
+		if err := s.repo.Update(ctx, coin); err != nil {
+			return fmt.Errorf("failed to update coin with numista search: %w", err)
 		}
 		return nil
 	}
 
-	if err := saveNumistaImage(result.ObverseThumbnail, "observe"); err != nil {
-		slog.Warn("Failed to save obverse image", "error", err)
+	// 4. Get Details for the first result
+	firstTypeID := searchResult.Types[0].ID
+	typeDetails, err := s.numistaClient.GetType(ctx, firstTypeID)
+	if err != nil {
+		return fmt.Errorf("failed to get numista type details: %w", err)
 	}
-	if err := saveNumistaImage(result.ReverseThumbnail, "reverse"); err != nil {
-		slog.Warn("Failed to save reverse image", "error", err)
+
+	// 5. Update Coin
+	coin.NumistaNumber = firstTypeID
+	coin.NumistaDetails = typeDetails
+
+	// Example mapping from Numista Details (structure depends on API response)
+	// Usually "title", "description", "year", etc. are top level or nested.
+	// For now we trust the raw map is saved and maybe we update some basic fields if empty.
+	// We can refine this mapping based on the actual JSON structure of 'typeDetails'.
+
+	if err := s.repo.Update(ctx, coin); err != nil {
+		return fmt.Errorf("failed to update coin with numista details: %w", err)
 	}
 
 	return nil
@@ -672,6 +606,49 @@ func (s *CoinService) CreateGroup(ctx context.Context, name, description string)
 		return nil, fmt.Errorf("group name cannot be empty")
 	}
 	return s.groupRepo.Create(ctx, name, description)
+}
+
+func (s *CoinService) RotateCoinImage(ctx context.Context, coinID uuid.UUID, side string, angle float64) error {
+	slog.Info("RotateCoinImage called", "coin_id", coinID, "side", side, "angle", angle)
+	coin, err := s.repo.GetByID(ctx, coinID)
+	if err != nil {
+		return fmt.Errorf("failed to get coin: %w", err)
+	}
+
+	// Find the processed image for the side
+	var targetImg *domain.CoinImage
+	for i := range coin.Images {
+		if coin.Images[i].Side == side && coin.Images[i].ImageType == "crop" {
+			targetImg = &coin.Images[i]
+			break
+		}
+	}
+
+	if targetImg == nil {
+		return fmt.Errorf("processed image not found for side %s", side)
+	}
+
+	slog.Info("Found image to rotate", "path", targetImg.Path)
+
+	// Rotate the image
+	// Note: Rotate modifies the file in place
+	if err := s.imageService.Rotate(targetImg.Path, angle); err != nil {
+		slog.Error("Rotation failed", "error", err)
+		return fmt.Errorf("failed to rotate image: %w", err)
+	}
+	slog.Info("Rotation successful")
+
+	// Regenerate thumbnail
+	// VipsImageService.GenerateThumbnail derives name from input: path + "_thumb.png"
+	// Our naming convention in AddCoin is "processed_front.png" -> "processed_front_thumb.png"
+	thumbPath, err := s.imageService.GenerateThumbnail(targetImg.Path, 300)
+	if err != nil {
+		slog.Error("Thumbnail regeneration failed", "error", err)
+		return fmt.Errorf("failed to regenerate thumbnail: %w", err)
+	}
+	slog.Info("Thumbnail regenerated", "path", thumbPath)
+
+	return nil
 }
 
 func (s *CoinService) UpdateGroup(ctx context.Context, id int, name, description string) (*domain.Group, error) {

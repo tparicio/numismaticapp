@@ -21,42 +21,72 @@
                 >
                     {{ $t('details.toggles.original') }}
                 </button>
-                <button 
-                    v-if="hasNumistaImages"
-                    class="btn join-item" 
-                    :class="{ 'btn-primary': activeImageSource === 'sample' }"
-                    @click="activeImageSource = 'sample'"
-                >
-                    Numista
-                </button>
             </div>
         </div>
 
         <div class="flex flex-col sm:flex-row justify-center gap-8 items-center">
             <!-- Front -->
-            <div class="text-center">
-                <figure class="cursor-zoom-in relative group inline-block" @click="openViewer('front')">
+            <div class="text-center relative group">
+                <figure class="cursor-zoom-in relative inline-block" @click="openViewer('front')">
                     <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all flex items-center justify-center rounded-full z-10">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                         </svg>
                     </div>
-                    <img :src="getCurrentImageUrl('front')" class="rounded-full shadow-lg max-w-xs hover:scale-105 transition-transform duration-300" alt="Front" @error="handleImageError" />
+                    <img :src="getCurrentImageUrl('front')" 
+                         class="rounded-full shadow-lg max-w-xs hover:scale-105 transition-transform duration-300" 
+                         :style="{ transform: `rotate(${rotations.front}deg)` }"
+                         alt="Front" @error="handleImageError" />
                 </figure>
-                <div class="mt-4 font-bold text-lg">{{ $t('details.obverse') }}</div>
+                <button @click.stop="openRotationEditor('front')" class="absolute top-2 right-10 btn btn-circle btn-sm btn-neutral bg-opacity-70 border-none hover:bg-opacity-100 opacity-0 group-hover:opacity-100 transition-opacity z-20" title="Corregir Rotación">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                    </svg>
+                </button>
+                <div class="mt-4 font-bold text-lg flex flex-col items-center gap-2">
+                    {{ $t('details.obverse') }}
+                    <a v-if="coin?.numista_details?.obverse_thumbnail" 
+                       :href="coin.numista_details.obverse_thumbnail" 
+                       target="_blank" 
+                       class="btn btn-xs btn-ghost text-gray-500 gap-1 font-normal opacity-70 hover:opacity-100">
+                        {{ $t('details.view_sample') }}
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                        </svg>
+                    </a>
+                </div>
             </div>
 
             <!-- Back -->
-            <div class="text-center">
-                <figure class="cursor-zoom-in relative group inline-block" @click="openViewer('back')">
+            <div class="text-center relative group">
+                <figure class="cursor-zoom-in relative inline-block" @click="openViewer('back')">
                     <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all flex items-center justify-center rounded-full z-10">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                         </svg>
                     </div>
-                    <img :src="getCurrentImageUrl('back')" class="rounded-full shadow-lg max-w-xs hover:scale-105 transition-transform duration-300" alt="Back" @error="handleImageError" />
+                    <img :src="getCurrentImageUrl('back')" 
+                         class="rounded-full shadow-lg max-w-xs hover:scale-105 transition-transform duration-300" 
+                         :style="{ transform: `rotate(${rotations.back}deg)` }"
+                         alt="Back" @error="handleImageError" />
                 </figure>
-                <div class="mt-4 font-bold text-lg">{{ $t('details.reverse') }}</div>
+                <button @click.stop="openRotationEditor('back')" class="absolute top-2 right-10 btn btn-circle btn-sm btn-neutral bg-opacity-70 border-none hover:bg-opacity-100 opacity-0 group-hover:opacity-100 transition-opacity z-20" title="Corregir Rotación">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                    </svg>
+                </button>
+                <div class="mt-4 font-bold text-lg flex flex-col items-center gap-2">
+                    {{ $t('details.reverse') }}
+                    <a v-if="coin?.numista_details?.reverse_thumbnail" 
+                       :href="coin.numista_details.reverse_thumbnail" 
+                       target="_blank" 
+                       class="btn btn-xs btn-ghost text-gray-500 gap-1 font-normal opacity-70 hover:opacity-100">
+                        {{ $t('details.view_sample') }}
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                        </svg>
+                    </a>
+                </div>
             </div>
         </div>
       </div>
@@ -66,7 +96,7 @@
     <div class="card bg-base-100 shadow-xl h-fit">
       <div class="card-body">
         <h2 v-if="coin.name" class="text-2xl font-bold text-primary mb-1">{{ coin.name }}</h2>
-        <h1 class="card-title text-4xl mb-2">{{ coin.country }} {{ coin.face_value }}</h1>
+        <h1 class="card-title text-4xl mb-2">{{ coin.country }} {{ coin.face_value }} {{ coin.currency }}</h1>
         <div class="flex gap-2 mb-6">
             <div class="badge badge-lg badge-primary" v-if="coin.year && coin.year !== 0">{{ coin.year }}</div>
             <div class="badge badge-lg badge-secondary">{{ coin.currency }}</div>
@@ -99,15 +129,15 @@
                     </a>
                 </span>
             </div>
-            <div>
+            <div v-if="coin.mint">
                 <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.mint') }}</span>
-                <span>{{ coin.mint || 'N/A' }}</span>
+                <span>{{ coin.mint }}</span>
             </div>
-            <div>
+            <div v-if="coin.mintage && coin.mintage > 0">
                 <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.mintage') }}</span>
                 <span>{{ formatMintage(coin.mintage) }}</span>
             </div>
-            <div>
+            <div v-if="coin.min_value > 0 || coin.max_value > 0">
                 <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.est_value') }}</span>
                 <span>{{ coin.min_value }} - {{ coin.max_value }}</span>
             </div>
@@ -118,7 +148,7 @@
         </div>
 
         <div class="divider">{{ $t('details.sections.description') }}</div>
-        <p class="text-justify">{{ coin.description }}</p>
+        <p class="leading-relaxed text-gray-600 dark:text-gray-300">{{ coin.description }}</p>
 
         <div v-if="coin.gemini_model" class="mt-4 flex flex-col text-xs text-gray-400">
            <div class="flex items-center justify-between">
@@ -174,6 +204,60 @@
   </div>
   <div v-else class="flex justify-center p-20">
     <span class="loading loading-spinner loading-lg"></span>
+  </div>
+
+  <!-- Rotation Editor Modal -->
+  <div v-if="editingSide" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 backdrop-blur-sm transition-opacity" @click.self="cancelRotation">
+    <div class="relative w-full max-w-2xl p-4 flex flex-col gap-4 animate-in zoom-in duration-200">
+        <button @click="cancelRotation" class="absolute -top-10 right-0 btn btn-circle btn-ghost text-white z-50 hover:rotate-90 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+        
+        <!-- Editor Area -->
+        <div class="relative flex justify-center items-center overflow-hidden bg-gray-900 rounded-2xl shadow-2xl h-[400px] sm:h-[500px] border border-gray-700">
+             <!-- Grid Overlay -->
+             <div class="absolute inset-0 pointer-events-none z-10 opacity-20" 
+                  style="background-image: linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px); background-size: 33.3% 33.3%;">
+             </div>
+             <!-- Center Crosshair -->
+             <div class="absolute inset-0 pointer-events-none z-10 flex items-center justify-center opacity-30">
+                <div class="w-8 h-8 border border-white rounded-full"></div>
+                <div class="absolute w-4 h-[1px] bg-white"></div>
+                <div class="absolute h-4 w-[1px] bg-white"></div>
+             </div>
+             
+             <!-- Image -->
+             <img :src="getCurrentImageUrl(editingSide)" 
+                  class="max-h-full max-w-full transition-transform duration-75 ease-out object-contain select-none"
+                  :style="{ transform: `rotate(${tempRotation}deg)` }" />
+        </div>
+
+        <!-- Controls -->
+        <div class="bg-gray-800 rounded-2xl p-6 flex flex-col gap-6 shadow-xl border border-gray-700">
+             <div class="flex justify-between text-white text-sm font-mono items-end">
+                 <span class="opacity-50">-180°</span>
+                 <div class="flex flex-col items-center">
+                    <span class="text-xs uppercase text-gray-500 font-bold tracking-widest mb-1">{{ $t('common.rotation') }}</span>
+                    <span class="font-bold text-3xl text-primary tracking-tighter">{{ tempRotation > 0 ? '+' : ''}}{{ tempRotation }}°</span>
+                 </div>
+                 <span class="opacity-50">+180°</span>
+             </div>
+             <input type="range" min="-180" max="180" step="0.5" v-model.number="tempRotation" class="range range-primary w-full" />
+             <div class="w-full flex justify-between px-2 text-xs text-gray-500">
+                <span>|</span><span>|</span><span>|</span><span>|</span><span>|</span>
+             </div>
+             
+             <div class="flex justify-end gap-3 mt-2">
+                 <button @click="cancelRotation" class="btn btn-ghost text-white hover:bg-white/10">{{ $t('common.cancel') }}</button>
+                 <button @click="saveRotation" class="btn btn-primary px-8 gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                    {{ $t('common.apply') }}
+                 </button>
+             </div>
+        </div>
+    </div>
   </div>
 
   <!-- Delete Modal -->
@@ -234,7 +318,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, reactive } from 'vue'
 import axios from 'axios'
 import { useRoute, useRouter } from 'vue-router'
 import { normalizeGrade } from '../utils/grades'
@@ -270,10 +354,6 @@ const aiSettingsOpen = ref(true)
 
 // Numista Sync State
 const syncing = ref(false)
-const hasNumistaImages = computed(() => {
-    if (!coin.value || !coin.value.images) return false
-    return coin.value.images.some(img => img.image_type === 'sample')
-})
 
 const syncNumista = async () => {
     if (!coin.value) return
@@ -283,10 +363,6 @@ const syncNumista = async () => {
         // Refresh coin data
         const res = await axios.get(`${API_URL}/coins/${coin.value.id}`)
         coin.value = res.data
-        // Switch to sample images if found
-        if (hasNumistaImages.value) {
-            activeImageSource.value = 'sample'
-        }
     } catch (e) {
         console.error("Failed to sync with Numista", e)
         alert('Failed to sync: ' + (e.response?.data?.error || e.message))
@@ -356,29 +432,65 @@ const getImageUrl = (path) => {
 
 const getNumistaUrl = () => {
     if (coin.value && coin.value.numista_number) {
-        return `https://es.numista.com/${coin.value.numista_number}`
+        return `https://es.numista.com/catalogue/pieces${coin.value.numista_number}.html`
     }
     return null
+}
+
+// Rotation Logic
+const rotations = reactive({ front: 0, back: 0 })
+const editingSide = ref(null)
+const tempRotation = ref(0)
+
+const imageTimestamp = ref(Date.now())
+
+const openRotationEditor = (side) => {
+    editingSide.value = side
+    tempRotation.value = rotations[side]
+}
+
+const saveRotation = () => {
+    if (editingSide.value && coin.value) {
+        const side = editingSide.value
+        const angle = tempRotation.value
+        const id = coin.value.id
+        
+        // Optimistic update:
+        // Update local state to reflect rotation visually (via CSS)
+        rotations[side] = angle
+        editingSide.value = null
+
+        // Fire and forget (log error if needed)
+        axios.post(`${API_URL}/coins/${id}/rotate`, {
+            side: side,
+            angle: angle
+        }).catch(e => {
+            console.error("Failed to save rotation background", e)
+            // Optional: Revert via toast? For now silent fail or alert.
+        })
+    }
+}
+
+const cancelRotation = () => {
+    editingSide.value = null
 }
 
 const getCurrentImageUrl = (side) => {
     if (!coin.value) return '/broken_coin.png'
     
-    // Try to find specific image type in images array
+    // Standard Logic (Processed/Original)
     if (coin.value.images && coin.value.images.length > 0) {
         let typeToFind = 'crop'
         if (activeImageSource.value === 'original') {
             typeToFind = 'original'
-        } else if (activeImageSource.value === 'sample') {
-            typeToFind = 'sample'
         }
         
         const img = coin.value.images.find(img => img.image_type === typeToFind && img.side === side)
         if (img) {
-            return getImageUrl(img.path)
+            return `${getImageUrl(img.path)}?t=${imageTimestamp.value}`
         }
     }
-
+    
     // Fallback logic
     return '/broken_coin.png'
 }
@@ -397,6 +509,8 @@ const getGradeDescription = (code) => {
     const base = normalizeGrade(code)
     return t(`grades.${base}.desc`)
 }
+
+
 
 onMounted(async () => {
   try {
