@@ -138,23 +138,8 @@ func (r *PostgresCoinRepository) List(ctx context.Context, filter domain.CoinFil
 		return nil, fmt.Errorf("failed to list coins: %w", err)
 	}
 
-	coins := make([]*domain.Coin, len(rows))
-	for i, row := range rows {
-		c, err := toDomainCoin(row)
-		if err != nil {
-			return nil, err
-		}
-
-		// Ideally we should batch fetch images or use a join, but for now N+1 is acceptable for MVP
-		images, err := r.q.ListCoinImagesByCoinID(ctx, row.ID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to list coin images for coin %v: %w", row.ID, err)
-		}
-		c.Images = toDomainImages(images)
-
-		coins[i] = c
-	}
-	return coins, nil
+	// Use the shared helper which generates coins and batch-fetches images
+	return r.rowsToCoins(ctx, rows)
 }
 
 func (r *PostgresCoinRepository) Count(ctx context.Context) (int64, error) {
@@ -367,20 +352,38 @@ func (r *PostgresCoinRepository) GetAllCoins(ctx context.Context) ([]*domain.Coi
 
 // Helper to avoid duplication
 func (r *PostgresCoinRepository) rowsToCoins(ctx context.Context, rows []db.Coin) ([]*domain.Coin, error) {
+	if len(rows) == 0 {
+		return []*domain.Coin{}, nil
+	}
+
 	coins := make([]*domain.Coin, len(rows))
+	coinIDs := make([]pgtype.UUID, len(rows))
+	coinMap := make(map[uuid.UUID]*domain.Coin)
+
 	for i, row := range rows {
 		c, err := toDomainCoin(row)
 		if err != nil {
 			return nil, err
 		}
-		// Fetch images (N+1, acceptable for small lists like top 3)
-		images, err := r.q.ListCoinImagesByCoinID(ctx, row.ID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to list coin images for coin %v: %w", row.ID, err)
-		}
-		c.Images = toDomainImages(images)
+		c.Images = []domain.CoinImage{} // Initialize empty slice
 		coins[i] = c
+		coinIDs[i] = pgtype.UUID{Bytes: c.ID, Valid: true}
+		coinMap[c.ID] = c
 	}
+
+	// Batch fetch images
+	images, err := r.q.ListCoinImagesByCoinIDs(ctx, coinIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to batch list coin images: %w", err)
+	}
+
+	// Map images to coins
+	for _, img := range toDomainImages(images) {
+		if coin, exists := coinMap[img.CoinID]; exists {
+			coin.Images = append(coin.Images, img)
+		}
+	}
+
 	return coins, nil
 }
 

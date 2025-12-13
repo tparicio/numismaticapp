@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"os"
 
 	"github.com/antonioparicio/numismaticapp/internal/api"
@@ -16,22 +16,29 @@ import (
 )
 
 func main() {
+	// 0. Logging Setup
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
+
 	ctx := context.Background()
 
 	// 1. Config
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
-		log.Fatal("DATABASE_URL is not set")
+		slog.Error("DATABASE_URL is not set")
+		os.Exit(1)
 	}
 	geminiKey := os.Getenv("GEMINI_API_KEY")
 	if geminiKey == "" {
-		log.Fatal("GEMINI_API_KEY is not set")
+		slog.Error("GEMINI_API_KEY is not set")
+		os.Exit(1)
 	}
 
 	// 2. Database
 	dbPool, err := pgxpool.New(ctx, dbURL)
 	if err != nil {
-		log.Fatalf("Unable to connect to database: %v", err)
+		slog.Error("Unable to connect to database", "error", err)
+		os.Exit(1)
 	}
 	defer dbPool.Close()
 
@@ -43,7 +50,8 @@ func main() {
 	geminiModel := os.Getenv("GEMINI_MODEL")
 	geminiClient, err := gemini.NewGeminiService(ctx, os.Getenv("GEMINI_API_KEY"), geminiModel)
 	if err != nil {
-		log.Fatalf("Failed to create Gemini client: %v", err)
+		slog.Error("Failed to create Gemini client", "error", err)
+		os.Exit(1)
 	}
 	defer geminiClient.Close()
 
@@ -59,7 +67,8 @@ func main() {
 	// Run Migrations
 	migrator := infrastructure.NewMigrationService(dbPool)
 	if err := migrator.RunMigrations(ctx); err != nil {
-		log.Fatalf("Failed to run migrations: %v", err)
+		slog.Error("Failed to run migrations", "error", err)
+		os.Exit(1)
 	}
 
 	// Initialize Application Services
@@ -78,6 +87,9 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
-	log.Printf("Server starting on port %s", port)
-	log.Fatal(app.Listen(":" + port))
+	slog.Info("Server starting", "port", port)
+	if err := app.Listen(":" + port); err != nil {
+		slog.Error("Server failed to start", "error", err)
+		os.Exit(1)
+	}
 }

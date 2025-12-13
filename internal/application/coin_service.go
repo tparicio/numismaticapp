@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"mime/multipart"
 	"net/http"
 	"strings"
@@ -133,11 +134,11 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 	}
 
 	// 4. Analyze with Gemini
-	fmt.Println("🤖 Analyzing coin with Gemini...")
+	slog.Info("Analyzing coin with Gemini", "model", modelName)
 	analysis, err := s.aiService.AnalyzeCoin(ctx, originalFrontPath, originalBackPath, modelName, temperature)
 	if err != nil {
 		// Log error but continue with empty analysis to not block creation
-		fmt.Printf("⚠️ Gemini analysis failed: %v\n", err)
+		slog.Warn("Gemini analysis failed", "error", err)
 		analysis = &domain.CoinAnalysisResult{
 			Description: "Analysis failed",
 			RawDetails:  map[string]any{"error": err.Error()},
@@ -146,12 +147,12 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 	// 4.1 Apply Rotation Correction
 	if analysis.VerticalCorrectionAngleFront != 0 {
 		if err := s.imageService.Rotate(processedFrontPath, analysis.VerticalCorrectionAngleFront); err != nil {
-			fmt.Printf("⚠️ Failed to rotate front image: %v\n", err)
+			slog.Warn("Failed to rotate front image", "error", err)
 		}
 	}
 	if analysis.VerticalCorrectionAngleBack != 0 {
 		if err := s.imageService.Rotate(processedBackPath, analysis.VerticalCorrectionAngleBack); err != nil {
-			fmt.Printf("⚠️ Failed to rotate back image: %v\n", err)
+			slog.Warn("Failed to rotate back image", "error", err)
 		}
 	}
 
@@ -670,7 +671,7 @@ func (s *CoinService) ReanalyzeCoin(ctx context.Context, id uuid.UUID, modelName
 	}
 
 	// 3. Analyze with Gemini
-	fmt.Printf("🤖 Re-analyzing coin %s with Gemini...\n", id)
+	slog.Info("Re-analyzing coin with Gemini", "coin_id", id)
 	analysis, err := s.aiService.AnalyzeCoin(ctx, frontPath, backPath, modelName, temperature)
 	if err != nil {
 		return nil, fmt.Errorf("gemini analysis failed: %w", err)

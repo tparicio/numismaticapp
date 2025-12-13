@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -41,7 +42,7 @@ func (s *MigrationService) RunMigrations(ctx context.Context) error {
 	}
 
 	if len(pending) == 0 {
-		fmt.Println("No pending migrations.")
+		slog.Info("No pending migrations")
 		return nil
 	}
 
@@ -53,7 +54,7 @@ func (s *MigrationService) RunMigrations(ctx context.Context) error {
 		}
 	}
 
-	fmt.Println("All migrations applied successfully.")
+	slog.Info("All migrations applied successfully")
 	return nil
 }
 

@@ -1,3 +1,4 @@
+```go
 package image
 
 import (
@@ -6,6 +7,7 @@ import (
 	"image"
 	"image/draw"
 	"image/png"
+	"log/slog"
 
 	"github.com/h2non/bimg"
 )
@@ -60,7 +62,7 @@ func (s *VipsImageService) Trim(imagePath string) error {
 
 	img := bimg.NewImage(buffer)
 	size, _ := img.Size()
-	fmt.Printf("DEBUG: Trimming %s. Original size: %dx%d\n", imagePath, size.Width, size.Height)
+	slog.Debug("Trimming image", "path", imagePath, "width", size.Width, "height", size.Height)
 
 	// Use Process with explicit threshold to be more aggressive
 	// Default is usually 10, we try 50 to catch shadows/noise
@@ -76,7 +78,7 @@ func (s *VipsImageService) Trim(imagePath string) error {
 
 	trimmedImg := bimg.NewImage(trimmed)
 	newSize, _ := trimmedImg.Size()
-	fmt.Printf("DEBUG: Trimmed %s. New size: %dx%d\n", imagePath, newSize.Width, newSize.Height)
+	slog.Debug("Trimmed image", "path", imagePath, "width", newSize.Width, "height", newSize.Height)
 
 	if err := bimg.Write(imagePath, trimmed); err != nil {
 		return err

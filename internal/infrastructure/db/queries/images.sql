@@ -18,3 +18,8 @@ INSERT INTO coin_images (
 SELECT * FROM coin_images
 WHERE coin_id = $1
 ORDER BY created_at ASC;
+
+-- name: ListCoinImagesByCoinIDs :many
+SELECT * FROM coin_images
+WHERE coin_id = ANY($1::uuid[])
+ORDER BY coin_id, created_at ASC;
