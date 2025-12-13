@@ -265,7 +265,7 @@ const reprocessing = ref(false)
 const selectedModel = ref('gemini-2.5-flash')
 const temperature = ref(0.4)
 const availableModels = ref([])
-const availableModels = ref([])
+
 const aiSettingsOpen = ref(true)
 
 // Numista Sync State

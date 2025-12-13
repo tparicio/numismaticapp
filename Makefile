@@ -28,6 +28,10 @@ run: ## 🚀 Start the application in detached mode
 	@echo "   Frontend: http://localhost:8080"
 	@echo "   API:      http://localhost:8080/api/v1"
 
+logs: ## 📋 View application logs
+	@echo "$(COLOR_BLUE)📋 Tailing logs... (Ctrl+C to exit)$(COLOR_RESET)"
+	$(DOCKER_COMPOSE) logs -f
+
 stop: ## 🛑 Stop the application
 	@echo "$(COLOR_BLUE)🛑 Stopping application...$(COLOR_RESET)"
 	$(DOCKER_COMPOSE) down

@@ -63,6 +63,8 @@ func NewCoinService(
 
 func (s *CoinService) AddCoin(ctx context.Context, frontData io.Reader, frontFilename string, backData io.Reader, backFilename string, groupName, userNotes, name, mint string, mintage int, modelName string, temperature float32) (*domain.Coin, error) {
 	coinID := uuid.New()
+	// Start Log
+	slog.Info("Starting AddCoin process", "coin_id", coinID)
 
 	// 1. Sync: Read and Save Original Images
 	frontBytes, err := io.ReadAll(frontData)
@@ -118,17 +120,18 @@ func (s *CoinService) AddCoin(ctx context.Context, frontData io.Reader, frontFil
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		slog.Info("Analyzing coin with Gemini", "model", modelName)
+		slog.Info("Starting Task A: AI Analysis", "coin_id", coinID, "model", modelName)
 		// Assuming "es" as default language per previous refactor
 		analysis, err := s.aiService.AnalyzeCoin(ctx, originalFrontPath, originalBackPath, modelName, temperature, "es")
 		if err != nil {
-			slog.Warn("Gemini analysis failed", "error", err)
+			slog.Warn("Gemini analysis failed", "coin_id", coinID, "error", err)
 			// Don't fail the whole process, just return empty/error result
 			analysis = &domain.CoinAnalysisResult{
 				Description: "Analysis failed",
 				RawDetails:  map[string]any{"error": err.Error()},
 			}
 		}
+		slog.Info("Completed Task A: AI Analysis", "coin_id", coinID)
 		aiChan <- aiResult{res: analysis}
 	}()
 
@@ -136,10 +139,12 @@ func (s *CoinService) AddCoin(ctx context.Context, frontData io.Reader, frontFil
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		slog.Info("Starting Task B: Image Processing", "coin_id", coinID)
 
 		// Process Front
 		pFrontBytes, err := s.bgRemover.RemoveBackground(ctx, frontBytes)
 		if err != nil {
+			slog.Error("Failed to remove background from front", "coin_id", coinID, "error", err)
 			errChan <- fmt.Errorf("failed to bg remove front: %w", err)
 			return
 		}
@@ -162,6 +167,7 @@ func (s *CoinService) AddCoin(ctx context.Context, frontData io.Reader, frontFil
 		// Process Back
 		pBackBytes, err := s.bgRemover.RemoveBackground(ctx, backBytes)
 		if err != nil {
+			slog.Error("Failed to remove background from back", "coin_id", coinID, "error", err)
 			errChan <- fmt.Errorf("failed to bg remove back: %w", err)
 			return
 		}
@@ -187,14 +193,17 @@ func (s *CoinService) AddCoin(ctx context.Context, frontData io.Reader, frontFil
 			thumbFrontPath:     tFrontPath,
 			thumbBackPath:      tBackPath,
 		}
+		slog.Info("Completed Task B: Image Processing", "coin_id", coinID)
 	}()
 
 	// Task C: Group Management
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		slog.Info("Starting Task C: Group Management", "coin_id", coinID)
 		groupName = strings.TrimSpace(groupName)
 		if groupName == "" {
+			slog.Info("No group name provided, skipping group creation", "coin_id", coinID)
 			grpChan <- grpResult{id: nil}
 			return
 		}
@@ -204,10 +213,12 @@ func (s *CoinService) AddCoin(ctx context.Context, frontData io.Reader, frontFil
 			// Try create
 			group, err = s.groupRepo.Create(ctx, groupName, "")
 			if err != nil {
+				slog.Error("Failed to create group", "coin_id", coinID, "group_name", groupName, "error", err)
 				errChan <- fmt.Errorf("failed to create group: %w", err)
 				return
 			}
 		}
+		slog.Info("Completed Task C: Group Management", "coin_id", coinID, "group_id", group.ID)
 		grpChan <- grpResult{id: &group.ID}
 	}()
 
@@ -329,8 +340,10 @@ func (s *CoinService) AddCoin(ctx context.Context, frontData io.Reader, frontFil
 
 	// 6. Persist
 	if err := s.repo.Save(ctx, coin); err != nil {
+		slog.Error("Failed to save coin to DB", "coin_id", coinID, "error", err)
 		return nil, fmt.Errorf("failed to save coin to db: %w", err)
 	}
+	slog.Info("Successfully saved coin", "coin_id", coinID)
 
 	// 7. Trigger Numista Enrichment (Async)
 	if s.numistaClient != nil && s.numistaClient.APIKey != "" {
@@ -408,8 +421,16 @@ func (s *CoinService) EnrichCoinWithNumista(ctx context.Context, coinID uuid.UUI
 		if url == "" {
 			return nil
 		}
-		// Download
-		resp, err := http.Get(url)
+
+		// Download with User-Agent to avoid 403
+		req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+		if err != nil {
+			return fmt.Errorf("failed to create request: %w", err)
+		}
+		req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+
+		client := &http.Client{}
+		resp, err := client.Do(req)
 		if err != nil {
 			return fmt.Errorf("failed to download image %s: %w", url, err)
 		}
