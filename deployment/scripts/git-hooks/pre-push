@@ -1,0 +1,13 @@
+#!/bin/bash
+
+echo "🚀 Running pre-push checks (make ci-local)..."
+
+# Run the local CI target from Makefile
+# redirect output to preserve colors if possible, or just standard output
+if make ci-local; then
+    echo "✅ Pre-push checks passed!"
+    exit 0
+else
+    echo "❌ Pre-push checks failed. Please fix issues before pushing."
+    exit 1
+fi

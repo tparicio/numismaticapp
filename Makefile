@@ -67,9 +67,22 @@ deploy: docker-init docker-push ## 🚀 Initialize buildx and push multi-arch im
 
 ## 🛠️  Development
 
+ci-local: lint vet test ## 🚦 Run local CI checks (Lint, Vet, Test)
+
+install-hooks: ## 🪝 Install git hooks
+	@echo "$(COLOR_BLUE)🪝 Installing git hooks...$(COLOR_RESET)"
+	cp deployment/scripts/git-hooks/commit-msg .git/hooks/commit-msg
+	cp deployment/scripts/git-hooks/pre-push .git/hooks/pre-push
+	chmod +x .git/hooks/commit-msg .git/hooks/pre-push
+	@echo "$(COLOR_GREEN)✅ Git hooks installed!$(COLOR_RESET)"
+
+vet: ## 🔍 Run go vet
+	@echo "$(COLOR_BLUE)🔍 Running go vet...$(COLOR_RESET)"
+	go vet ./...
+
 lint: ## 🔍 Run linters (Go & Vue)
 	@echo "$(COLOR_BLUE)🔍 Running linters...$(COLOR_RESET)"
-	golangci-lint run
+	docker run --rm -v $$(pwd):/app -w /app golangci/golangci-lint:latest-alpine golangci-lint run -v
 	cd web && npm run lint
 
 build-web: ## 🏗️  Build frontend (in Docker)
