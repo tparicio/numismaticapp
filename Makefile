@@ -102,15 +102,18 @@ list-models: ## List available Gemini models using curl
 		echo "Error: .env.local file not found"; \
 	fi
 
+# Test packages (exclude infrastructure, mocks, cmd, api from unit tests)
+TEST_PKGS = $(shell go list ./... | grep -v 'internal/infrastructure' | grep -v 'internal/api' | grep -v 'cmd' | grep -v 'mocks')
+
 ## 🧪 Testing
 test-unit: ## Run unit tests
 	@echo "$(COLOR_BLUE)🧪 Running unit tests...$(COLOR_RESET)"
-	go test -v ./...
+	go test -v $(TEST_PKGS)
 
 test-unit-coverage: ## Run unit tests with coverage
 	@echo "$(COLOR_BLUE)🧪 Running unit tests with coverage...$(COLOR_RESET)"
 	@mkdir -p reports/tests
-	go test -v -coverprofile=reports/tests/coverage.out ./...
+	go test -v -coverprofile=reports/tests/coverage.out $(TEST_PKGS)
 	go tool cover -func=reports/tests/coverage.out
 
 ## 📦 Dependencies
