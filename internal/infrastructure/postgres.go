@@ -608,6 +608,7 @@ func toDomainCoin(row db.Coin) (*domain.Coin, error) {
 		SoldPrice:         soldPrice.Float64,
 		GeminiModel:       row.GeminiModel.String,
 		GeminiTemperature: geminiTemp.Float64,
+		NumistaSearch:     row.NumistaSearch.String,
 		CreatedAt:         row.CreatedAt.Time,
 		UpdatedAt:         row.UpdatedAt.Time,
 	}, nil

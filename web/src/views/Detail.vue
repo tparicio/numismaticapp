@@ -28,13 +28,15 @@
             <!-- Front -->
             <div class="text-center relative group">
                 <figure class="cursor-zoom-in relative inline-block" @click="openViewer('front')">
-                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all flex items-center justify-center rounded-full z-10">
+                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all flex items-center justify-center z-10"
+                         :class="{ 'rounded-full': activeImageSource !== 'original', 'rounded-xl': activeImageSource === 'original' }">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                         </svg>
                     </div>
                     <img :src="getCurrentImageUrl('front')" 
-                         class="rounded-full shadow-lg max-w-xs hover:scale-105 transition-transform duration-300" 
+                         class="shadow-lg max-w-xs hover:scale-105 transition-transform duration-300" 
+                         :class="{ 'rounded-full': activeImageSource !== 'original', 'rounded-xl': activeImageSource === 'original' }"
                          :style="{ transform: `rotate(${rotations.front}deg)` }"
                          alt="Front" @error="handleImageError" />
                 </figure>
@@ -45,8 +47,8 @@
                 </button>
                 <div class="mt-4 font-bold text-lg flex flex-col items-center gap-2">
                     {{ $t('details.obverse') }}
-                    <a v-if="coin?.numista_details?.obverse_thumbnail" 
-                       :href="coin.numista_details.obverse_thumbnail" 
+                    <a v-if="coin?.numista_details?.obverse?.picture" 
+                       :href="coin.numista_details.obverse.picture" 
                        target="_blank" 
                        class="btn btn-xs btn-ghost text-gray-500 gap-1 font-normal opacity-70 hover:opacity-100">
                         {{ $t('details.view_sample') }}
@@ -60,13 +62,15 @@
             <!-- Back -->
             <div class="text-center relative group">
                 <figure class="cursor-zoom-in relative inline-block" @click="openViewer('back')">
-                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all flex items-center justify-center rounded-full z-10">
+                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all flex items-center justify-center z-10"
+                         :class="{ 'rounded-full': activeImageSource !== 'original', 'rounded-xl': activeImageSource === 'original' }">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                         </svg>
                     </div>
                     <img :src="getCurrentImageUrl('back')" 
-                         class="rounded-full shadow-lg max-w-xs hover:scale-105 transition-transform duration-300" 
+                         class="shadow-lg max-w-xs hover:scale-105 transition-transform duration-300" 
+                         :class="{ 'rounded-full': activeImageSource !== 'original', 'rounded-xl': activeImageSource === 'original' }"
                          :style="{ transform: `rotate(${rotations.back}deg)` }"
                          alt="Back" @error="handleImageError" />
                 </figure>
@@ -77,8 +81,8 @@
                 </button>
                 <div class="mt-4 font-bold text-lg flex flex-col items-center gap-2">
                     {{ $t('details.reverse') }}
-                    <a v-if="coin?.numista_details?.reverse_thumbnail" 
-                       :href="coin.numista_details.reverse_thumbnail" 
+                    <a v-if="coin?.numista_details?.reverse?.picture" 
+                       :href="coin.numista_details.reverse.picture" 
                        target="_blank" 
                        class="btn btn-xs btn-ghost text-gray-500 gap-1 font-normal opacity-70 hover:opacity-100">
                         {{ $t('details.view_sample') }}
@@ -127,6 +131,11 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
                         </svg>
                     </a>
+                    <button v-if="numistaCount > 0" 
+                            @click="numistaModalOpen = true" 
+                            class="btn btn-xs btn-outline btn-accent gap-1">
+                        {{ numistaCount }} resultados numista
+                    </button>
                 </span>
             </div>
             <div v-if="coin.mint">
@@ -650,16 +659,22 @@ const numistaModalOpen = ref(false)
 const applyingNumista = ref(false)
 const selectedNumistaId = ref(null)
 
-const numistaResults = computed(() => {
-    if (!coin.value || !coin.value.numista_search) return []
+const parsedNumistaSearch = computed(() => {
+    if (!coin.value || !coin.value.numista_search) return null
+    // If it's already an object, return it directly
+    if (typeof coin.value.numista_search === 'object') {
+        return coin.value.numista_search
+    }
     try {
-        const search = JSON.parse(coin.value.numista_search)
-        return search.types || []
+        return JSON.parse(coin.value.numista_search)
     } catch (e) {
         console.error("Failed to parse numista_search", e)
-        return []
+        return null
     }
 })
+
+const numistaResults = computed(() => parsedNumistaSearch.value?.types || [])
+const numistaCount = computed(() => parsedNumistaSearch.value?.count || 0)
 
 const applyNumistaResult = async (numistaId) => {
     if (!coin.value) return
