@@ -38,7 +38,7 @@ func (p *PromptGenerator) getSpanishPrompt() string {
 		"material": "Material (ej: Plata .925, Cobre)",
 		"description": "Descripción visual detallada del anverso y reverso",
 		"km_code": "Código KM (ej: KM# 819)",
-		"numista_number": 0,
+
 		"mint": "Ceca (ej: Madrid, M coronada)",
 		"mintage": 0,
 		"min_value": 0.0,
@@ -70,7 +70,7 @@ func (p *PromptGenerator) getEnglishPrompt() string {
 		"material": "Material (e.g. Silver .925, Copper)",
 		"description": "Detailed visual description of obverse and reverse",
 		"km_code": "KM Code (e.g. KM# 819)",
-		"numista_number": 0,
+
 		"mint": "Mint (e.g. Madrid)",
 		"mintage": 0,
 		"min_value": 0.0,

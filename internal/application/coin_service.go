@@ -397,8 +397,13 @@ func (s *CoinService) EnrichCoinWithNumista(ctx context.Context, coinID uuid.UUI
 
 	slog.Info("Numista search completed", "count", searchResult.Count, "results_len", len(searchResult.Types))
 
-	// 3. Save full search response
-	searchJSON, err := json.Marshal(searchResult)
+	// 3. Save full search response (with query injected)
+	searchMap := map[string]interface{}{
+		"q":     query,
+		"count": searchResult.Count,
+		"types": searchResult.Types,
+	}
+	searchJSON, err := json.Marshal(searchMap)
 	if err != nil {
 		slog.Warn("Failed to marshal numista search result", "error", err)
 	} else {

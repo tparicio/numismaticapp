@@ -63,6 +63,7 @@ func (r *PostgresCoinRepository) Save(ctx context.Context, coin *domain.Coin) er
 		NumistaNumber:     toNullInt4(coin.NumistaNumber),
 		GeminiModel:       toNullString(coin.GeminiModel),
 		GeminiTemperature: toNumeric(coin.GeminiTemperature),
+		NumistaSearch:     toNullString(coin.NumistaSearch),
 	}
 
 	result, err := r.q.CreateCoin(ctx, params)
@@ -450,6 +451,7 @@ func (r *PostgresCoinRepository) Update(ctx context.Context, coin *domain.Coin) 
 		NumistaDetails:    numistaDetailsBytes,
 		GeminiModel:       toNullString(coin.GeminiModel),
 		GeminiTemperature: toNumeric(coin.GeminiTemperature),
+		NumistaSearch:     toNullString(coin.NumistaSearch),
 	}
 
 	result, err := r.q.UpdateCoin(ctx, params)

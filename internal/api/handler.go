@@ -42,7 +42,7 @@ func (h *CoinHandler) AddCoin(c *fiber.Ctx) error {
 
 	modelName := c.FormValue("model_name")
 	temperatureStr := c.FormValue("temperature")
-	var temperature float32 = 0.4 // Default
+	var temperature float32 = 0.1 // Default
 	if temperatureStr != "" {
 		if val, err := strconv.ParseFloat(temperatureStr, 32); err == nil {
 			temperature = float32(val)
@@ -310,7 +310,7 @@ func (h *CoinHandler) ReanalyzeCoin(c *fiber.Ctx) error {
 	}
 
 	if req.Temperature == 0 {
-		req.Temperature = 0.4
+		req.Temperature = 0.1
 	}
 
 	coin, err := h.service.ReanalyzeCoin(c.Context(), id, req.ModelName, req.Temperature)

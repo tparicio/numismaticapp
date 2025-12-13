@@ -147,11 +147,28 @@
             </div>
         </div>
 
-        <div class="divider">{{ $t('details.sections.description') }}</div>
-        <p class="leading-relaxed text-gray-600 dark:text-gray-300">{{ coin.description }}</p>
+        <div class="divider">
+            {{ $t('details.sections.description') }}
+            <div class="badge badge-neutral gap-1 text-xs">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3">
+                    <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.633-.73l-3.111-9.64a1.184 1.184 0 01-.722-1.463A1.184 1.184 0 0110 2zM4.08 6.647a1 1 0 011.666-.086l1.248 1.94 1.258-.636a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 018 17a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.633-.73L1.589 5.611a1 1 0 012.491-1.036z" clip-rule="evenodd" />
+                </svg>
+                Gemini
+            </div>
+        </div>
+        <p class="whitespace-pre-line">{{ coin.description }}</p>
 
-        <!-- Numista Extended Description -->
-        <div v-if="coin.numista_details" class="mt-6 space-y-4 text-sm text-gray-700 dark:text-gray-300">
+        <!-- Numista Extended Details -->
+        <template v-if="coin.numista_details">
+             <div class="divider mt-6">
+                {{ $t('details.sections.numista_details') || 'Detalles Numista' }}
+                <div class="badge badge-secondary gap-1 text-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                    </svg>
+                    Numista
+                </div>
+            </div>
             <!-- Obverse -->
             <div v-if="coin.numista_details.obverse">
                 <h3 class="font-bold border-b border-gray-200 dark:border-gray-700 pb-1 mb-2 text-primary">Anverso</h3>
@@ -193,7 +210,8 @@
                  <h3 class="font-bold border-b border-gray-200 dark:border-gray-700 pb-1 mb-2 text-primary">Técnica</h3>
                  <p>{{ coin.numista_details.technique.text }}</p>
             </div>
-        </div>
+        </template>
+
 
         <div v-if="coin.gemini_model" class="mt-4 flex flex-col text-xs text-gray-400">
            <div class="flex items-center justify-between">
@@ -211,15 +229,26 @@
                        <span class="whitespace-nowrap">{{ $t('common.reprocess') || 'Reprocesar' }}</span>
                    </button>
                </div>
-               <div class="tooltip" :data-tip="$t('details.sync_numista_tooltip') || 'Sincronizar con Numista'">
-                   <button @click="syncNumista" class="btn btn-xs btn-outline btn-secondary flex flex-row items-center gap-1 flex-nowrap" :disabled="syncing">
-                       <span v-if="syncing" class="loading loading-spinner loading-xs"></span>
-                       <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 flex-shrink-0">
-                           <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                       </svg>
-                       <span class="whitespace-nowrap">Numista</span>
-                   </button>
-               </div>
+                <!-- Numista Link - Only conditional on Numista Number -->
+                <div class="tooltip" :data-tip="$t('details.open_numista_tooltip') || 'Ver en Numista'" v-if="coin.numista_number">
+                    <a :href="`https://es.numista.com/catalogue/pieces${coin.numista_number}.html`" target="_blank" class="btn btn-xs btn-outline btn-secondary flex flex-row items-center gap-1 flex-nowrap">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 flex-shrink-0">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                        </svg>
+                        <span class="whitespace-nowrap">Numista #{{ coin.numista_number }}</span>
+                    </a>
+                </div>
+
+                <!-- Sync Action (Always available if you want to retry?) or replace if no link? Let's keep separate for re-sync -->
+                 <div class="tooltip" :data-tip="$t('details.sync_numista_tooltip') || 'Sincronizar con Numista'">
+                    <button @click="syncNumista" class="btn btn-xs btn-ghost btn-secondary btn-square" :disabled="syncing">
+                        <span v-if="syncing" class="loading loading-spinner loading-xs"></span>
+                        <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                        </svg>
+                    </button>
+                </div>
+
                 <!-- Numista Search Results Action -->
                 <div class="tooltip" :data-tip="$t('details.show_results_tooltip') || 'Ver resultados de búsqueda'" v-if="numistaResults.length > 0">
                     <button @click="numistaModalOpen = true" class="btn btn-xs btn-outline btn-accent flex flex-row items-center gap-1 flex-nowrap">
