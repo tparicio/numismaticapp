@@ -52,6 +52,7 @@ Thumbs.db
 /bin/
 /var/
 /storage/
+/docs/prompts
 
 #.env
 .env.local

@@ -60,7 +60,7 @@ const countryMapping = {
   "Polonia": "Poland"
 }
 
-const normalize = (str) => str ? str.toLowerCase().trim() : ''
+
 
 const transformData = () => {
     // Convert the props.data object {'España': 10} to Highcharts array [{'code3': 'ESP', 'value': 10}]
