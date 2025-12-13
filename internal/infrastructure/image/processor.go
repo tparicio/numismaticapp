@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"image/draw"
 	"image/png"
 	"log/slog"
+	"os"
+	"strings"
 
 	"github.com/disintegration/imaging"
-	"github.com/h2non/bimg"
 )
 
 type VipsImageService struct{}
@@ -56,113 +56,151 @@ func (s *VipsImageService) ProcessCoinImages(frontPath, backPath string) (string
 }
 
 func (s *VipsImageService) Trim(imagePath string) error {
-	buffer, err := bimg.Read(imagePath)
+	img, err := imaging.Open(imagePath)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to open image for trim: %w", err)
 	}
 
-	img := bimg.NewImage(buffer)
-	size, _ := img.Size()
-	slog.Debug("Trimming image", "path", imagePath, "width", size.Width, "height", size.Height)
+	// Scan for non-transparent pixels to determine bounds
+	bounds := img.Bounds()
+	minX, minY, maxX, maxY := bounds.Max.X, bounds.Max.Y, bounds.Min.X, bounds.Min.Y
+	found := false
 
-	// Use Process with explicit threshold to be more aggressive
-	// Default is usually 10, we try 50 to catch shadows/noise
-	options := bimg.Options{
-		Trim:      true,
-		Threshold: 50,
+	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
+		for x := bounds.Min.X; x < bounds.Max.X; x++ {
+			_, _, _, a := img.At(x, y).RGBA()
+			if a > 0 { // Simple threshold, can increase if noisy
+				if x < minX {
+					minX = x
+				}
+				if x > maxX {
+					maxX = x
+				}
+				if y < minY {
+					minY = y
+				}
+				if y > maxY {
+					maxY = y
+				}
+				found = true
+			}
+		}
 	}
 
-	trimmed, err := img.Process(options)
-	if err != nil {
-		return err
+	if !found {
+		// Empty image, do nothing
+		return nil
 	}
 
-	trimmedImg := bimg.NewImage(trimmed)
-	newSize, _ := trimmedImg.Size()
-	slog.Debug("Trimmed image", "path", imagePath, "width", newSize.Width, "height", newSize.Height)
+	// Add slight padding to avoid cutting too close
+	padding := 5
+	minX = max(bounds.Min.X, minX-padding)
+	minY = max(bounds.Min.Y, minY-padding)
+	maxX = min(bounds.Max.X-1, maxX+padding)
+	maxY = min(bounds.Max.Y-1, maxY+padding)
 
-	if err := bimg.Write(imagePath, trimmed); err != nil {
-		return err
+	rect := image.Rect(minX, minY, maxX+1, maxY+1)
+	trimmedImg := imaging.Crop(img, rect)
+
+	if err := imaging.Save(trimmedImg, imagePath); err != nil {
+		return fmt.Errorf("failed to save trimmed image: %w", err)
 	}
 
+	slog.Debug("Trimmed image", "path", imagePath, "old_bounds", bounds, "new_bounds", rect)
 	return nil
 }
 
 func (s *VipsImageService) CropToCircle(imagePath string) (string, error) {
-	buffer, err := bimg.Read(imagePath)
+	img, err := imaging.Open(imagePath)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to open image for circle crop: %w", err)
 	}
 
-	img := bimg.NewImage(buffer)
-	size, err := img.Size()
-	if err != nil {
-		return "", err
+	bounds := img.Bounds()
+	dim := bounds.Dx()
+	if bounds.Dy() < dim {
+		dim = bounds.Dy()
 	}
 
-	// 1. Determine smallest dimension for square crop
-	dimension := size.Width
-	if size.Height < size.Width {
-		dimension = size.Height
+	// 1. Crop to square center
+	img = imaging.CropCenter(img, dim, dim)
+
+	// 2. Create circular mask
+	// Create a new RGBA image for the result
+	dst := image.NewRGBA(image.Rect(0, 0, dim, dim))
+
+	// Center and Radius
+	cx, cy := float64(dim)/2, float64(dim)/2
+	r := float64(dim) / 2
+
+	// Iterate over pixels to apply circular mask
+	for y := 0; y < dim; y++ {
+		for x := 0; x < dim; x++ {
+			dx, dy := float64(x)-cx, float64(y)-cy
+			if dx*dx+dy*dy <= r*r {
+				dst.Set(x, y, img.At(x, y))
+			} else {
+				dst.Set(x, y, color.Transparent)
+			}
+		}
 	}
 
-	// 2. Crop to square centered
-	cropped, err := img.Crop(dimension, dimension, bimg.GravityCentre)
-	if err != nil {
-		return "", err
-	}
-
-	// 3. Save as PNG
-	newImg := bimg.NewImage(cropped)
-	pngBuf, err := newImg.Convert(bimg.PNG)
-	if err != nil {
-		return "", fmt.Errorf("failed to convert to png: %w", err)
-	}
-
+	// 3. Save as _crop.png
 	basePath := imagePath
-	if len(basePath) > 4 {
-		basePath = basePath[:len(basePath)-4]
+	if len(basePath) > 4 && strings.Contains(basePath, ".") {
+		// strip extension
+		idx := strings.LastIndex(basePath, ".")
+		if idx > 0 {
+			basePath = basePath[:idx]
+		}
 	}
 	outputPath := basePath + "_crop.png"
 
-	if err := bimg.Write(outputPath, pngBuf); err != nil {
-		return "", err
+	if err := imaging.Save(dst, outputPath); err != nil {
+		return "", fmt.Errorf("failed to save circle crop: %w", err)
 	}
 
 	return outputPath, nil
 }
 
 func (s *VipsImageService) GetMetadata(imagePath string) (width, height int, size int64, mimeType string, err error) {
-	buffer, err := bimg.Read(imagePath)
+	// Get file info for size
+	info, err := os.Stat(imagePath)
 	if err != nil {
-		return 0, 0, 0, "", fmt.Errorf("failed to read image: %w", err)
+		return 0, 0, 0, "", fmt.Errorf("failed to stat file: %w", err)
+	}
+	size = info.Size()
+
+	// Decode config for dimensions and format
+	file, err := os.Open(imagePath)
+	if err != nil {
+		return 0, 0, 0, "", fmt.Errorf("failed to open file: %w", err)
+	}
+	defer file.Close()
+
+	config, format, err := image.DecodeConfig(file)
+	if err != nil {
+		return 0, 0, 0, "", fmt.Errorf("failed to decode image config: %w", err)
 	}
 
-	img := bimg.NewImage(buffer)
-	dims, err := img.Size()
-	if err != nil {
-		return 0, 0, 0, "", fmt.Errorf("failed to get image size: %w", err)
-	}
-
-	size = int64(len(buffer))
-	typeName := img.Type()
-	mimeType = "image/" + typeName
-
-	return dims.Width, dims.Height, size, mimeType, nil
+	mimeType = "image/" + format
+	return config.Width, config.Height, size, mimeType, nil
 }
 
 func (s *VipsImageService) CropToContent(data []byte) ([]byte, error) {
-	// Use standard image library to avoid bimg/libvips issues with AutoCrop
+	// Reusing the pure Go implementation I viewed earlier, but adapted to accept bytes and return bytes
 	img, _, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode image: %w", err)
 	}
 
+	// Reuse logic from Trim roughly?
+	// Just return logic similar to Trim but for []byte
+	// Scan bounds
 	bounds := img.Bounds()
 	minX, minY, maxX, maxY := bounds.Max.X, bounds.Max.Y, bounds.Min.X, bounds.Min.Y
 	found := false
 
-	// Scan for non-transparent pixels
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 		for x := bounds.Min.X; x < bounds.Max.X; x++ {
 			_, _, _, a := img.At(x, y).RGBA()
@@ -185,86 +223,46 @@ func (s *VipsImageService) CropToContent(data []byte) ([]byte, error) {
 	}
 
 	if !found {
-		// Return original if empty
 		return data, nil
 	}
 
-	// Crop rect
-	// maxX and maxY are inclusive in the loop, but Rect is exclusive at max
-	cropRect := image.Rect(minX, minY, maxX+1, maxY+1)
-	width := cropRect.Dx()
-	height := cropRect.Dy()
+	// Padding
+	padding := int(float64(max(bounds.Dx(), bounds.Dy())) * 0.05)
+	minX = max(bounds.Min.X, minX-padding)
+	minY = max(bounds.Min.Y, minY-padding)
+	maxX = min(bounds.Max.X-1, maxX+padding)
+	maxY = min(bounds.Max.Y-1, maxY+padding)
 
-	// Calculate square size with padding
-	maxDim := width
-	if height > maxDim {
-		maxDim = height
-	}
-	padding := int(float64(maxDim) * 0.05)
-	finalSize := maxDim + (padding * 2)
+	rect := image.Rect(minX, minY, maxX+1, maxY+1)
 
-	// Create new square image
-	newImg := image.NewRGBA(image.Rect(0, 0, finalSize, finalSize))
+	// Crop
+	trimmed := imaging.Crop(img, rect)
 
-	// Calculate offset to center
-	offsetX := (finalSize - width) / 2
-	offsetY := (finalSize - height) / 2
-
-	// Draw cropped part onto new image
-	draw.Draw(newImg, image.Rect(offsetX, offsetY, offsetX+width, offsetY+height), img, cropRect.Min, draw.Over)
-
-	// Encode to PNG
+	// Encode to PNG buffer
 	var buf bytes.Buffer
-	if err := png.Encode(&buf, newImg); err != nil {
+	if err := png.Encode(&buf, trimmed); err != nil {
 		return nil, fmt.Errorf("failed to encode png: %w", err)
 	}
-
 	return buf.Bytes(), nil
 }
 
 func (s *VipsImageService) GenerateThumbnail(imagePath string, width int) (string, error) {
-	buffer, err := bimg.Read(imagePath)
+	img, err := imaging.Open(imagePath)
 	if err != nil {
-		return "", fmt.Errorf("failed to read image: %w", err)
+		return "", fmt.Errorf("failed to open image for thumbnail: %w", err)
 	}
 
-	img := bimg.NewImage(buffer)
+	// Resize (Fit width, maintain aspect ratio)
+	newImg := imaging.Resize(img, width, 0, imaging.Lanczos)
 
-	// Resize maintaining aspect ratio
-	// By setting height to 0, bimg calculates it automatically
-	newImg, err := img.Resize(width, 0)
-	if err != nil {
-		return "", fmt.Errorf("failed to resize image: %w", err)
-	}
-
-	// Save as PNG to preserve transparency
-	// If the input was not PNG, we might need to convert, but bimg.Resize returns a buffer.
-	// We should ensure it's saved as PNG.
-
-	// Check if we need to convert to PNG (if original wasn't) or just ensure output is PNG
-	// bimg.Resize returns []byte which is the image data in the original format usually,
-	// unless we explicitly convert.
-	// Let's force conversion to PNG to be safe for transparency.
-
-	processedImg := bimg.NewImage(newImg)
-	pngBuf, err := processedImg.Convert(bimg.PNG)
-	if err != nil {
-		return "", fmt.Errorf("failed to convert thumbnail to png: %w", err)
-	}
-
-	// Construct output path
 	basePath := imagePath
-	if len(basePath) > 4 {
-		// Strip extension if present (simple check)
-		// Better to use filepath.Ext but keeping it simple as per existing code style
-		if basePath[len(basePath)-4] == '.' {
-			basePath = basePath[:len(basePath)-4]
-		}
+	if idx := strings.LastIndex(basePath, "."); idx > 0 {
+		basePath = basePath[:idx]
 	}
 	outputPath := basePath + "_thumb.png"
 
-	if err := bimg.Write(outputPath, pngBuf); err != nil {
-		return "", fmt.Errorf("failed to write thumbnail: %w", err)
+	if err := imaging.Save(newImg, outputPath); err != nil {
+		return "", fmt.Errorf("failed to save thumbnail: %w", err)
 	}
 
 	return outputPath, nil
@@ -274,40 +272,34 @@ func (s *VipsImageService) Rotate(imagePath string, angle float64) error {
 	if angle == 0 {
 		return nil
 	}
-	// 1. Read file
-	buffer, err := bimg.Read(imagePath)
+
+	img, err := imaging.Open(imagePath)
 	if err != nil {
-		return fmt.Errorf("failed to read image for rotation: %w", err)
+		return fmt.Errorf("failed to open for rotation: %w", err)
 	}
 
-	// 2. Decode bytes to standard Go image
-	img, format, err := image.Decode(bytes.NewReader(buffer))
-	if err != nil {
-		return fmt.Errorf("failed to decode image for rotation: %w", err)
-	}
+	slog.Info("Rotating image with imaging", "path", imagePath, "angle", angle)
 
-	slog.Info("Rotating image with imaging", "path", imagePath, "angle", angle, "format", format)
+	// Rotate (imaging rotates CCW)
+	rotatedImg := imaging.Rotate(img, -angle, color.Transparent)
 
-	// 3. Define background color (Transparent)
-	bgColor := color.Transparent
-
-	// 4. Rotate (imaging rotates CCW, but UI likely sends CW, so we invert)
-	rotatedImg := imaging.Rotate(img, -angle, bgColor)
-
-	// 5. Encode back to bytes (Force PNG)
-	var buf bytes.Buffer
-	if err := png.Encode(&buf, rotatedImg); err != nil {
-		return fmt.Errorf("failed to encode rotated image: %w", err)
-	}
-
-	// 6. Write back to file
-	// We use bimg.Write/os.WriteFile logic. bimg.Write is basically ioutil.WriteFile.
-	// Since we used bimg.Read, let's use bimg.Write which is imported, or standard os.
-	// Note: bimg.Write takes []byte.
-	if err := bimg.Write(imagePath, buf.Bytes()); err != nil {
+	if err := imaging.Save(rotatedImg, imagePath); err != nil {
 		return fmt.Errorf("failed to save rotated image: %w", err)
 	}
 
-	slog.Info("Rotation complete", "path", imagePath)
 	return nil
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

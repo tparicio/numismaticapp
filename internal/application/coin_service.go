@@ -518,89 +518,7 @@ func (s *CoinService) EnrichCoinWithNumista(ctx context.Context, coinID uuid.UUI
 		coin.NumistaDetails = finalDetails
 		coin.NumistaNumber = finalID
 
-		// Map Numista Details to Coin Fields
-		// 1. Dimensions & Weight
-		if v, ok := finalDetails["size"].(float64); ok {
-			coin.DiameterMM = v
-		}
-		if v, ok := finalDetails["thickness"].(float64); ok {
-			coin.ThicknessMM = v
-		}
-		if v, ok := finalDetails["weight"].(float64); ok {
-			coin.WeightG = v
-		}
-
-		// 2. Shape
-		if v, ok := finalDetails["shape"].(string); ok {
-			coin.Shape = v
-		}
-
-		// 3. Material (Composition)
-		if comp, ok := finalDetails["composition"].(map[string]any); ok {
-			if text, ok := comp["text"].(string); ok {
-				coin.Material = text
-			}
-		}
-
-		// 4. Mints (Pick first)
-		if mints, ok := finalDetails["mints"].([]any); ok && len(mints) > 0 {
-			if firstMint, ok := mints[0].(map[string]any); ok {
-				if name, ok := firstMint["name"].(string); ok {
-					coin.Mint = name
-				}
-			}
-		}
-
-		// 5. KM Code (Loop references)
-		if refs, ok := finalDetails["references"].([]any); ok {
-			for _, r := range refs {
-				if refMap, ok := r.(map[string]any); ok {
-					if cat, ok := refMap["catalogue"].(map[string]any); ok {
-						if code, ok := cat["code"].(string); ok && code == "KM" {
-							if number, ok := refMap["number"].(string); ok {
-								coin.KMCode = fmt.Sprintf("KM# %s", number)
-								break // Found KM
-							}
-						}
-					}
-				}
-			}
-		}
-
-		// 6. Ruler (First from list)
-		if rulers, ok := finalDetails["ruler"].([]any); ok && len(rulers) > 0 {
-			if firstRuler, ok := rulers[0].(map[string]any); ok {
-				if name, ok := firstRuler["name"].(string); ok {
-					coin.Ruler = name
-				}
-			}
-		}
-
-		// 7. Orientation
-		if v, ok := finalDetails["orientation"].(string); ok {
-			coin.Orientation = v
-		}
-
-		// 8. Series
-		if v, ok := finalDetails["series"].(string); ok {
-			coin.Series = v
-		}
-
-		// 9. Commemorated Topic
-		if v, ok := finalDetails["commemorated_topic"].(string); ok {
-			coin.CommemoratedTopic = v
-		}
-
-		slog.Info("Mapped Numista details to coin fields",
-			"diameter", coin.DiameterMM,
-			"weight", coin.WeightG,
-			"mint", coin.Mint,
-			"km", coin.KMCode,
-			"ruler", coin.Ruler,
-			"series", coin.Series,
-			"orientation", coin.Orientation,
-			"commemorated_topic", coin.CommemoratedTopic,
-		)
+		s.mapNumistaDetails(coin, finalDetails)
 
 		slog.Info("Persisting Numista details", "coin_id", coinID, "numista_id", coin.NumistaNumber)
 		if err := s.repo.Update(ctx, coin); err != nil {
@@ -617,6 +535,116 @@ func (s *CoinService) EnrichCoinWithNumista(ctx context.Context, coinID uuid.UUI
 	slog.Info("Numista enrichment finished", "coin_id", coinID)
 
 	return nil
+}
+
+func (s *CoinService) ApplyNumistaCandidate(ctx context.Context, coinID uuid.UUID, numistaID int) (*domain.Coin, error) {
+	slog.Info("Applying Numista candidate manually", "coin_id", coinID, "numista_id", numistaID)
+
+	coin, err := s.repo.GetByID(ctx, coinID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get coin: %w", err)
+	}
+
+	details, err := s.numistaClient.GetType(ctx, numistaID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get numista details: %w", err)
+	}
+
+	coin.NumistaDetails = details
+	coin.NumistaNumber = numistaID
+
+	s.mapNumistaDetails(coin, details)
+
+	if err := s.repo.Update(ctx, coin); err != nil {
+		return nil, fmt.Errorf("failed to update coin: %w", err)
+	}
+
+	return coin, nil
+}
+
+func (s *CoinService) mapNumistaDetails(coin *domain.Coin, details map[string]any) {
+	// 1. Dimensions & Weight
+	if v, ok := details["size"].(float64); ok {
+		coin.DiameterMM = v
+	}
+	if v, ok := details["thickness"].(float64); ok {
+		coin.ThicknessMM = v
+	}
+	if v, ok := details["weight"].(float64); ok {
+		coin.WeightG = v
+	}
+
+	// 2. Shape
+	if v, ok := details["shape"].(string); ok {
+		coin.Shape = v
+	}
+
+	// 3. Material (Composition)
+	if comp, ok := details["composition"].(map[string]any); ok {
+		if text, ok := comp["text"].(string); ok {
+			coin.Material = text
+		}
+	}
+
+	// 4. Mints (Pick first)
+	if mints, ok := details["mints"].([]any); ok && len(mints) > 0 {
+		if firstMint, ok := mints[0].(map[string]any); ok {
+			if name, ok := firstMint["name"].(string); ok {
+				coin.Mint = name
+			}
+		}
+	}
+
+	// 5. KM Code (Loop references)
+	if refs, ok := details["references"].([]any); ok {
+		for _, r := range refs {
+			if refMap, ok := r.(map[string]any); ok {
+				if cat, ok := refMap["catalogue"].(map[string]any); ok {
+					if code, ok := cat["code"].(string); ok && code == "KM" {
+						if number, ok := refMap["number"].(string); ok {
+							coin.KMCode = fmt.Sprintf("KM# %s", number)
+							break // Found KM
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// 6. Ruler (First from list)
+	if rulers, ok := details["ruler"].([]any); ok && len(rulers) > 0 {
+		if firstRuler, ok := rulers[0].(map[string]any); ok {
+			if name, ok := firstRuler["name"].(string); ok {
+				coin.Ruler = name
+			}
+		}
+	}
+
+	// 7. Orientation
+	if v, ok := details["orientation"].(string); ok {
+		coin.Orientation = v
+	}
+
+	// 8. Series
+	if v, ok := details["series"].(string); ok {
+		coin.Series = v
+	}
+
+	// 9. Commemorated Topic
+	if v, ok := details["commemorated_topic"].(string); ok {
+		coin.CommemoratedTopic = v
+	}
+
+	slog.Info("Mapped Numista details to coin fields",
+		"diameter", coin.DiameterMM,
+		"weight", coin.WeightG,
+		"mint", coin.Mint,
+		"km", coin.KMCode,
+		"ruler", coin.Ruler,
+		"series", coin.Series,
+		"orientation", coin.Orientation,
+		"commemorated_topic", coin.CommemoratedTopic,
+	)
 }
 
 // Helper to bridge side string to enum if needed in internal logic,

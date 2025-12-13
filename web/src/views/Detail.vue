@@ -220,6 +220,15 @@
                        <span class="whitespace-nowrap">Numista</span>
                    </button>
                </div>
+                <!-- Numista Search Results Action -->
+                <div class="tooltip" :data-tip="$t('details.show_results_tooltip') || 'Ver resultados de búsqueda'" v-if="numistaResults.length > 0">
+                    <button @click="numistaModalOpen = true" class="btn btn-xs btn-outline btn-accent flex flex-row items-center gap-1 flex-nowrap">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 flex-shrink-0">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 17.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                        </svg>
+                        <span class="whitespace-nowrap">{{ numistaResults.length }} Resultados</span>
+                    </button>
+                </div>
            </div>
            <div v-if="coin.gemini_details && coin.gemini_details.error" class="mt-1 text-error">
                Warning: {{ coin.gemini_details.error }}
@@ -355,6 +364,58 @@
     </div>
   </dialog>
 
+  <!-- Numista Results Modal -->
+  <dialog id="numista_modal" class="modal" :class="{ 'modal-open': numistaModalOpen }">
+    <div class="modal-box w-11/12 max-w-4xl">
+      <h3 class="font-bold text-lg text-primary flex items-center gap-2 mb-4">
+          Resultados de Numista ({{ numistaResults.length }})
+      </h3>
+      
+      <div class="overflow-x-auto">
+        <table class="table table-zebra w-full">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Título</th>
+              <th>Año</th>
+              <th>Emisor</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="result in numistaResults" :key="result.id">
+              <td>
+                  <a :href="`https://es.numista.com/catalogue/pieces${result.id}.html`" target="_blank" class="link link-primary font-mono text-xs">
+                      {{ result.id }}
+                  </a>
+              </td>
+              <td class="whitespace-normal">
+                  <div class="font-bold">{{ result.title }}</div>
+              </td>
+              <td>{{ result.min_year }} - {{ result.max_year }}</td>
+              <td>{{ result.issuer?.name }}</td>
+              <td class="flex gap-2">
+                  <a :href="`https://es.numista.com/catalogue/pieces${result.id}.html`" target="_blank" class="btn btn-xs btn-ghost btn-square" title="Ver en Numista">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                      </svg>
+                  </a>
+                  <button @click="applyNumistaResult(result.id)" class="btn btn-xs btn-primary" :disabled="applyingNumista">
+                      <span v-if="applyingNumista && selectedNumistaId === result.id" class="loading loading-spinner loading-xs"></span>
+                      Aplicar
+                  </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="modal-action">
+        <button class="btn" @click="numistaModalOpen = false">{{ $t('common.close') || 'Cerrar' }}</button>
+      </div>
+    </div>
+  </dialog>
+
   <ImageViewer 
       :is-open="viewerOpen" 
       :image-url="viewerImage" 
@@ -477,7 +538,7 @@ const getImageUrl = (path) => {
 
 const getNumistaUrl = () => {
     if (coin.value && coin.value.numista_number) {
-        return `https://es.numista.com/catalogue/pieces${coin.value.numista_number}.html`
+        return `https://es.numista.com/${coin.value.numista_number}`
     }
     return null
 }
@@ -565,4 +626,39 @@ onMounted(async () => {
     console.error(e)
   }
 })
+// Numista Manual Selection
+const numistaModalOpen = ref(false)
+const applyingNumista = ref(false)
+const selectedNumistaId = ref(null)
+
+const numistaResults = computed(() => {
+    if (!coin.value || !coin.value.numista_search) return []
+    try {
+        const search = JSON.parse(coin.value.numista_search)
+        return search.types || []
+    } catch (e) {
+        console.error("Failed to parse numista_search", e)
+        return []
+    }
+})
+
+const applyNumistaResult = async (numistaId) => {
+    if (!coin.value) return
+    applyingNumista.value = true
+    selectedNumistaId.value = numistaId
+    try {
+        await axios.post(`${API_URL}/coins/${coin.value.id}/apply-numista/${numistaId}`)
+        // Refresh
+        const res = await axios.get(`${API_URL}/coins/${coin.value.id}`)
+        coin.value = res.data
+        numistaModalOpen.value = false
+        // Optional success toast
+    } catch (e) {
+        console.error("Failed to apply numista result", e)
+        alert('Failed: ' + (e.response?.data?.error || e.message))
+    } finally {
+        applyingNumista.value = false
+        selectedNumistaId.value = null
+    }
+}
 </script>

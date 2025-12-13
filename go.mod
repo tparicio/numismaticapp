@@ -7,7 +7,6 @@ require (
 	github.com/gofiber/fiber/v2 v2.52.10
 	github.com/google/generative-ai-go v0.20.1
 	github.com/google/uuid v1.6.0
-	github.com/h2non/bimg v1.1.9
 	github.com/jackc/pgx/v5 v5.7.6
 	google.golang.org/api v0.257.0
 )
