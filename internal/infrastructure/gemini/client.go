@@ -90,7 +90,7 @@ func (s *GeminiService) ListModels(ctx context.Context) ([]domain.GeminiModelInf
 	return models, nil
 }
 
-func (s *GeminiService) AnalyzeCoin(ctx context.Context, frontImagePath, backImagePath string, modelName string, temperature float32) (*domain.CoinAnalysisResult, error) {
+func (s *GeminiService) AnalyzeCoin(ctx context.Context, frontImagePath, backImagePath string, modelName string, temperature float32, lang string) (*domain.CoinAnalysisResult, error) {
 	frontData, err := os.ReadFile(frontImagePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read front image: %w", err)
@@ -109,51 +109,8 @@ func (s *GeminiService) AnalyzeCoin(ctx context.Context, frontImagePath, backIma
 	model := s.client.GenerativeModel(modelName)
 	model.SetTemperature(temperature)
 
-	prompt := `
-	Actúa como un experto numismático y analista de imagen. Tu tarea es extraer datos técnicos, calcular la corrección de rotación de una moneda y buscar referencias visuales comparativas.
-
-	INSTRUCCIONES DE VISIÓN Y ORIENTACIÓN (CRÍTICO):
-	1. Ignora el cartón, la cápsula de plástico o el fondo. Céntrate solo en el disco metálico.
-	2. Identifica la "parte superior" lógica del diseño (cabeza, escudo, texto).
-	3. Imagina un reloj superpuesto. Si la parte superior está a las 3 en punto (derecha) -> Ángulo -90. A las 9 (izquierda) -> 90. A las 6 (abajo) -> 180.
-	4. Calcula el ángulo exacto para dejar la moneda vertical.
-
-	INSTRUCCIONES DE BÚSQUEDA DE REFERENCIA:
-	1. Identifica el Código KM (Krause) de la moneda.
-	2. Busca el número identificador de Numista para esta moneda (Numista Number).
-
-	INSTRUCCIONES DE SALIDA:
-	Genera UNICAMENTE un objeto JSON válido. Sin markdown.
-
-	Estructura JSON requerida:
-	{
-		"_debug_orientation_front": "Descripción de la orientación visual del anverso",
-		"vertical_correction_angle_front": 0.0,
-		"_debug_orientation_back": "Descripción de la orientación visual del reverso",
-		"vertical_correction_angle_back": 0.0,
-		"name": "Título descriptivo (ej: 25 Pesetas - Mundial 82)",
-		"country": "País",
-		"year": 1980,
-		"face_value": "Valor facial",
-		"currency": "Unidad monetaria",
-		"material": "Material",
-		"description": "Descripción visual",
-		"km_code": "Código KM#",
-		"numista_number": 0,
-		"min_value": 0.0,
-		"max_value": 0.0,
-		"grade": "Estado estimado (USAR SOLO: PROOF, FDC, SC, EBC, MBC, BC, RC, MC)",
-		"reference_source_name": "Nombre de la fuente (ej: Numista, uCoin)",
-		"notes": "Notas",
-		"weight_g": 0.0,
-		"diameter_mm": 0.0,
-		"thickness_mm": 0.0,
-		"edge": "Canto",
-		"shape": "Forma",
-		"mint": "Ceca",
-		"mintage": 0
-	}
-	`
+	promptGen := NewPromptGenerator()
+	prompt := promptGen.GetPrompt(lang)
 
 	resp, err := model.GenerateContent(ctx,
 		genai.Text(prompt),

@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/antonioparicio/numismaticapp/internal/domain"
@@ -61,19 +62,13 @@ func NewCoinService(
 }
 
 func (s *CoinService) AddCoin(ctx context.Context, frontData io.Reader, frontFilename string, backData io.Reader, backFilename string, groupName, userNotes, name, mint string, mintage int, modelName string, temperature float32) (*domain.Coin, error) {
-	// 1. Process Images (Remove Background)
-	// We use Rembg to remove background and get a clean PNG
 	coinID := uuid.New()
 
-	// 2. Save Original Images & Process Background
-
-	// Read front image
+	// 1. Sync: Read and Save Original Images
 	frontBytes, err := io.ReadAll(frontData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read front file: %w", err)
 	}
-
-	// Read back image
 	backBytes, err := io.ReadAll(backData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read back file: %w", err)
@@ -83,110 +78,186 @@ func (s *CoinService) AddCoin(ctx context.Context, frontData io.Reader, frontFil
 	if err != nil {
 		return nil, fmt.Errorf("failed to save original front: %w", err)
 	}
-
 	originalBackPath, err := s.storage.SaveFile(coinID, "original_back.jpg", bytes.NewReader(backBytes))
 	if err != nil {
 		return nil, fmt.Errorf("failed to save original back: %w", err)
 	}
 
-	// 3. Remove Background (Rembg)
-	// Process front
-	processedFrontBytes, err := s.bgRemover.RemoveBackground(ctx, frontBytes)
-	if err != nil {
-		return nil, fmt.Errorf("failed to remove background from front: %w", err)
-	}
-	// Crop and center
-	croppedFrontBytes, err := s.imageService.CropToContent(processedFrontBytes)
-	if err != nil {
-		return nil, fmt.Errorf("failed to crop front: %w", err)
-	}
-	processedFrontPath, err := s.storage.SaveFile(coinID, "processed_front.png", bytes.NewReader(croppedFrontBytes))
-	if err != nil {
-		return nil, fmt.Errorf("failed to save processed front: %w", err)
-	}
+	// 2. Async: Launch Parallel Tasks
+	var wg sync.WaitGroup
 
-	// Process back
-	processedBackBytes, err := s.bgRemover.RemoveBackground(ctx, backBytes)
-	if err != nil {
-		return nil, fmt.Errorf("failed to remove background from back: %w", err)
-	}
-	// Crop and center
-	croppedBackBytes, err := s.imageService.CropToContent(processedBackBytes)
-	if err != nil {
-		return nil, fmt.Errorf("failed to crop back: %w", err)
-	}
-	processedBackPath, err := s.storage.SaveFile(coinID, "processed_back.png", bytes.NewReader(croppedBackBytes))
-	if err != nil {
-		return nil, fmt.Errorf("failed to save processed back: %w", err)
-	}
+	// Channels for results and errors
+	errChan := make(chan error, 3)
 
-	// 4. Analyze with Gemini
-	slog.Info("Analyzing coin with Gemini", "model", modelName)
-	analysis, err := s.aiService.AnalyzeCoin(ctx, originalFrontPath, originalBackPath, modelName, temperature)
-	if err != nil {
-		// Log error but continue with empty analysis to not block creation
-		slog.Warn("Gemini analysis failed", "error", err)
-		analysis = &domain.CoinAnalysisResult{
-			Description: "Analysis failed",
-			RawDetails:  map[string]any{"error": err.Error()},
-		}
+	// AI Result
+	type aiResult struct {
+		res *domain.CoinAnalysisResult
 	}
-	// 4.1 Apply Rotation Correction
-	if analysis.VerticalCorrectionAngleFront != 0 {
-		if err := s.imageService.Rotate(processedFrontPath, analysis.VerticalCorrectionAngleFront); err != nil {
-			slog.Warn("Failed to rotate front image", "error", err)
-		}
-	}
-	if analysis.VerticalCorrectionAngleBack != 0 {
-		if err := s.imageService.Rotate(processedBackPath, analysis.VerticalCorrectionAngleBack); err != nil {
-			slog.Warn("Failed to rotate back image", "error", err)
-		}
-	}
+	aiChan := make(chan aiResult, 1)
 
-	// Handle Group
-	var groupID *int
-	groupName = strings.TrimSpace(groupName)
-	if groupName != "" {
-		group, err := s.groupRepo.GetByName(ctx, groupName)
+	// Image Proc Result
+	type imgResult struct {
+		processedFrontPath string
+		processedBackPath  string
+		thumbFrontPath     string
+		thumbBackPath      string
+	}
+	imgChan := make(chan imgResult, 1)
+
+	// Group Result
+	type grpResult struct {
+		id *int
+	}
+	grpChan := make(chan grpResult, 1)
+
+	// Context for cancellation if one fails
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	// Task A: AI Analysis
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		slog.Info("Analyzing coin with Gemini", "model", modelName)
+		// Assuming "es" as default language per previous refactor
+		analysis, err := s.aiService.AnalyzeCoin(ctx, originalFrontPath, originalBackPath, modelName, temperature, "es")
 		if err != nil {
-			// If not found (or other error), try to create
-			// Ideally check specific error, but for MVP assuming not found
-			group, err = s.groupRepo.Create(ctx, groupName, "")
-			if err != nil {
-				return nil, fmt.Errorf("failed to create group: %w", err)
+			slog.Warn("Gemini analysis failed", "error", err)
+			// Don't fail the whole process, just return empty/error result
+			analysis = &domain.CoinAnalysisResult{
+				Description: "Analysis failed",
+				RawDetails:  map[string]any{"error": err.Error()},
 			}
 		}
-		groupID = &group.ID
+		aiChan <- aiResult{res: analysis}
+	}()
+
+	// Task B: Image Processing
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		// Process Front
+		pFrontBytes, err := s.bgRemover.RemoveBackground(ctx, frontBytes)
+		if err != nil {
+			errChan <- fmt.Errorf("failed to bg remove front: %w", err)
+			return
+		}
+		cFrontBytes, err := s.imageService.CropToContent(pFrontBytes)
+		if err != nil {
+			errChan <- fmt.Errorf("failed to crop front: %w", err)
+			return
+		}
+		pFrontPath, err := s.storage.SaveFile(coinID, "processed_front.png", bytes.NewReader(cFrontBytes))
+		if err != nil {
+			errChan <- fmt.Errorf("failed to save processed front: %w", err)
+			return
+		}
+		tFrontPath, err := s.imageService.GenerateThumbnail(pFrontPath, 300)
+		if err != nil {
+			errChan <- fmt.Errorf("failed to thumb front: %w", err)
+			return
+		}
+
+		// Process Back
+		pBackBytes, err := s.bgRemover.RemoveBackground(ctx, backBytes)
+		if err != nil {
+			errChan <- fmt.Errorf("failed to bg remove back: %w", err)
+			return
+		}
+		cBackBytes, err := s.imageService.CropToContent(pBackBytes)
+		if err != nil {
+			errChan <- fmt.Errorf("failed to crop back: %w", err)
+			return
+		}
+		pBackPath, err := s.storage.SaveFile(coinID, "processed_back.png", bytes.NewReader(cBackBytes))
+		if err != nil {
+			errChan <- fmt.Errorf("failed to save processed back: %w", err)
+			return
+		}
+		tBackPath, err := s.imageService.GenerateThumbnail(pBackPath, 300)
+		if err != nil {
+			errChan <- fmt.Errorf("failed to thumb back: %w", err)
+			return
+		}
+
+		imgChan <- imgResult{
+			processedFrontPath: pFrontPath,
+			processedBackPath:  pBackPath,
+			thumbFrontPath:     tFrontPath,
+			thumbBackPath:      tBackPath,
+		}
+	}()
+
+	// Task C: Group Management
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		groupName = strings.TrimSpace(groupName)
+		if groupName == "" {
+			grpChan <- grpResult{id: nil}
+			return
+		}
+
+		group, err := s.groupRepo.GetByName(ctx, groupName)
+		if err != nil {
+			// Try create
+			group, err = s.groupRepo.Create(ctx, groupName, "")
+			if err != nil {
+				errChan <- fmt.Errorf("failed to create group: %w", err)
+				return
+			}
+		}
+		grpChan <- grpResult{id: &group.ID}
+	}()
+
+	// Wait for all
+	wg.Wait()
+	close(errChan)
+	close(aiChan)
+	close(imgChan)
+	close(grpChan)
+
+	// Check for critical errors (Image Proc or Group)
+	// AI error logic is handled inside to be non-critical
+	for err := range errChan {
+		if err != nil {
+			return nil, err // Return first error
+		}
 	}
 
-	// 5. Create Coin Entity
+	analysisRes := (<-aiChan).res
+	imgRes := <-imgChan
+	grpRes := <-grpChan
+
+	// 5. Assemble Coin Entity
 	coin := &domain.Coin{
 		ID:                coinID,
-		Country:           analysis.Country,
-		Year:              analysis.Year,
-		FaceValue:         analysis.FaceValue,
-		Currency:          analysis.Currency,
-		Material:          analysis.Material,
-		Description:       analysis.Description,
-		KMCode:            analysis.KMCode,
-		NumistaNumber:     analysis.NumistaNumber,
-		MinValue:          analysis.MinValue,
-		MaxValue:          analysis.MaxValue,
-		Grade:             normalizeGrade(analysis.Grade),
-		TechnicalNotes:    analysis.Notes,
-		GeminiDetails:     analysis.RawDetails,
+		Country:           analysisRes.Country,
+		Year:              analysisRes.Year,
+		FaceValue:         analysisRes.FaceValue,
+		Currency:          analysisRes.Currency,
+		Material:          analysisRes.Material,
+		Description:       analysisRes.Description,
+		KMCode:            analysisRes.KMCode,
+		NumistaNumber:     analysisRes.NumistaNumber,
+		MinValue:          analysisRes.MinValue,
+		MaxValue:          analysisRes.MaxValue,
+		Grade:             normalizeGrade(analysisRes.Grade),
+		TechnicalNotes:    analysisRes.Notes,
+		GeminiDetails:     analysisRes.RawDetails,
 		Images:            []domain.CoinImage{},
-		GroupID:           groupID,
+		GroupID:           grpRes.id,
 		PersonalNotes:     userNotes,
-		Name:              analysis.Name, // Use AI provided name
-		Mint:              analysis.Mint,
-		Mintage:           analysis.Mintage,
-		WeightG:           analysis.WeightG,
-		DiameterMM:        analysis.DiameterMM,
-		ThicknessMM:       analysis.ThicknessMM,
-		Edge:              analysis.Edge,
-		Shape:             analysis.Shape,
-		AcquiredAt:        nil,
+		Name:              analysisRes.Name,
+		Mint:              analysisRes.Mint,
+		Mintage:           analysisRes.Mintage,
+		WeightG:           analysisRes.WeightG,
+		DiameterMM:        analysisRes.DiameterMM,
+		ThicknessMM:       analysisRes.ThicknessMM,
+		Edge:              analysisRes.Edge,
+		Shape:             analysisRes.Shape,
+		AcquiredAt:        nil, // TODO
 		SoldAt:            nil,
 		PricePaid:         0,
 		SoldPrice:         0,
@@ -194,7 +265,7 @@ func (s *CoinService) AddCoin(ctx context.Context, frontData io.Reader, frontFil
 		GeminiTemperature: float64(temperature),
 	}
 
-	// Helper to add image
+	// Helper to add image RECORD
 	addImage := func(path, imgType, side, originalFilename string) error {
 		w, h, size, mime, err := s.imageService.GetMetadata(path)
 		if err != nil {
@@ -206,7 +277,28 @@ func (s *CoinService) AddCoin(ctx context.Context, frontData io.Reader, frontFil
 			ImageType:        imgType,
 			Side:             side,
 			Path:             path,
-			Extension:        "png", // TODO: Detect extension
+			Extension:        "png", // processed are png
+			Size:             size,
+			Width:            w,
+			Height:           h,
+			MimeType:         mime,
+			OriginalFilename: originalFilename,
+		})
+		return nil
+	}
+	// For original jpgs
+	addOriginal := func(path, side, originalFilename string) error {
+		w, h, size, mime, err := s.imageService.GetMetadata(path)
+		if err != nil {
+			return fmt.Errorf("failed to get metadata for original: %w", err)
+		}
+		coin.Images = append(coin.Images, domain.CoinImage{
+			ID:               uuid.New(),
+			CoinID:           coinID,
+			ImageType:        "original",
+			Side:             side,
+			Path:             path,
+			Extension:        "jpg",
 			Size:             size,
 			Width:            w,
 			Height:           h,
@@ -216,36 +308,22 @@ func (s *CoinService) AddCoin(ctx context.Context, frontData io.Reader, frontFil
 		return nil
 	}
 
-	// Add all images
-	if err := addImage(originalFrontPath, "original", "front", frontFilename); err != nil {
+	if err := addOriginal(originalFrontPath, "front", frontFilename); err != nil {
 		return nil, err
 	}
-	if err := addImage(originalBackPath, "original", "back", backFilename); err != nil {
+	if err := addOriginal(originalBackPath, "back", backFilename); err != nil {
 		return nil, err
 	}
-	if err := addImage(processedFrontPath, "crop", "front", frontFilename); err != nil {
+	if err := addImage(imgRes.processedFrontPath, "crop", "front", frontFilename); err != nil {
 		return nil, err
 	}
-	if err := addImage(processedBackPath, "crop", "back", backFilename); err != nil {
+	if err := addImage(imgRes.processedBackPath, "crop", "back", backFilename); err != nil {
 		return nil, err
 	}
-
-	// 5. Generate Thumbnails
-	// Front
-	thumbFrontPath, err := s.imageService.GenerateThumbnail(processedFrontPath, 300)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate front thumbnail: %w", err)
-	}
-	if err := addImage(thumbFrontPath, "thumbnail", "front", frontFilename); err != nil {
+	if err := addImage(imgRes.thumbFrontPath, "thumbnail", "front", frontFilename); err != nil {
 		return nil, err
 	}
-
-	// Back
-	thumbBackPath, err := s.imageService.GenerateThumbnail(processedBackPath, 300)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate back thumbnail: %w", err)
-	}
-	if err := addImage(thumbBackPath, "thumbnail", "back", backFilename); err != nil {
+	if err := addImage(imgRes.thumbBackPath, "thumbnail", "back", backFilename); err != nil {
 		return nil, err
 	}
 
@@ -255,12 +333,8 @@ func (s *CoinService) AddCoin(ctx context.Context, frontData io.Reader, frontFil
 	}
 
 	// 7. Trigger Numista Enrichment (Async)
-	// We check if API key is present in client (it's checked in SearchTypes but we can check here to avoid goroutine)
 	if s.numistaClient != nil && s.numistaClient.APIKey != "" {
 		go func(id uuid.UUID) {
-			// Create a new context as correct async pattern usually requires independent context or long running one
-			// passing ctx might be cancelled when request ends.
-			// Ideally use background with timeout
 			bgCtx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 			defer cancel()
 			if err := s.EnrichCoinWithNumista(bgCtx, id); err != nil {
@@ -805,7 +879,7 @@ func (s *CoinService) ReanalyzeCoin(ctx context.Context, id uuid.UUID, modelName
 
 	// 3. Analyze with Gemini
 	slog.Info("Re-analyzing coin with Gemini", "coin_id", id)
-	analysis, err := s.aiService.AnalyzeCoin(ctx, frontPath, backPath, modelName, temperature)
+	analysis, err := s.aiService.AnalyzeCoin(ctx, frontPath, backPath, modelName, temperature, "es")
 	if err != nil {
 		return nil, fmt.Errorf("gemini analysis failed: %w", err)
 	}
