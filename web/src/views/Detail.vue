@@ -150,6 +150,51 @@
         <div class="divider">{{ $t('details.sections.description') }}</div>
         <p class="leading-relaxed text-gray-600 dark:text-gray-300">{{ coin.description }}</p>
 
+        <!-- Numista Extended Description -->
+        <div v-if="coin.numista_details" class="mt-6 space-y-4 text-sm text-gray-700 dark:text-gray-300">
+            <!-- Obverse -->
+            <div v-if="coin.numista_details.obverse">
+                <h3 class="font-bold border-b border-gray-200 dark:border-gray-700 pb-1 mb-2 text-primary">Anverso</h3>
+                <p v-if="coin.numista_details.obverse.lettering" class="mb-1">
+                    <span class="font-semibold italic opacity-80">Leyenda:</span> 
+                    <span class="ml-1">{{ coin.numista_details.obverse.lettering }}</span>
+                </p>
+                <p v-if="coin.numista_details.obverse.description">
+                    <span class="font-semibold italic opacity-80">Descripción:</span>
+                    <span class="ml-1">{{ coin.numista_details.obverse.description }}</span>
+                </p>
+            </div>
+
+            <!-- Reverse -->
+            <div v-if="coin.numista_details.reverse">
+                <h3 class="font-bold border-b border-gray-200 dark:border-gray-700 pb-1 mb-2 text-primary">Reverso</h3>
+                <p v-if="coin.numista_details.reverse.lettering" class="mb-1">
+                    <span class="font-semibold italic opacity-80">Leyenda:</span>
+                    <span class="ml-1">{{ coin.numista_details.reverse.lettering }}</span>
+                </p>
+                <p v-if="coin.numista_details.reverse.description">
+                    <span class="font-semibold italic opacity-80">Descripción:</span>
+                    <span class="ml-1">{{ coin.numista_details.reverse.description }}</span>
+                </p>
+            </div>
+
+            <!-- Edge -->
+            <div v-if="coin.numista_details.edge && (coin.numista_details.edge.description || coin.numista_details.edge.lettering)">
+                <h3 class="font-bold border-b border-gray-200 dark:border-gray-700 pb-1 mb-2 text-primary">Edge</h3>
+                <p v-if="coin.numista_details.edge.description" class="mb-1">{{ coin.numista_details.edge.description }}</p>
+                <p v-if="coin.numista_details.edge.lettering">
+                    <span class="font-semibold italic opacity-80">Leyenda:</span>
+                    <span class="ml-1">{{ coin.numista_details.edge.lettering }}</span>
+                </p>
+            </div>
+
+            <!-- Technique -->
+            <div v-if="coin.numista_details.technique && coin.numista_details.technique.text">
+                 <h3 class="font-bold border-b border-gray-200 dark:border-gray-700 pb-1 mb-2 text-primary">Técnica</h3>
+                 <p>{{ coin.numista_details.technique.text }}</p>
+            </div>
+        </div>
+
         <div v-if="coin.gemini_model" class="mt-4 flex flex-col text-xs text-gray-400">
            <div class="flex items-center justify-between">
                <div class="flex gap-2 items-center">

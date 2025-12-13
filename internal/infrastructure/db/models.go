@@ -130,6 +130,10 @@ type Coin struct {
 	GeminiModel       pgtype.Text        `json:"gemini_model"`
 	GeminiTemperature pgtype.Numeric     `json:"gemini_temperature"`
 	NumistaSearch     pgtype.Text        `json:"numista_search"`
+	Ruler             string             `json:"ruler"`
+	Orientation       string             `json:"orientation"`
+	Series            string             `json:"series"`
+	CommemoratedTopic string             `json:"commemorated_topic"`
 	CreatedAt         pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
 }

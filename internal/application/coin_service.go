@@ -362,6 +362,7 @@ func (s *CoinService) AddCoin(ctx context.Context, frontData io.Reader, frontFil
 }
 
 func (s *CoinService) EnrichCoinWithNumista(ctx context.Context, coinID uuid.UUID) error {
+	slog.Info("Starting Numista enrichment", "coin_id", coinID)
 	// 1. Get Coin
 	coin, err := s.repo.GetByID(ctx, coinID)
 	if err != nil {
@@ -369,24 +370,32 @@ func (s *CoinService) EnrichCoinWithNumista(ctx context.Context, coinID uuid.UUI
 	}
 
 	// 2. Search Numista (Top 10)
-	query := fmt.Sprintf("%s %s %s", coin.FaceValue, coin.Currency, coin.Name)
-	query = strings.TrimSpace(query)
-	issuer := coin.Country
+	queryParts := []string{coin.FaceValue, coin.Currency}
+	if coin.Country != "" {
+		queryParts = append(queryParts, coin.Country)
+	}
+	query := strings.Join(queryParts, " ")
+	query = strings.Join(strings.Fields(query), " ")
+
 	yearStr := ""
 	if coin.Year > 0 {
 		yearStr = fmt.Sprintf("%d", coin.Year)
 	}
 
-	// Search requesting 10 results
-	searchResult, err := s.numistaClient.SearchTypes(ctx, query, "coin", yearStr, issuer, 10)
+	slog.Info("Searching Numista", "query", query, "year", yearStr)
+
+	searchResult, err := s.numistaClient.SearchTypes(ctx, query, "coin", yearStr, "", 10)
 	if err != nil {
+		slog.Error("Numista search request failed", "error", err)
 		return fmt.Errorf("numista search failed: %w", err)
 	}
 
 	if searchResult == nil {
-		slog.Info("Numista returned no results", "coin_id", coinID)
+		slog.Info("Numista returned nil result", "coin_id", coinID)
 		return nil
 	}
+
+	slog.Info("Numista search completed", "count", searchResult.Count, "results_len", len(searchResult.Types))
 
 	// 3. Save full search response
 	searchJSON, err := json.Marshal(searchResult)
@@ -394,35 +403,218 @@ func (s *CoinService) EnrichCoinWithNumista(ctx context.Context, coinID uuid.UUI
 		slog.Warn("Failed to marshal numista search result", "error", err)
 	} else {
 		coin.NumistaSearch = string(searchJSON)
+		slog.Info("Set NumistaSearch field", "length", len(coin.NumistaSearch))
 	}
 
-	// If no types found, just save the search result and exit
 	if searchResult.Count == 0 || len(searchResult.Types) == 0 {
+		slog.Info("No types found in Numista, saving empty search result", "coin_id", coinID)
 		if err := s.repo.Update(ctx, coin); err != nil {
 			return fmt.Errorf("failed to update coin with numista search: %w", err)
 		}
 		return nil
 	}
 
-	// 4. Get Details for the first result
-	firstTypeID := searchResult.Types[0].ID
-	typeDetails, err := s.numistaClient.GetType(ctx, firstTypeID)
-	if err != nil {
-		return fmt.Errorf("failed to get numista type details: %w", err)
+	// Helper to extract numeric value from string (e.g. "50 Pesetas" -> 50.0)
+	parseNumeric := func(input string) float64 {
+		var val float64
+		// Try scanning first number
+		_, err := fmt.Sscanf(input, "%f", &val)
+		if err == nil {
+			return val
+		}
+		// If failed, maybe regex or simple iteration?
+		// Simple approach: replace comma with dot, extract first sequence of digits/dots
+		// For now simple scan is a good start.
+		return 0 // fail
 	}
 
-	// 5. Update Coin
-	coin.NumistaNumber = firstTypeID
-	coin.NumistaDetails = typeDetails
+	targetValue := parseNumeric(coin.FaceValue)
+	slog.Info("Target numeric value", "raw", coin.FaceValue, "parsed", targetValue)
 
-	// Example mapping from Numista Details (structure depends on API response)
-	// Usually "title", "description", "year", etc. are top level or nested.
-	// For now we trust the raw map is saved and maybe we update some basic fields if empty.
-	// We can refine this mapping based on the actual JSON structure of 'typeDetails'.
+	var bestMatchDetails map[string]any
+	var bestMatchID int
+	var fallbackMatchDetails map[string]any // Matches value but maybe not year
+	var fallbackMatchID int
 
-	if err := s.repo.Update(ctx, coin); err != nil {
-		return fmt.Errorf("failed to update coin with numista details: %w", err)
+	// 4. Iterate Candidates
+	for i, candidate := range searchResult.Types {
+		slog.Info("Checking candidate", "index", i, "id", candidate.ID, "title", candidate.Title, "min_year", candidate.MinYear, "max_year", candidate.MaxYear)
+
+		// Fast Filter: Year Range
+		// Only strictly check year if we have one
+		yearMatches := true
+		if coin.Year > 0 {
+			if coin.Year < candidate.MinYear || coin.Year > candidate.MaxYear {
+				yearMatches = false
+				slog.Debug("Year mismatch", "coin_year", coin.Year, "range", fmt.Sprintf("%d-%d", candidate.MinYear, candidate.MaxYear))
+			}
+		}
+
+		// Fetch matches details to check value
+		// Warning: This makes an API call per candidate in loop
+		details, err := s.numistaClient.GetType(ctx, candidate.ID)
+		if err != nil {
+			slog.Warn("Failed to get details for candidate, skipping", "id", candidate.ID, "error", err)
+			continue
+		}
+
+		// Check Value Match
+		var detailsValue float64
+		if valMap, ok := details["value"].(map[string]any); ok {
+			if numVal, ok := valMap["numeric_value"].(float64); ok {
+				detailsValue = numVal
+			}
+		}
+
+		valueMatches := (targetValue > 0 && detailsValue == targetValue)
+		slog.Info("Details fetched", "id", candidate.ID, "details_value", detailsValue, "value_matches", valueMatches, "year_matches", yearMatches)
+
+		if valueMatches && yearMatches {
+			slog.Info("PERFECT MATCH FOUND", "id", candidate.ID)
+			bestMatchDetails = details
+			bestMatchID = candidate.ID
+			break // Stop searching
+		}
+
+		if valueMatches && fallbackMatchDetails == nil {
+			slog.Info("Fallback match found (Value matches, year mismatch)", "id", candidate.ID)
+			fallbackMatchDetails = details
+			fallbackMatchID = candidate.ID
+			// Continue searching for a perfect match...
+		}
+
+		// Capture first result as ultimate fallback if we have nothing else yet?
+		// User requirement: "si ninguna cumple ambos... nos quedaremos con la primera que cumpla face_value".
+		// This implies if we finish loop and no perfect match, we use fallbackMatchDetails.
+
+		// If we don't have even a fallback, should we take the first result?
+		// User didn't explicitly say "default to first result if NOTHING matches",
+		// but standard behavior usually implies keeping the "closest" or at least "something".
+		// Implemented logic: Priority 1: Perfect. Priority 2: Fallback (Value only).
 	}
+
+	finalDetails := bestMatchDetails
+	finalID := bestMatchID
+
+	if finalDetails == nil {
+		if fallbackMatchDetails != nil {
+			slog.Info("No perfect match found. Using fallback (Value match).")
+			finalDetails = fallbackMatchDetails
+			finalID = fallbackMatchID
+		} else {
+			slog.Info("No match found for Value. No update performed for Details.")
+			// If user wants default to first result, uncomment below:
+			/*
+				slog.Info("Defaulting to first result.")
+				finalDetails, _ = s.numistaClient.GetType(ctx, searchResult.Types[0].ID)
+				coin.NumistaNumber = searchResult.Types[0].ID
+			*/
+			// For now obeying "recordar en el bucle... primera que cumpla face_value".
+			// If none comply, we do nothing (except saving parsing search results).
+		}
+	}
+
+	if finalDetails != nil {
+		coin.NumistaDetails = finalDetails
+		coin.NumistaNumber = finalID
+
+		// Map Numista Details to Coin Fields
+		// 1. Dimensions & Weight
+		if v, ok := finalDetails["size"].(float64); ok {
+			coin.DiameterMM = v
+		}
+		if v, ok := finalDetails["thickness"].(float64); ok {
+			coin.ThicknessMM = v
+		}
+		if v, ok := finalDetails["weight"].(float64); ok {
+			coin.WeightG = v
+		}
+
+		// 2. Shape
+		if v, ok := finalDetails["shape"].(string); ok {
+			coin.Shape = v
+		}
+
+		// 3. Material (Composition)
+		if comp, ok := finalDetails["composition"].(map[string]any); ok {
+			if text, ok := comp["text"].(string); ok {
+				coin.Material = text
+			}
+		}
+
+		// 4. Mints (Pick first)
+		if mints, ok := finalDetails["mints"].([]any); ok && len(mints) > 0 {
+			if firstMint, ok := mints[0].(map[string]any); ok {
+				if name, ok := firstMint["name"].(string); ok {
+					coin.Mint = name
+				}
+			}
+		}
+
+		// 5. KM Code (Loop references)
+		if refs, ok := finalDetails["references"].([]any); ok {
+			for _, r := range refs {
+				if refMap, ok := r.(map[string]any); ok {
+					if cat, ok := refMap["catalogue"].(map[string]any); ok {
+						if code, ok := cat["code"].(string); ok && code == "KM" {
+							if number, ok := refMap["number"].(string); ok {
+								coin.KMCode = fmt.Sprintf("KM# %s", number)
+								break // Found KM
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// 6. Ruler (First from list)
+		if rulers, ok := finalDetails["ruler"].([]any); ok && len(rulers) > 0 {
+			if firstRuler, ok := rulers[0].(map[string]any); ok {
+				if name, ok := firstRuler["name"].(string); ok {
+					coin.Ruler = name
+				}
+			}
+		}
+
+		// 7. Orientation
+		if v, ok := finalDetails["orientation"].(string); ok {
+			coin.Orientation = v
+		}
+
+		// 8. Series
+		if v, ok := finalDetails["series"].(string); ok {
+			coin.Series = v
+		}
+
+		// 9. Commemorated Topic
+		if v, ok := finalDetails["commemorated_topic"].(string); ok {
+			coin.CommemoratedTopic = v
+		}
+
+		slog.Info("Mapped Numista details to coin fields",
+			"diameter", coin.DiameterMM,
+			"weight", coin.WeightG,
+			"mint", coin.Mint,
+			"km", coin.KMCode,
+			"ruler", coin.Ruler,
+			"series", coin.Series,
+			"orientation", coin.Orientation,
+			"commemorated_topic", coin.CommemoratedTopic,
+		)
+
+		slog.Info("Persisting Numista details", "coin_id", coinID, "numista_id", coin.NumistaNumber)
+		if err := s.repo.Update(ctx, coin); err != nil {
+			slog.Error("Failed to persist coin updates", "error", err)
+			return fmt.Errorf("failed to update coin with numista details: %w", err)
+		}
+	} else {
+		// Even if no details applied, we must save the NumistaSearch field we set earlier
+		if err := s.repo.Update(ctx, coin); err != nil {
+			return fmt.Errorf("failed to update coin (search only): %w", err)
+		}
+	}
+
+	slog.Info("Numista enrichment finished", "coin_id", coinID)
 
 	return nil
 }

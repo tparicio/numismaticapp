@@ -9,19 +9,24 @@ import (
 
 // Coin represents a numismatic coin in the collection.
 type Coin struct {
-	ID                uuid.UUID      `json:"id"`
-	Name              string         `json:"name"`
-	Mint              string         `json:"mint"`
-	Mintage           int64          `json:"mintage"`
-	Country           string         `json:"country"`
-	Year              int            `json:"year"`
-	FaceValue         string         `json:"face_value"`
-	Currency          string         `json:"currency"`
-	Material          string         `json:"material"`
-	Description       string         `json:"description"`
-	KMCode            string         `json:"km_code"`
-	NumistaNumber     int            `json:"numista_number"`
-	NumistaDetails    map[string]any `json:"numista_details"`
+	ID             uuid.UUID      `json:"id"`
+	Name           string         `json:"name"`
+	Mint           string         `json:"mint"`
+	Mintage        int64          `json:"mintage"`
+	Country        string         `json:"country"`
+	Year           int            `json:"year"`
+	FaceValue      string         `json:"face_value"`
+	Currency       string         `json:"currency"`
+	Material       string         `json:"material"`
+	Description    string         `json:"description"`
+	KMCode         string         `json:"km_code"`
+	NumistaNumber  int            `json:"numista_number"`
+	NumistaDetails map[string]any `json:"numista_details"`
+	// Detailed fields
+	Ruler             string         `json:"ruler"`
+	Orientation       string         `json:"orientation"`
+	Series            string         `json:"series"`
+	CommemoratedTopic string         `json:"commemorated_topic"`
 	MinValue          float64        `json:"min_value"`
 	MaxValue          float64        `json:"max_value"`
 	Grade             string         `json:"grade"`

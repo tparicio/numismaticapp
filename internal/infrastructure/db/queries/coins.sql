@@ -4,13 +4,15 @@ INSERT INTO coins (
     min_value, max_value, grade, technical_notes, gemini_details, group_id, personal_notes,
     weight_g, diameter_mm, thickness_mm, edge, shape,
     acquired_at, sold_at, price_paid, sold_price, numista_number, numista_details,
-    gemini_model, gemini_temperature, numista_search
+    gemini_model, gemini_temperature, numista_search,
+    ruler, orientation, series, commemorated_topic
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
     $12, $13, $14, $15, $16, $17, $18,
     $19, $20, $21, $22, $23,
     $24, $25, $26, $27, $28, $29,
-    $30, $31, $32
+    $30, $31, $32,
+    $33, $34, $35, $36
 ) RETURNING *;
 
 -- name: GetCoin :one
@@ -89,6 +91,10 @@ SET
     gemini_model = $30,
     gemini_temperature = $31,
     numista_search = $32,
+    ruler = $33,
+    orientation = $34,
+    series = $35,
+    commemorated_topic = $36,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
 RETURNING *;
