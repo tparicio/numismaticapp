@@ -49,8 +49,21 @@ func (h *CoinHandler) AddCoin(c *fiber.Ctx) error {
 		}
 	}
 
+	// Open files
+	frontSrc, err := frontFile.Open()
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "failed to open front file"})
+	}
+	defer frontSrc.Close()
+
+	backSrc, err := backFile.Open()
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "failed to open back file"})
+	}
+	defer backSrc.Close()
+
 	// Call service
-	coin, err := h.service.AddCoin(c.Context(), frontFile, backFile, groupName, userNotes, name, mint, mintage, modelName, temperature)
+	coin, err := h.service.AddCoin(c.Context(), frontSrc, frontFile.Filename, backSrc, backFile.Filename, groupName, userNotes, name, mint, mintage, modelName, temperature)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}

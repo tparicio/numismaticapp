@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"mime/multipart"
 	"net/http"
 	"strings"
 	"time"
@@ -56,38 +55,21 @@ func NewCoinService(
 	}
 }
 
-func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipart.FileHeader, groupName, userNotes, name, mint string, mintage int, modelName string, temperature float32) (*domain.Coin, error) {
+func (s *CoinService) AddCoin(ctx context.Context, frontData io.Reader, frontFilename string, backData io.Reader, backFilename string, groupName, userNotes, name, mint string, mintage int, modelName string, temperature float32) (*domain.Coin, error) {
 	// 1. Process Images (Remove Background)
 	// We use Rembg to remove background and get a clean PNG
 	coinID := uuid.New()
 
 	// 2. Save Original Images & Process Background
-	frontSrc, err := frontFile.Open()
-	if err != nil {
-		return nil, fmt.Errorf("failed to open front file: %w", err)
-	}
-	defer frontSrc.Close()
 
-	if _, err := frontSrc.Seek(0, 0); err != nil {
-		return nil, fmt.Errorf("failed to seek front file: %w", err)
-	}
-
-	frontBytes, err := io.ReadAll(frontSrc)
+	// Read front image
+	frontBytes, err := io.ReadAll(frontData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read front file: %w", err)
 	}
 
-	backSrc, err := backFile.Open()
-	if err != nil {
-		return nil, fmt.Errorf("failed to open back file: %w", err)
-	}
-	defer backSrc.Close()
-
-	if _, err := backSrc.Seek(0, 0); err != nil {
-		return nil, fmt.Errorf("failed to seek back file: %w", err)
-	}
-
-	backBytes, err := io.ReadAll(backSrc)
+	// Read back image
+	backBytes, err := io.ReadAll(backData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read back file: %w", err)
 	}
@@ -230,16 +212,16 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 	}
 
 	// Add all images
-	if err := addImage(originalFrontPath, "original", "front", frontFile.Filename); err != nil {
+	if err := addImage(originalFrontPath, "original", "front", frontFilename); err != nil {
 		return nil, err
 	}
-	if err := addImage(originalBackPath, "original", "back", backFile.Filename); err != nil {
+	if err := addImage(originalBackPath, "original", "back", backFilename); err != nil {
 		return nil, err
 	}
-	if err := addImage(processedFrontPath, "crop", "front", frontFile.Filename); err != nil {
+	if err := addImage(processedFrontPath, "crop", "front", frontFilename); err != nil {
 		return nil, err
 	}
-	if err := addImage(processedBackPath, "crop", "back", backFile.Filename); err != nil {
+	if err := addImage(processedBackPath, "crop", "back", backFilename); err != nil {
 		return nil, err
 	}
 
@@ -249,7 +231,7 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate front thumbnail: %w", err)
 	}
-	if err := addImage(thumbFrontPath, "thumbnail", "front", frontFile.Filename); err != nil {
+	if err := addImage(thumbFrontPath, "thumbnail", "front", frontFilename); err != nil {
 		return nil, err
 	}
 
@@ -258,7 +240,7 @@ func (s *CoinService) AddCoin(ctx context.Context, frontFile, backFile *multipar
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate back thumbnail: %w", err)
 	}
-	if err := addImage(thumbBackPath, "thumbnail", "back", backFile.Filename); err != nil {
+	if err := addImage(thumbBackPath, "thumbnail", "back", backFilename); err != nil {
 		return nil, err
 	}
 
@@ -626,7 +608,7 @@ func (s *CoinService) downloadAndSaveImage(coinID uuid.UUID, url, filename strin
 
 	// START TEMPORARY FIX: Add import at top or use full package name if possible.
 	// Go doesn't allow random imports. I must add "net/http" to imports.
-	// Since I can't easily edit imports reliably with multi_replace without context,
+	// Since I can't easily edit imports reliably weplace without context,
 	// I will assume "net/http" is available or handle it.
 	// Actually, I'll just use http.Get
 
