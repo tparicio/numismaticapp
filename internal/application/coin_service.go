@@ -16,6 +16,11 @@ import (
 	"github.com/google/uuid"
 )
 
+type NumistaService interface {
+	SearchTypes(ctx context.Context, query, category, year, issuer string, count int) (*numista.TypeSearchResponse, error)
+	GetType(ctx context.Context, id int) (map[string]any, error)
+}
+
 // StorageService interface defined below
 
 // Need to import infrastructure to use LocalFileStorage if not using interface.
@@ -37,7 +42,7 @@ type CoinService struct {
 	aiService     domain.AIService
 	storage       StorageService
 	bgRemover     domain.BackgroundRemover
-	numistaClient *numista.Client
+	numistaClient NumistaService
 }
 
 func NewCoinService(
@@ -47,7 +52,7 @@ func NewCoinService(
 	aiService domain.AIService,
 	storage StorageService,
 	bgRemover domain.BackgroundRemover,
-	numistaClient *numista.Client,
+	numistaClient NumistaService,
 ) *CoinService {
 	return &CoinService{
 		repo:          repo,
@@ -345,7 +350,7 @@ func (s *CoinService) AddCoin(ctx context.Context, frontData io.Reader, frontFil
 	slog.Info("Successfully saved coin", "coin_id", coinID)
 
 	// 7. Trigger Numista Enrichment (Async)
-	if s.numistaClient != nil && s.numistaClient.APIKey != "" {
+	if s.numistaClient != nil {
 		go func(id uuid.UUID) {
 			bgCtx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 			defer cancel()
