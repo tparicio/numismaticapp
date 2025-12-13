@@ -169,6 +169,7 @@
             "details": "Detalles",
             "description": "Descripción",
             "notes": "Notas",
+            "numista_details": "Detalles Numista",
             "view_sample": "Ver Muestra"
         },
         "labels": {
@@ -182,6 +183,7 @@
         "no_notes": "Sin notas disponibles.",
         "back_gallery": "Volver a la Galería",
         "reprocess_tooltip": "Reprocesar con IA",
+        "reprocess_numista_tooltip": "Reprocesar Numista",
         "reprocess_modal": {
             "title": "Reprocesar con Inteligencia Artificial",
             "warning": "¡Advertencia! Esta acción volverá a enviar las imágenes originales a Gemini y SOBREESCRIBIRÁ todos los detalles de la moneda (Nombre, año, país, descripción, etc) con la nueva respuesta. Las notas personales se mantendrán."

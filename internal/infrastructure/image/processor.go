@@ -176,7 +176,11 @@ func (s *VipsImageService) GetMetadata(imagePath string) (width, height int, siz
 	if err != nil {
 		return 0, 0, 0, "", fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			slog.Error("Failed to close image file", "path", imagePath, "error", err)
+		}
+	}()
 
 	config, format, err := image.DecodeConfig(file)
 	if err != nil {

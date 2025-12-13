@@ -54,7 +54,11 @@ func main() {
 		slog.Error("Failed to create Gemini client", "error", err)
 		os.Exit(1)
 	}
-	defer geminiClient.Close()
+	defer func() {
+		if err := geminiClient.Close(); err != nil {
+			slog.Error("Failed to close Gemini client", "error", err)
+		}
+	}()
 
 	imageService := image.NewVipsImageService()
 	storageService := storage.NewLocalFileStorage("storage")

@@ -3,6 +3,7 @@ package storage
 import (
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -36,7 +37,11 @@ func (s *LocalFileStorage) SaveFile(coinID uuid.UUID, filename string, content i
 	if err != nil {
 		return "", fmt.Errorf("failed to create file: %w", err)
 	}
-	defer dst.Close()
+	defer func() {
+		if err := dst.Close(); err != nil {
+			slog.Error("Failed to close destination file", "path", fullPath, "error", err)
+		}
+	}()
 
 	if _, err := io.Copy(dst, content); err != nil {
 		return "", fmt.Errorf("failed to save content: %w", err)

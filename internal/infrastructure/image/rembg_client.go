@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"mime/multipart"
 	"net/http"
 
@@ -48,7 +49,11 @@ func (c *RembgClient) RemoveBackground(ctx context.Context, image []byte) ([]byt
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request to rembg: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			slog.Error("Failed to close response body", "error", err)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("rembg service returned status: %d", resp.StatusCode)

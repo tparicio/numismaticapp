@@ -23,7 +23,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer client.Close()
+	defer func() {
+		if err := client.Close(); err != nil {
+			log.Printf("Error closing client: %v", err)
+		}
+	}()
 
 	iter := client.ListModels(ctx)
 	fmt.Println("Available models for your API Key:")

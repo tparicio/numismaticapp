@@ -152,7 +152,10 @@ func (s *MigrationService) applyMigration(ctx context.Context, m migrationFile) 
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() {
+		// Ignore rollback error as it is likely due to transaction being committed
+		_ = tx.Rollback(ctx)
+	}()
 
 	// Execute migration SQL
 	if _, err := tx.Exec(ctx, m.Content); err != nil {

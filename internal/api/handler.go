@@ -37,7 +37,10 @@ func (h *CoinHandler) AddCoin(c *fiber.Ctx) error {
 	mintageStr := c.FormValue("mintage")
 	mintage := 0
 	if mintageStr != "" {
-		fmt.Sscanf(mintageStr, "%d", &mintage)
+		if _, err := fmt.Sscanf(mintageStr, "%d", &mintage); err != nil {
+			// Just log debug, mintage 0 is fine default
+			fmt.Printf("Failed to parse mintage: %v\n", err)
+		}
 	}
 
 	modelName := c.FormValue("model_name")
@@ -54,13 +57,21 @@ func (h *CoinHandler) AddCoin(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "failed to open front file"})
 	}
-	defer frontSrc.Close()
+	defer func() {
+		if err := frontSrc.Close(); err != nil {
+			fmt.Printf("Failed to close front file: %v\n", err)
+		}
+	}()
 
 	backSrc, err := backFile.Open()
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "failed to open back file"})
 	}
-	defer backSrc.Close()
+	defer func() {
+		if err := backSrc.Close(); err != nil {
+			fmt.Printf("Failed to close back file: %v\n", err)
+		}
+	}()
 
 	// Call service
 	coin, err := h.service.AddCoin(c.Context(), frontSrc, frontFile.Filename, backSrc, backFile.Filename, groupName, userNotes, name, mint, mintage, modelName, temperature)

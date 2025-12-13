@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -1050,29 +1049,6 @@ func (s *CoinService) DeleteCoin(ctx context.Context, id uuid.UUID) error {
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *CoinService) downloadAndSaveImage(coinID uuid.UUID, url, filename string) (string, error) {
-	// Basic implementation: fetch URL, save to storage
-	// We need http client
-
-	// START TEMPORARY FIX: Add import at top or use full package name if possible.
-	// Go doesn't allow random imports. I must add "net/http" to imports.
-	// Since I can't easily edit imports reliably weplace without context,
-	// I will assume "net/http" is available or handle it.
-	// Actually, I'll just use http.Get
-
-	resp, err := http.Get(url)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("bad status: %s", resp.Status)
-	}
-
-	return s.storage.SaveFile(coinID, filename, resp.Body)
-}
-
 func (s *CoinService) GetGeminiModels(ctx context.Context) ([]domain.GeminiModelInfo, error) {
 	return s.aiService.ListModels(ctx)
 }
@@ -1088,9 +1064,10 @@ func (s *CoinService) ReanalyzeCoin(ctx context.Context, id uuid.UUID, modelName
 	var frontPath, backPath string
 	for _, img := range coin.Images {
 		if img.ImageType == "original" {
-			if img.Side == "front" {
+			switch img.Side {
+			case "front":
 				frontPath = img.Path
-			} else if img.Side == "back" {
+			case "back":
 				backPath = img.Path
 			}
 		}
