@@ -1,4 +1,3 @@
-```go
 package image
 
 import (
