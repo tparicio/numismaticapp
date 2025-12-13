@@ -124,7 +124,7 @@ const aiSettingsOpen = ref(false)
 // AI Config
 const availableModels = ref([])
 const selectedModel = ref('gemini-2.5-flash') // Default fallback
-const temperature = ref(0.4)
+const temperature = ref(0.1)
 
 const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
 

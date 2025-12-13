@@ -160,6 +160,7 @@
     "details": {
         "obverse": "Anverso",
         "reverse": "Reverso",
+        "view_sample": "Ver Muestra",
         "toggles": {
             "processed": "Procesadas",
             "original": "Original",

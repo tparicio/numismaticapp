@@ -423,11 +423,7 @@
               <td>{{ result.min_year }} - {{ result.max_year }}</td>
               <td>{{ result.issuer?.name }}</td>
               <td class="flex gap-2">
-                  <a :href="`https://es.numista.com/catalogue/pieces${result.id}.html`" target="_blank" class="btn btn-xs btn-ghost btn-square" title="Ver en Numista">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                      </svg>
-                  </a>
+                  <!-- Redundant icon removed -->
                   <button @click="applyNumistaResult(result.id)" class="btn btn-xs btn-primary" :disabled="applyingNumista">
                       <span v-if="applyingNumista && selectedNumistaId === result.id" class="loading loading-spinner loading-xs"></span>
                       Aplicar
@@ -438,8 +434,22 @@
         </table>
       </div>
 
+      <div class="divider">O importar manualmente</div>
+      <div class="flex items-end gap-4 p-4 bg-base-200 rounded-lg">
+          <div class="form-control w-full max-w-xs">
+              <label class="label">
+                  <span class="label-text">Numista ID</span>
+              </label>
+              <input type="number" v-model="manualNumistaId" placeholder="Ej: 12345" class="input input-bordered w-full max-w-xs" />
+          </div>
+          <button class="btn btn-primary" @click="applyManualNumista" :disabled="!manualNumistaId || applyingNumista">
+              <span v-if="applyingNumista && selectedNumistaId === manualNumistaId" class="loading loading-spinner"></span>
+              Enviar
+          </button>
+      </div>
+
       <div class="modal-action">
-        <button class="btn" @click="numistaModalOpen = false">{{ $t('common.close') || 'Cerrar' }}</button>
+        <button class="btn" @click="numistaModalOpen = false">Cerrar</button>
       </div>
     </div>
   </dialog>
@@ -481,7 +491,7 @@ const deleting = ref(false)
 const reprocessModalOpen = ref(false)
 const reprocessing = ref(false)
 const selectedModel = ref('gemini-2.5-flash')
-const temperature = ref(0.4)
+const temperature = ref(0.1)
 const availableModels = ref([])
 
 const aiSettingsOpen = ref(true)
@@ -658,6 +668,7 @@ onMounted(async () => {
 const numistaModalOpen = ref(false)
 const applyingNumista = ref(false)
 const selectedNumistaId = ref(null)
+const manualNumistaId = ref(null)
 
 const parsedNumistaSearch = computed(() => {
     if (!coin.value || !coin.value.numista_search) return null
@@ -693,6 +704,12 @@ const applyNumistaResult = async (numistaId) => {
     } finally {
         applyingNumista.value = false
         selectedNumistaId.value = null
+    }
+}
+
+const applyManualNumista = () => {
+    if (manualNumistaId.value) {
+        applyNumistaResult(manualNumistaId.value)
     }
 }
 </script>

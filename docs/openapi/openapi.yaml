@@ -156,7 +156,7 @@ paths:
                 temperature:
                   type: number
                   format: float
-                  description: Temperature for AI analysis (default 0.4)
+                  description: Temperature for AI analysis (default 0.1)
       responses:
         '201':
           description: Coin created successfully

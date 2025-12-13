@@ -160,6 +160,7 @@
     "details": {
         "obverse": "Obverse",
         "reverse": "Reverse",
+        "view_sample": "View Sample",
         "sections": {
             "details": "Details",
             "description": "Description",

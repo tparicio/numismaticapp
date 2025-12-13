@@ -470,8 +470,28 @@ func (s *CoinService) EnrichCoinWithNumista(ctx context.Context, coinID uuid.UUI
 			}
 		}
 
-		valueMatches := (targetValue > 0 && detailsValue == targetValue)
-		slog.Info("Details fetched", "id", candidate.ID, "details_value", detailsValue, "value_matches", valueMatches, "year_matches", yearMatches)
+		valuesMatch := func(v1, v2 float64) bool {
+			if v1 <= 0 || v2 <= 0 {
+				return false
+			}
+			epsilon := 0.001
+			// Exact match
+			if v1 > v2-epsilon && v1 < v2+epsilon {
+				return true
+			}
+			// v1 is cents (20), v2 is unit (0.2) -> v1 = v2 * 100
+			if v1 > (v2*100)-epsilon && v1 < (v2*100)+epsilon {
+				return true
+			}
+			// v1 is unit (0.2), v2 is cents (20) -> v1 * 100 = v2
+			if (v1*100) > v2-epsilon && (v1*100) < v2+epsilon {
+				return true
+			}
+			return false
+		}
+
+		valueMatches := valuesMatch(detailsValue, targetValue)
+		slog.Info("Details fetched", "id", candidate.ID, "details_value", detailsValue, "target_value", targetValue, "value_matches", valueMatches, "year_matches", yearMatches)
 
 		if valueMatches && yearMatches {
 			slog.Info("PERFECT MATCH FOUND", "id", candidate.ID)
