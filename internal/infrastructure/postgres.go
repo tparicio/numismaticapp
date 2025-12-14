@@ -26,44 +26,9 @@ func NewPostgresCoinRepository(pool *pgxpool.Pool) *PostgresCoinRepository {
 }
 
 func (r *PostgresCoinRepository) Save(ctx context.Context, coin *domain.Coin) error {
-	// Convert map to JSONB byte array
-	geminiDetailsBytes, err := json.Marshal(coin.GeminiDetails)
+	params, err := toDBParams(coin)
 	if err != nil {
-		return fmt.Errorf("failed to marshal gemini details: %w", err)
-	}
-
-	params := db.CreateCoinParams{
-		ID:                pgtype.UUID{Bytes: coin.ID, Valid: true},
-		Name:              toNullString(coin.Name),
-		Mint:              toNullString(coin.Mint),
-		Mintage:           toNullInt8(coin.Mintage),
-		Country:           toNullString(coin.Country),
-		Year:              toNullInt4(coin.Year),
-		FaceValue:         toNullString(coin.FaceValue),
-		Currency:          toNullString(coin.Currency),
-		Material:          toNullString(coin.Material),
-		Description:       toNullString(coin.Description),
-		KmCode:            toNullString(coin.KMCode),
-		MinValue:          toNumeric(coin.MinValue),
-		MaxValue:          toNumeric(coin.MaxValue),
-		Grade:             toNullString(coin.Grade),
-		TechnicalNotes:    toNullString(coin.TechnicalNotes),
-		GeminiDetails:     geminiDetailsBytes,
-		GroupID:           toNullInt4Ptr(coin.GroupID),
-		PersonalNotes:     toNullString(coin.PersonalNotes),
-		WeightG:           toNumeric(coin.WeightG),
-		DiameterMm:        toNumeric(coin.DiameterMM),
-		ThicknessMm:       toNumeric(coin.ThicknessMM),
-		Edge:              toNullString(coin.Edge),
-		Shape:             toNullString(coin.Shape),
-		AcquiredAt:        toNullDate(coin.AcquiredAt),
-		SoldAt:            toNullDate(coin.SoldAt),
-		PricePaid:         toNumeric(coin.PricePaid),
-		SoldPrice:         toNumeric(coin.SoldPrice),
-		NumistaNumber:     toNullInt4(coin.NumistaNumber),
-		GeminiModel:       toNullString(coin.GeminiModel),
-		GeminiTemperature: toNumeric(coin.GeminiTemperature),
-		NumistaSearch:     toNullString(coin.NumistaSearch),
+		return err
 	}
 
 	result, err := r.q.CreateCoin(ctx, params)
@@ -123,20 +88,7 @@ func (r *PostgresCoinRepository) GetByID(ctx context.Context, id uuid.UUID) (*do
 		return nil, fmt.Errorf("failed to get coin: %w", err)
 	}
 
-	coin, err := toDomainCoin(row)
-	if err != nil {
-		return nil, err
-	}
-
-	// Fetch images
-	images, err := r.q.ListCoinImagesByCoinID(ctx, pgtype.UUID{Bytes: id, Valid: true})
-	if err != nil {
-		return nil, fmt.Errorf("failed to list coin images: %w", err)
-	}
-
-	coin.Images = toDomainImages(images)
-
-	return coin, nil
+	return r.coinFromDB(ctx, row)
 }
 
 func (r *PostgresCoinRepository) List(ctx context.Context, filter domain.CoinFilter) ([]*domain.Coin, error) {
@@ -149,6 +101,10 @@ func (r *PostgresCoinRepository) List(ctx context.Context, filter domain.CoinFil
 		Query:     toNullStringPtr(filter.Query),
 		MinPrice:  toNullFloat8Ptr(filter.MinPrice),
 		MaxPrice:  toNullFloat8Ptr(filter.MaxPrice),
+		Grade:     toNullStringPtr(filter.Grade),
+		Material:  toNullStringPtr(filter.Material),
+		MinYear:   toNullInt4Ptr(filter.MinYear),
+		MaxYear:   toNullInt4Ptr(filter.MaxYear),
 		SortBy:    toNullStringPtr(filter.SortBy),
 		SortOrder: toNullStringPtr(filter.SortOrder),
 	}
@@ -305,16 +261,7 @@ func (r *PostgresCoinRepository) GetHeaviestCoin(ctx context.Context) (*domain.C
 	if err != nil {
 		return nil, fmt.Errorf("failed to get heaviest coin: %w", err)
 	}
-	coin, err := toDomainCoin(row)
-	if err != nil {
-		return nil, err
-	}
-	images, err := r.q.ListCoinImagesByCoinID(ctx, row.ID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to list images: %w", err)
-	}
-	coin.Images = toDomainImages(images)
-	return coin, nil
+	return r.coinFromDB(ctx, row)
 }
 
 func (r *PostgresCoinRepository) GetSmallestCoin(ctx context.Context) (*domain.Coin, error) {
@@ -322,16 +269,7 @@ func (r *PostgresCoinRepository) GetSmallestCoin(ctx context.Context) (*domain.C
 	if err != nil {
 		return nil, fmt.Errorf("failed to get smallest coin: %w", err)
 	}
-	coin, err := toDomainCoin(row)
-	if err != nil {
-		return nil, err
-	}
-	images, err := r.q.ListCoinImagesByCoinID(ctx, row.ID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to list images: %w", err)
-	}
-	coin.Images = toDomainImages(images)
-	return coin, nil
+	return r.coinFromDB(ctx, row)
 }
 
 func (r *PostgresCoinRepository) GetRandomCoin(ctx context.Context) (*domain.Coin, error) {
@@ -339,16 +277,7 @@ func (r *PostgresCoinRepository) GetRandomCoin(ctx context.Context) (*domain.Coi
 	if err != nil {
 		return nil, fmt.Errorf("failed to get random coin: %w", err)
 	}
-	coin, err := toDomainCoin(row)
-	if err != nil {
-		return nil, err
-	}
-	images, err := r.q.ListCoinImagesByCoinID(ctx, row.ID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to list images: %w", err)
-	}
-	coin.Images = toDomainImages(images)
-	return coin, nil
+	return r.coinFromDB(ctx, row)
 }
 
 func (r *PostgresCoinRepository) GetAllCoins(ctx context.Context) ([]*domain.Coin, error) {
@@ -408,51 +337,12 @@ func (r *PostgresCoinRepository) rowsToCoins(ctx context.Context, rows []db.Coin
 }
 
 func (r *PostgresCoinRepository) Update(ctx context.Context, coin *domain.Coin) error {
-	// Convert map to JSONB byte array
-	geminiDetailsBytes, err := json.Marshal(coin.GeminiDetails)
+	createParams, err := toDBParams(coin)
 	if err != nil {
-		return fmt.Errorf("failed to marshal gemini details: %w", err)
+		return err
 	}
 
-	numistaDetailsBytes, err := json.Marshal(coin.NumistaDetails)
-	if err != nil {
-		return fmt.Errorf("failed to marshal numista details: %w", err)
-	}
-
-	params := db.UpdateCoinParams{
-		ID:                pgtype.UUID{Bytes: coin.ID, Valid: true},
-		Name:              toNullString(coin.Name),
-		Mint:              toNullString(coin.Mint),
-		Mintage:           toNullInt8(coin.Mintage),
-		Country:           toNullString(coin.Country),
-		Year:              toNullInt4(coin.Year),
-		FaceValue:         toNullString(coin.FaceValue),
-		Currency:          toNullString(coin.Currency),
-		Material:          toNullString(coin.Material),
-		Description:       toNullString(coin.Description),
-		KmCode:            toNullString(coin.KMCode),
-		MinValue:          toNumeric(coin.MinValue),
-		MaxValue:          toNumeric(coin.MaxValue),
-		Grade:             toNullString(coin.Grade),
-		TechnicalNotes:    toNullString(coin.TechnicalNotes),
-		GeminiDetails:     geminiDetailsBytes,
-		GroupID:           toNullInt4Ptr(coin.GroupID),
-		PersonalNotes:     toNullString(coin.PersonalNotes),
-		WeightG:           toNumeric(coin.WeightG),
-		DiameterMm:        toNumeric(coin.DiameterMM),
-		ThicknessMm:       toNumeric(coin.ThicknessMM),
-		Edge:              toNullString(coin.Edge),
-		Shape:             toNullString(coin.Shape),
-		AcquiredAt:        toNullDate(coin.AcquiredAt),
-		SoldAt:            toNullDate(coin.SoldAt),
-		PricePaid:         toNumeric(coin.PricePaid),
-		SoldPrice:         toNumeric(coin.SoldPrice),
-		NumistaNumber:     toNullInt4(coin.NumistaNumber),
-		NumistaDetails:    numistaDetailsBytes,
-		GeminiModel:       toNullString(coin.GeminiModel),
-		GeminiTemperature: toNumeric(coin.GeminiTemperature),
-		NumistaSearch:     toNullString(coin.NumistaSearch),
-	}
+	params := db.UpdateCoinParams(createParams)
 
 	result, err := r.q.UpdateCoin(ctx, params)
 	if err != nil {
@@ -528,6 +418,67 @@ func (r *PostgresGroupRepository) Update(ctx context.Context, group *domain.Grou
 
 func (r *PostgresGroupRepository) Delete(ctx context.Context, id int) error {
 	return r.q.DeleteGroup(ctx, int32(id))
+}
+
+func (r *PostgresCoinRepository) coinFromDB(ctx context.Context, row db.Coin) (*domain.Coin, error) {
+	coin, err := toDomainCoin(row)
+	if err != nil {
+		return nil, err
+	}
+
+	images, err := r.q.ListCoinImagesByCoinID(ctx, row.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list images: %w", err)
+	}
+	coin.Images = toDomainImages(images)
+	return coin, nil
+}
+
+func toDBParams(coin *domain.Coin) (db.CreateCoinParams, error) {
+	geminiDetailsBytes, err := json.Marshal(coin.GeminiDetails)
+	if err != nil {
+		return db.CreateCoinParams{}, fmt.Errorf("failed to marshal gemini details: %w", err)
+	}
+
+	numistaDetailsBytes, err := json.Marshal(coin.NumistaDetails)
+	if err != nil {
+		return db.CreateCoinParams{}, fmt.Errorf("failed to marshal numista details: %w", err)
+	}
+
+	return db.CreateCoinParams{
+		ID:                pgtype.UUID{Bytes: coin.ID, Valid: true},
+		Name:              toNullString(coin.Name),
+		Mint:              toNullString(coin.Mint),
+		Mintage:           toNullInt8(coin.Mintage),
+		Country:           toNullString(coin.Country),
+		Year:              toNullInt4(coin.Year),
+		FaceValue:         toNullString(coin.FaceValue),
+		Currency:          toNullString(coin.Currency),
+		Material:          toNullString(coin.Material),
+		Description:       toNullString(coin.Description),
+		KmCode:            toNullString(coin.KMCode),
+		MinValue:          toNumeric(coin.MinValue),
+		MaxValue:          toNumeric(coin.MaxValue),
+		Grade:             toNullString(coin.Grade),
+		TechnicalNotes:    toNullString(coin.TechnicalNotes),
+		GeminiDetails:     geminiDetailsBytes,
+		GroupID:           toNullInt4Ptr(coin.GroupID),
+		PersonalNotes:     toNullString(coin.PersonalNotes),
+		WeightG:           toNumeric(coin.WeightG),
+		DiameterMm:        toNumeric(coin.DiameterMM),
+		ThicknessMm:       toNumeric(coin.ThicknessMM),
+		Edge:              toNullString(coin.Edge),
+		Shape:             toNullString(coin.Shape),
+		AcquiredAt:        toNullDate(coin.AcquiredAt),
+		SoldAt:            toNullDate(coin.SoldAt),
+		PricePaid:         toNumeric(coin.PricePaid),
+		SoldPrice:         toNumeric(coin.SoldPrice),
+		NumistaNumber:     toNullInt4(coin.NumistaNumber),
+		NumistaDetails:    numistaDetailsBytes,
+		GeminiModel:       toNullString(coin.GeminiModel),
+		GeminiTemperature: toNumeric(coin.GeminiTemperature),
+		NumistaSearch:     toNullString(coin.NumistaSearch),
+	}, nil
 }
 
 // Helper functions for conversion

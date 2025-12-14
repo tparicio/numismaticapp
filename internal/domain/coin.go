@@ -84,6 +84,10 @@ type CoinFilter struct {
 	Query     *string
 	MinPrice  *float64
 	MaxPrice  *float64
+	Grade     *string
+	Material  *string
+	MinYear   *int
+	MaxYear   *int
 	SortBy    *string
 	SortOrder *string
 }

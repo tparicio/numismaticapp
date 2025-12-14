@@ -6,6 +6,7 @@
 
 <script setup>
 import { ref, onMounted, watch, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
 import Highcharts from 'highcharts'
 import HighchartsMap from 'highcharts/modules/map'
 
@@ -22,6 +23,8 @@ const props = defineProps({
     default: () => ({})
   }
 })
+
+const router = useRouter()
 
 const chartContainer = ref(null)
 let chart = null
@@ -145,6 +148,27 @@ const initChart = async () => {
             tooltip: {
                 headerFormat: '',
                 pointFormat: '<b>{point.name}</b>: {point.value} coins'
+            },
+            point: {
+                events: {
+                    click: function (e) {
+                        const clickedName = this.name
+                        // Find original key (DB name) from mapping or use clicked name
+                        let dbName = clickedName
+                        // Reverse lookup
+                        for (const [key, val] of Object.entries(countryMapping)) {
+                            if (val === clickedName) {
+                                dbName = key
+                                break
+                            }
+                        }
+                        
+                        // If not found in mapping, it might be a direct match (e.g. if DB had "Canada" and mapping has "Canadá": "Canada")
+                        // Wait, my mapping is "Canadá": "Canada".
+                        
+                        router.push({ path: '/list', query: { country: dbName } })
+                    }
+                }
             }
         }]
     });

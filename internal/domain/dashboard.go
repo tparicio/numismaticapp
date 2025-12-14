@@ -14,6 +14,7 @@ type DashboardStats struct {
 	CenturyDistribution  map[string]int `json:"century_distribution"`
 	DecadeDistribution   map[string]int `json:"decade_distribution"`
 	OldestCoin           *Coin          `json:"oldest_coin"`
+	OldestHighGradeCoin  *Coin          `json:"oldest_high_grade_coin"`
 	RarestCoins          []Coin         `json:"rarest_coins"`
 	GroupDistribution    map[string]int `json:"group_distribution"`
 	TotalSilverWeight    float64        `json:"total_silver_weight"`

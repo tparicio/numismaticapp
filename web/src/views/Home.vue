@@ -67,14 +67,24 @@
       </div>
     </div>
 
-    <!-- Charts Row 1 -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Charts Row 1: Distributions (Value, Grade, Material) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <!-- Value Distribution -->
       <div class="card bg-base-100 shadow-xl">
         <div class="card-body">
           <h2 class="card-title">{{ $t('dashboard.charts.value_dist') }}</h2>
           <div class="h-64 relative">
             <Bar v-if="valueChartData" :data="valueChartData" :options="valueChartOptions" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Grade Distribution -->
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <h2 class="card-title">{{ $t('dashboard.charts.grades') }}</h2>
+          <div class="h-64 relative">
+            <Bar v-if="gradeChartData" :data="gradeChartData" :options="gradeChartOptions" />
           </div>
         </div>
       </div>
@@ -90,65 +100,7 @@
       </div>
     </div>
 
-    <!-- Charts Row 2 & Lists -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <!-- Grade Distribution -->
-      <div class="card bg-base-100 shadow-xl lg:col-span-1">
-        <div class="card-body">
-          <h2 class="card-title">{{ $t('dashboard.charts.grades') }}</h2>
-          <div class="h-64 relative">
-            <Bar v-if="gradeChartData" :data="gradeChartData" :options="gradeChartOptions" />
-          </div>
-        </div>
-      </div>
 
-
-      <!-- Rarest Coins -->
-      <div class="card bg-base-100 shadow-xl lg:col-span-1">
-          <div class="card-body">
-              <h2 class="card-title text-sm uppercase text-base-content/70">{{ $t('dashboard.lists.top_rarity') }}</h2>
-              <div class="divide-y divide-base-200">
-                  <div v-for="coin in stats.rarest_coins" :key="coin.id" 
-                       class="flex items-center gap-3 py-3 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
-                       @click="router.push(`/coin/${coin.id}`)">
-                       <div class="flex-1">
-                          <div class="font-bold">{{ coin.name }}</div>
-                          <div class="text-xs opacity-50">{{ coin.year }} • {{ coin.country }}</div>
-                       </div>
-                       <div class="badge badge-accent">{{ formatMintage(coin.mintage) }}</div>
-                  </div>
-              </div>
-          </div>
-      </div>
-
-      <!-- Trivia & Physical Stats -->
-      <div class="card bg-base-100 shadow-xl lg:col-span-1">
-          <div class="card-body">
-              <h2 class="card-title text-sm uppercase text-base-content/70">{{ $t('dashboard.lists.trivia') }}</h2>
-              <div class="space-y-4">
-                  <div class="stats stats-vertical shadow w-full">
-                      <div class="stat">
-                          <div class="stat-title">{{ $t('dashboard.stats.silver_reserve') }}</div>
-                          <div class="stat-value text-primary text-2xl">{{ stats.total_silver_weight.toFixed(1) }}g</div>
-                          <div class="stat-desc">{{ $t('dashboard.stats.pure_silver') }}</div>
-                      </div>
-                      <div class="stat">
-                          <div class="stat-title">{{ $t('dashboard.stats.gold_reserve') }}</div>
-                          <div class="stat-value text-warning text-2xl">{{ stats.total_gold_weight.toFixed(1) }}g</div>
-                          <div class="stat-desc">{{ $t('dashboard.stats.pure_gold') }}</div>
-                      </div>
-                  </div>
-                  
-                  <div v-if="stats.heaviest_coin" class="text-sm">
-                      <span class="font-bold">{{ $t('dashboard.stats.heaviest') }}</span> {{ stats.heaviest_coin.name }} ({{ stats.heaviest_coin.weight_g }}g)
-                  </div>
-                  <div v-if="stats.smallest_coin" class="text-sm">
-                      <span class="font-bold">{{ $t('dashboard.stats.smallest') }}</span> {{ stats.smallest_coin.name }} ({{ stats.smallest_coin.diameter_mm }}mm)
-                  </div>
-              </div>
-          </div>
-      </div>
-    </div>
 
 
 
@@ -168,8 +120,9 @@
         <div class="card bg-base-100 shadow-xl">
             <div class="card-body p-4">
                 <div class="tabs tabs-boxed bg-base-200 mb-4">
-                    <a class="tab" :class="{ 'tab-active': activeTab === 'recent' }" @click="activeTab = 'recent'">{{ $t('dashboard.tabs.recent') }}</a>
-                    <a class="tab" :class="{ 'tab-active': activeTab === 'valuable' }" @click="activeTab = 'valuable'">{{ $t('dashboard.tabs.valuable') }}</a>
+                    <a class="tab" :class="{ 'tab-active': activeTab === 'recent' }" @click="activeTab = 'recent'">{{ $t('dashboard.tabs.recent') || 'Recientes' }}</a>
+                    <a class="tab" :class="{ 'tab-active': activeTab === 'valuable' }" @click="activeTab = 'valuable'">{{ $t('dashboard.tabs.valuable') || 'Mayor Valor' }}</a>
+                    <a class="tab" :class="{ 'tab-active': activeTab === 'rare' }" @click="activeTab = 'rare'">{{ $t('dashboard.tabs.rare') || 'Top Rareza' }}</a>
                 </div>
 
                 <div class="divide-y divide-base-200" v-if="activeTab === 'recent'">
@@ -210,6 +163,18 @@
                       <div class="font-bold text-primary">{{ formatCurrency(coin.max_value) }}</div>
                     </div>
                 </div>
+
+                <div class="divide-y divide-base-200" v-if="activeTab === 'rare'">
+                    <div v-for="coin in stats.rarest_coins" :key="coin.id" 
+                         class="flex items-center gap-3 py-3 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
+                         @click="router.push(`/coin/${coin.id}`)">
+                         <div class="flex-1 min-w-0">
+                            <div class="font-bold truncate">{{ coin.name }}</div>
+                            <div class="text-xs opacity-50">{{ coin.year }} • {{ coin.country }}</div>
+                         </div>
+                         <div class="badge badge-accent badge-sm">{{ formatMintage(coin.mintage) }}</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -238,6 +203,14 @@
                 <h2 class="card-title">{{ $t('dashboard.charts.quality') }}</h2>
                 <div class="h-64 relative">
                     <Scatter v-if="qualityChartData" :data="qualityChartData" :options="scatterOptions" />
+                </div>
+                <!-- Oldest High Grade Indicator -->
+                <div v-if="stats.oldest_high_grade_coin" class="alert alert-success mt-4 bg-opacity-20">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <div>
+                        <h3 class="font-bold text-success-content">{{ $t('dashboard.stats.oldest_gem') || 'Joya Antigua (Calidad Alta)' }}</h3>
+                        <div class="text-xs text-base-content/70">{{ stats.oldest_high_grade_coin.year }}: {{ stats.oldest_high_grade_coin.name }} ({{ stats.oldest_high_grade_coin.grade }})</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -311,75 +284,108 @@
 
 
 
-    <!-- Random Coin Feature -->
-    <div v-if="stats.random_coin" class="card lg:card-side bg-base-100 shadow-xl overflow-hidden">
-        <figure class="lg:w-auto lg:shrink-0 bg-base-200 p-6 flex flex-col gap-4 justify-center items-center">
-            <div class="flex gap-4 flex-row lg:flex-col">
-                <div class="avatar cursor-pointer" @click="router.push(`/coin/${stats.random_coin.id}`)">
-                    <div class="w-40 sm:w-48 rounded-xl shadow-xl hover:scale-105 transition-transform duration-300">
-                        <img :src="getThumbnail(stats.random_coin, 'front')" class="object-contain" />
+
+
+    <!-- Bottom Row: Trivia & Random Coin -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <!-- Trivia & Physical Stats -->
+        <div class="card bg-base-100 shadow-xl lg:col-span-1">
+            <div class="card-body">
+                <h2 class="card-title text-sm uppercase text-base-content/70">{{ $t('dashboard.lists.trivia') }}</h2>
+                <div class="space-y-4">
+                    <div class="stats stats-vertical shadow w-full">
+                        <div class="stat">
+                            <div class="stat-title">{{ $t('dashboard.stats.silver_reserve') }}</div>
+                            <div class="stat-value text-primary text-2xl">{{ stats.total_silver_weight ? stats.total_silver_weight.toFixed(1) : 0 }}g</div>
+                            <div class="stat-desc">{{ $t('dashboard.stats.pure_silver') }}</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-title">{{ $t('dashboard.stats.gold_reserve') }}</div>
+                            <div class="stat-value text-warning text-2xl">{{ stats.total_gold_weight ? stats.total_gold_weight.toFixed(1) : 0 }}g</div>
+                            <div class="stat-desc">{{ $t('dashboard.stats.pure_gold') }}</div>
+                        </div>
                     </div>
-                </div>
-                <div class="avatar cursor-pointer" @click="router.push(`/coin/${stats.random_coin.id}`)">
-                    <div class="w-40 sm:w-48 rounded-xl shadow-xl hover:scale-105 transition-transform duration-300">
-                        <img :src="getThumbnail(stats.random_coin, 'back')" class="object-contain" />
+                    
+                    <div v-if="stats.heaviest_coin" class="text-sm">
+                        <span class="font-bold">{{ $t('dashboard.stats.heaviest') }}</span> {{ stats.heaviest_coin.name }} ({{ stats.heaviest_coin.weight_g }}g)
+                    </div>
+                    <div v-if="stats.smallest_coin" class="text-sm">
+                        <span class="font-bold">{{ $t('dashboard.stats.smallest') }}</span> {{ stats.smallest_coin.name }} ({{ stats.smallest_coin.diameter_mm }}mm)
                     </div>
                 </div>
             </div>
-        </figure>
-        <div class="card-body">
-            <div class="flex justify-between items-start">
-                <div>
-                    <!-- Kicker -->
-                    <div class="text-[0.65rem] uppercase tracking-widest text-base-content/50 font-bold mb-1">
-                        {{ $t('dashboard.random.kicker') || 'MONEDA DESTACADA' }}
+        </div>
+
+        <!-- Random Coin Feature -->
+        <div v-if="stats.random_coin" class="card lg:card-side bg-base-100 shadow-xl overflow-hidden lg:col-span-3">
+            <figure class="lg:w-auto lg:shrink-0 bg-base-200 p-6 flex flex-col gap-4 justify-center items-center">
+                <div class="flex gap-4 flex-row lg:flex-col">
+                    <div class="avatar cursor-pointer" @click="router.push(`/coin/${stats.random_coin.id}`)">
+                        <div class="w-40 sm:w-48 rounded-xl shadow-xl hover:scale-105 transition-transform duration-300">
+                            <img :src="getThumbnail(stats.random_coin, 'front')" class="object-contain" />
+                        </div>
                     </div>
-                    <h2 class="card-title text-3xl font-bold mb-1">{{ stats.random_coin.name }}</h2>
-                    <div class="text-lg opacity-70 flex items-center gap-2">
-                        <span class="font-semibold">{{ stats.random_coin.country }}</span>
-                        <span>•</span>
-                        <span>{{ stats.random_coin.year }}</span>
+                    <div class="avatar cursor-pointer" @click="router.push(`/coin/${stats.random_coin.id}`)">
+                        <div class="w-40 sm:w-48 rounded-xl shadow-xl hover:scale-105 transition-transform duration-300">
+                            <img :src="getThumbnail(stats.random_coin, 'back')" class="object-contain" />
+                        </div>
                     </div>
                 </div>
-                <div class="badge badge-lg badge-primary font-bold">{{ formatCurrency(stats.random_coin.max_value) }}</div>
-            </div>
+            </figure>
+            <div class="card-body">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <!-- Kicker -->
+                        <div class="text-[0.65rem] uppercase tracking-widest text-base-content/50 font-bold mb-1">
+                            {{ $t('dashboard.random.kicker') || 'MONEDA DESTACADA' }}
+                        </div>
+                        <h2 class="card-title text-3xl font-bold mb-1">{{ stats.random_coin.name }}</h2>
+                        <div class="text-lg opacity-70 flex items-center gap-2">
+                            <span class="font-semibold">{{ stats.random_coin.country }}</span>
+                            <span>•</span>
+                            <span>{{ stats.random_coin.year }}</span>
+                        </div>
+                    </div>
+                    <div class="badge badge-lg badge-primary font-bold">{{ formatCurrency(stats.random_coin.max_value) }}</div>
+                </div>
 
-            <div class="divider my-2"></div>
+                <div class="divider my-2"></div>
 
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div>
-                    <div class="opacity-50">{{ $t('dashboard.random.face_value') }}</div>
-                    <div class="font-bold">{{ stats.random_coin.face_value }} {{ stats.random_coin.currency }}</div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                        <div class="opacity-50">{{ $t('dashboard.random.face_value') }}</div>
+                        <div class="font-bold">{{ stats.random_coin.face_value }} {{ stats.random_coin.currency }}</div>
+                    </div>
+                    <div>
+                        <div class="opacity-50">{{ $t('dashboard.random.mint') }}</div>
+                        <div class="font-bold">{{ stats.random_coin.mint || '-' }}</div>
+                    </div>
+                    <div>
+                        <div class="opacity-50">{{ $t('dashboard.random.mintage') }}</div>
+                        <div class="font-bold">{{ formatMintage(stats.random_coin.mintage) }}</div>
+                    </div>
+                    <div>
+                        <div class="opacity-50">{{ $t('dashboard.random.km_code') }}</div>
+                        <div class="font-bold">{{ stats.random_coin.km_code || '-' }}</div>
+                    </div>
+                    <div v-if="stats.random_coin.group_name">
+                        <div class="opacity-50">{{ $t('dashboard.random.collection') }}</div>
+                        <div class="badge badge-outline mt-1">{{ stats.random_coin.group_name }}</div>
+                    </div>
                 </div>
-                <div>
-                    <div class="opacity-50">{{ $t('dashboard.random.mint') }}</div>
-                    <div class="font-bold">{{ stats.random_coin.mint || '-' }}</div>
-                </div>
-                <div>
-                    <div class="opacity-50">{{ $t('dashboard.random.mintage') }}</div>
-                    <div class="font-bold">{{ formatMintage(stats.random_coin.mintage) }}</div>
-                </div>
-                <div>
-                    <div class="opacity-50">{{ $t('dashboard.random.km_code') }}</div>
-                    <div class="font-bold">{{ stats.random_coin.km_code || '-' }}</div>
-                </div>
-                <div v-if="stats.random_coin.group_name">
-                    <div class="opacity-50">{{ $t('dashboard.random.collection') }}</div>
-                    <div class="badge badge-outline mt-1">{{ stats.random_coin.group_name }}</div>
-                </div>
-            </div>
 
-            <p class="mt-4 text-base-content/80 italic border-l-4 border-primary pl-4 py-2 bg-base-200/50 rounded-r">
-                "{{ stats.random_coin.description || $t('dashboard.random.no_desc') }}"
-            </p>
+                <p class="mt-4 text-base-content/80 italic border-l-4 border-primary pl-4 py-2 bg-base-200/50 rounded-r">
+                    "{{ stats.random_coin.description || $t('dashboard.random.no_desc') }}"
+                </p>
 
-            <div class="card-actions justify-end mt-4">
-                <button class="btn btn-ghost border-primary/20 text-primary hover:bg-primary/10 gap-2" @click="router.push(`/coin/${stats.random_coin.id}`)">
-                    {{ $t('common.view_details') }}
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                    </svg>
-                </button>
+                <div class="card-actions justify-end mt-4">
+                    <button class="btn btn-ghost border-primary/20 text-primary hover:bg-primary/10 gap-2" @click="router.push(`/coin/${stats.random_coin.id}`)">
+                        {{ $t('common.view_details') }}
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -466,6 +472,23 @@ const chartOptions = computed(() => ({
            }
        }
     }
+  },
+  onClick: (event, elements, chart) => {
+     if (elements.length > 0) {
+        const index = elements[0].index
+        // Timeline Chart (Decades) logic
+        // Need to check if this is indeed the timeline chart.
+        // The options are shared, which is tricky.
+        // However, this `chartOptions` is only used for Timeline currently.
+        // Timeline labels are "1990s", "2000s"
+        const label = chart.data.labels[index]
+        if (label.endsWith('s')) {
+            const decade = parseInt(label.replace('s', ''))
+            if (!isNaN(decade)) {
+                router.push({ path: '/list', query: { min_year: decade, max_year: decade + 9 } })
+            }
+        }
+     }
   }
 }))
 
@@ -501,6 +524,25 @@ const valueChartOptions = computed(() => ({
            }
        }
     }
+  },
+  onClick: (event, elements, chart) => {
+     if (elements.length > 0) {
+        const index = elements[0].index
+        const label = chart.data.labels[index]
+        // Label format is "0-10 €" or "500+ €"
+        // We need to parse min_price and max_price
+        // Common regex or split
+        const cleanLabel = label.replace(' €', '').trim()
+        if (cleanLabel.includes('+')) {
+            const min = cleanLabel.replace('+', '')
+            router.push({ path: '/list', query: { min_price: min } })
+        } else if (cleanLabel.includes('-')) {
+            const parts = cleanLabel.split('-')
+            if (parts.length === 2) {
+                router.push({ path: '/list', query: { min_price: parts[0], max_price: parts[1] } })
+            }
+        }
+     }
   }
 }))
 
@@ -509,6 +551,13 @@ const doughnutOptions = {
   maintainAspectRatio: false,
   plugins: {
     legend: { position: 'right' }
+  },
+  onClick: (event, elements, chart) => {
+     if (elements.length > 0) {
+        const index = elements[0].index
+        const label = chart.data.labels[index]
+        router.push({ path: '/list', query: { material: label } })
+     }
   }
 }
 
@@ -575,6 +624,18 @@ const scatterOptions = computed(() => ({
                     const point = context.raw
                     return `${point.name} (${point.grade}): ${point.x}`
                 }
+            }
+        }
+    },
+    onClick: (event, elements, chart) => {
+        if (elements.length > 0) {
+            const index = elements[0].index
+            const point = chart.data.datasets[0].data[index]
+            // This assumes we have the coin ID or can access it.
+            // In qualityChartData mapping we only added x, y, name, grade. 
+            // We need to add ID to the data point.
+            if (point.id) {
+                router.push(`/coin/${point.id}`)
             }
         }
     }
@@ -666,6 +727,13 @@ const gradeChartOptions = computed(() => ({
             }
         }
     }
+  },
+  onClick: (event, elements, chart) => {
+     if (elements.length > 0) {
+        const index = elements[0].index
+        const label = chart.data.labels[index] // Grade e.g. "EBC"
+        router.push({ path: '/list', query: { grade: label } })
+     }
   }
 }))
 
@@ -699,7 +767,8 @@ const qualityChartData = computed(() => {
             x: c.year,
             y: getGradeValue(c.grade),
             name: c.name,
-            grade: c.grade
+            grade: c.grade,
+            id: c.id
         }))
 
     return {

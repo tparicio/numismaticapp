@@ -32,6 +32,10 @@ WHERE
     )
     AND (sqlc.narg('min_price')::float8 IS NULL OR min_value >= sqlc.narg('min_price')::float8)
     AND (sqlc.narg('max_price')::float8 IS NULL OR max_value <= sqlc.narg('max_price')::float8)
+    AND (sqlc.narg('grade')::text IS NULL OR grade = sqlc.narg('grade'))
+    AND (sqlc.narg('material')::text IS NULL OR material = sqlc.narg('material'))
+    AND (sqlc.narg('min_year')::int IS NULL OR year >= sqlc.narg('min_year'))
+    AND (sqlc.narg('max_year')::int IS NULL OR year <= sqlc.narg('max_year'))
 ORDER BY
     CASE WHEN sqlc.narg('sort_by')::text = 'year' AND sqlc.narg('sort_order')::text = 'asc' THEN year END ASC,
     CASE WHEN sqlc.narg('sort_by')::text = 'year' AND sqlc.narg('sort_order')::text = 'desc' THEN year END DESC,

@@ -180,23 +180,30 @@ func (h *CoinHandler) DeleteGroup(c *fiber.Ctx) error {
 }
 
 func (h *CoinHandler) ListCoins(c *fiber.Ctx) error {
-	limit := 10
-	offset := 0
-
+	// Parse filters
+	limit := 50
 	if l := c.Query("limit"); l != "" {
-		if val, err := strconv.Atoi(l); err == nil {
+		if val, err := strconv.Atoi(l); err == nil && val > 0 {
 			limit = val
 		}
 	}
+
+	offset := 0
 	if o := c.Query("offset"); o != "" {
-		if val, err := strconv.Atoi(o); err == nil {
+		if val, err := strconv.Atoi(o); err == nil && val >= 0 {
 			offset = val
 		}
 	}
 
 	filter := domain.CoinFilter{
-		Limit:  limit,
-		Offset: offset,
+		Limit:     limit,
+		Offset:    offset,
+		Query:     strPtr(c.Query("q")),
+		Country:   strPtr(c.Query("country")),
+		Grade:     strPtr(c.Query("grade")),
+		Material:  strPtr(c.Query("material")),
+		SortBy:    strPtr(c.Query("sort_by")),
+		SortOrder: strPtr(c.Query("order")),
 	}
 
 	if g := c.Query("group_id"); g != "" {
@@ -211,29 +218,30 @@ func (h *CoinHandler) ListCoins(c *fiber.Ctx) error {
 		}
 	}
 
-	if country := c.Query("country"); country != "" {
-		filter.Country = &country
+	if my := c.Query("min_year"); my != "" {
+		if val, err := strconv.Atoi(my); err == nil {
+			filter.MinYear = &val
+		}
 	}
 
-	if q := c.Query("q"); q != "" {
-		filter.Query = &q
+	if my := c.Query("max_year"); my != "" {
+		if val, err := strconv.Atoi(my); err == nil {
+			filter.MaxYear = &val
+		}
 	}
 
-	if minPrice := c.Query("min_price"); minPrice != "" {
-		if val, err := strconv.ParseFloat(minPrice, 64); err == nil {
+	if mp := c.Query("min_price"); mp != "" {
+		if val, err := strconv.ParseFloat(mp, 64); err == nil {
 			filter.MinPrice = &val
 		}
 	}
 
-	if maxPrice := c.Query("max_price"); maxPrice != "" {
-		if val, err := strconv.ParseFloat(maxPrice, 64); err == nil {
+	if mp := c.Query("max_price"); mp != "" {
+		if val, err := strconv.ParseFloat(mp, 64); err == nil {
 			filter.MaxPrice = &val
 		}
 	}
 
-	if sb := c.Query("sort_by"); sb != "" {
-		filter.SortBy = &sb
-	}
 	if so := c.Query("order"); so != "" {
 		filter.SortOrder = &so
 	}
@@ -365,4 +373,11 @@ func (h *CoinHandler) ApplyNumistaResult(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(coin)
+}
+
+func strPtr(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
 }

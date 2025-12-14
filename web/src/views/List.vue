@@ -226,6 +226,10 @@ const filters = ref({
     country: route.query.country || '',
     min_price: route.query.min_price || '',
     max_price: route.query.max_price || '',
+    grade: route.query.grade || '',
+    material: route.query.material || '',
+    min_year: route.query.min_year || '',
+    max_year: route.query.max_year || '',
     sort_by: route.query.sort_by || '',
     order: route.query.order || 'desc'
 })
@@ -268,6 +272,10 @@ const fetchCoins = async () => {
         if (filters.value.country) params.append('country', filters.value.country)
         if (filters.value.min_price) params.append('min_price', filters.value.min_price)
         if (filters.value.max_price) params.append('max_price', filters.value.max_price)
+        if (filters.value.grade) params.append('grade', filters.value.grade)
+        if (filters.value.material) params.append('material', filters.value.material)
+        if (filters.value.min_year) params.append('min_year', filters.value.min_year)
+        if (filters.value.max_year) params.append('max_year', filters.value.max_year)
         if (filters.value.sort_by) params.append('sort_by', filters.value.sort_by)
         if (filters.value.order) params.append('order', filters.value.order)
 

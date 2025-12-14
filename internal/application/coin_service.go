@@ -790,6 +790,14 @@ func (s *CoinService) GetDashboardStats(ctx context.Context) (*domain.DashboardS
 		stats.DecadeDistribution = make(map[string]int)
 		var totalSilver, totalGold float64
 
+		stats.OldestCoin, _ = s.repo.GetOldestCoin(ctx)
+
+		// Calculate Oldest High Grade Coin (>= EBC)
+		// We already have allCoins, let's iterate.
+		// We want the oldest year with grade rank >= EBC (rank 4)
+		var oldestHighGrade *domain.Coin
+		minHighGradeYear := 9999
+
 		for i, c := range allCoins {
 			stats.AllCoins[i] = *c
 			if c.Year > 0 {
@@ -802,6 +810,22 @@ func (s *CoinService) GetDashboardStats(ctx context.Context) (*domain.DashboardS
 				decade := (c.Year / 10) * 10
 				decadeKey := fmt.Sprintf("%ds", decade)
 				stats.DecadeDistribution[decadeKey]++
+
+				// Oldest High Grade Logic
+				rank := getGradeRank(c.Grade)
+				if rank >= 4 { // EBC or higher
+					if c.Year < minHighGradeYear {
+						minHighGradeYear = c.Year
+						cCopy := *c // Copy to avoid pointer issues if slice reallocates (though here it's fine)
+						oldestHighGrade = &cCopy
+					} else if c.Year == minHighGradeYear {
+						// Tie-breaker: Higher grade wins?
+						if oldestHighGrade != nil && rank > getGradeRank(oldestHighGrade.Grade) {
+							cCopy := *c
+							oldestHighGrade = &cCopy
+						}
+					}
+				}
 			}
 
 			// Calculate weights in memory to allow exclusion of Nordic Gold
@@ -815,9 +839,8 @@ func (s *CoinService) GetDashboardStats(ctx context.Context) (*domain.DashboardS
 		}
 		stats.TotalSilverWeight = totalSilver
 		stats.TotalGoldWeight = totalGold
+		stats.OldestHighGradeCoin = oldestHighGrade
 	}
-
-	stats.OldestCoin, _ = s.repo.GetOldestCoin(ctx)
 
 	rarest, err := s.repo.GetRarestCoins(ctx, 5)
 	if err == nil {
@@ -984,7 +1007,32 @@ func normalizeGrade(input string) string {
 	}
 
 	// Fallback to empty string which will be converted to NULL by repo
+	// Fallback to empty string which will be converted to NULL by repo
 	return ""
+}
+
+func getGradeRank(grade string) int {
+	grade = normalizeGrade(grade)
+	switch grade {
+	case "MC":
+		return 0
+	case "RC":
+		return 1
+	case "BC":
+		return 2
+	case "MBC":
+		return 3
+	case "EBC":
+		return 4
+	case "SC":
+		return 5
+	case "FDC":
+		return 6
+	case "PROOF":
+		return 7
+	default:
+		return -1
+	}
 }
 
 type UpdateCoinParams struct {
