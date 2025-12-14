@@ -47,6 +47,7 @@ Olvídate de introducir datos manualmente. Simplemente sube una foto de tu moned
 
 *   Docker & Docker Compose
 *   Una [API Key de Google Gemini](https://aistudio.google.com/app/apikey)
+*   Una [API Key de Numista](https://en.numista.com/api/doc/) (Opcional, para enriquecer datos)
 
 ### Opción 1: Docker Compose (Recomendado)
 
@@ -62,6 +63,7 @@ La forma más rápida de empezar es utilizando la imagen pre-construida desde Do
           - "8080:8080"
         environment:
           - GEMINI_API_KEY=tu_api_key_aqui
+          - NUMISTA_API_KEY=tu_api_key_numista_opcional
           - POSTGRES_HOST=db
           - POSTGRES_USER=postgres
           - POSTGRES_PASSWORD=secret
@@ -107,6 +109,7 @@ Si prefieres compilar desde el código fuente:
     Crea un archivo `.env` en la raíz:
     ```bash
     GEMINI_API_KEY=tu_api_key_aqui
+    NUMISTA_API_KEY=tu_api_key_numista_opcional
     POSTGRES_USER=postgres
     POSTGRES_PASSWORD=postgres
     POSTGRES_DB=numismatic
