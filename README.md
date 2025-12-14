@@ -43,6 +43,8 @@ Olvídate de introducir datos manualmente. Simplemente sube una foto de tu moned
 | **Base de Datos** | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=flat-square&logo=postgresql&logoColor=white) | Persistencia robusta y relacional. |
 | **AI** | ![Gemini](https://img.shields.io/badge/Google%20Gemini-8E75B2?style=flat-square&logo=google&logoColor=white) | Motor de análisis visual. |
 | **Imágenes** | **libvips** | Procesamiento de imágenes de alto rendimiento. |
+| **Background Removal** | **rembg** | Eliminación de fondo inteligente. |
+| **Datos Externos** | **Numista API** | Información y catálogos de monedas. |
 
 ## 🚀 Guía de Instalación
 
@@ -126,7 +128,7 @@ Si prefieres compilar desde el código fuente:
 
 1.  **Clona el repositorio:**
     ```bash
-    git clone https://github.com/antonioparicio/numismaticapp.git
+    git clone https://github.com/tparicio/numismaticapp.git
     cd numismaticapp
     ```
 
@@ -209,5 +211,4 @@ Distribuido bajo la licencia MIT. Ver el archivo `LICENSE` para más informació
 ---
 
 <div align="center">
-  Hecho con ❤️ por <a href="https://github.com/antonioparicio">Antonio Aparicio</a>
-</div>
+  Hecho con ❤️ por <a href="https://github.com/tparicio">Toni Paricio</a> con ayuda de 🚀 Antigravity y ✨ Gemini</div>
