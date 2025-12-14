@@ -50,7 +50,7 @@
                     <a v-if="coin?.numista_details?.obverse?.picture" 
                        :href="coin.numista_details.obverse.picture" 
                        target="_blank" 
-                       class="btn btn-xs btn-ghost text-gray-500 gap-1 font-normal opacity-70 hover:opacity-100">
+                       class="btn btn-xs btn-outline gap-1 font-normal text-xs">
                         {{ $t('details.view_sample') }}
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
@@ -84,7 +84,7 @@
                     <a v-if="coin?.numista_details?.reverse?.picture" 
                        :href="coin.numista_details.reverse.picture" 
                        target="_blank" 
-                       class="btn btn-xs btn-ghost text-gray-500 gap-1 font-normal opacity-70 hover:opacity-100">
+                       class="btn btn-xs btn-outline gap-1 font-normal text-xs">
                         {{ $t('details.view_sample') }}
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
@@ -263,8 +263,10 @@
            </div>
         </div>
 
-        <div class="divider">{{ $t('details.sections.notes') }}</div>
-        <p class="text-sm italic">{{ coin.notes || $t('details.no_notes') }}</p>
+        <template v-if="coin.notes">
+            <div class="divider">{{ $t('details.sections.notes') }}</div>
+            <p class="text-sm italic">{{ coin.notes }}</p>
+        </template>
         
         <div class="card-actions justify-end mt-8 gap-2">
             <router-link to="/list" class="btn btn-ghost">{{ $t('details.back_gallery') }}</router-link>

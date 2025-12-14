@@ -5,10 +5,13 @@ import List from '../views/List.vue'
 import Detail from '../views/Detail.vue'
 import EditCoin from '../views/EditCoin.vue'
 
+import GroupsList from '../views/GroupsList.vue'
+
 const routes = [
     { path: '/', component: Home },
     { path: '/add', component: AddCoin },
     { path: '/list', component: List },
+    { path: '/groups', component: GroupsList },
     { path: '/coin/:id', component: Detail },
     { path: '/edit/:id', component: EditCoin },
 ]

@@ -702,7 +702,29 @@ func (s *CoinService) GetCoin(ctx context.Context, id uuid.UUID) (*domain.Coin, 
 }
 
 func (s *CoinService) ListGroups(ctx context.Context) ([]*domain.Group, error) {
-	return s.groupRepo.List(ctx)
+	groups, err := s.groupRepo.List(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list groups: %w", err)
+	}
+
+	stats, err := s.repo.GetGroupStats(ctx)
+	if err != nil {
+		slog.Warn("Failed to fetch group stats", "error", err)
+		return groups, nil
+	}
+
+	statMap := make(map[int]int)
+	for _, stat := range stats {
+		statMap[stat.GroupID] = int(stat.Count)
+	}
+
+	for _, group := range groups {
+		if count, ok := statMap[group.ID]; ok {
+			group.CoinCount = count
+		}
+	}
+
+	return groups, nil
 }
 
 func (s *CoinService) GetDashboardStats(ctx context.Context) (*domain.DashboardStats, error) {

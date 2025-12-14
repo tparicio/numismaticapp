@@ -3,6 +3,7 @@
         "title": "NumismaticApp",
         "home": "Home",
         "collection": "Collection",
+        "groups": "Groups",
         "add_coin": "Add Coin"
     },
     "common": {
@@ -244,6 +245,23 @@
             "storage_stats": {
                 "title": "Storage Statistics"
             }
+        }
+    },
+    "groups": {
+        "title": "Groups",
+        "add_button": "Add Group",
+        "edit_title": "Edit Group",
+        "add_title": "Add New Group",
+        "name": "Name",
+        "description": "Description",
+        "count": "Coins",
+        "empty_state": "No groups found. Create one to organize your collection!",
+        "delete_modal": {
+            "title": "Delete Group",
+            "confirm": "Are you sure you want to delete group",
+            "warning": "Coins in this group will be unassigned.",
+            "success": "Group deleted successfully.",
+            "error": "Failed to delete group."
         }
     }
 }

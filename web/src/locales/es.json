@@ -3,6 +3,7 @@
         "title": "NumismaticApp",
         "home": "Inicio",
         "collection": "Colección",
+        "groups": "Grupos",
         "add_coin": "Añadir Moneda"
     },
     "common": {
@@ -251,6 +252,23 @@
             "storage_stats": {
                 "title": "Estadísticas de Almacenamiento"
             }
+        }
+    },
+    "groups": {
+        "title": "Grupos",
+        "add_button": "Añadir Grupo",
+        "edit_title": "Editar Grupo",
+        "add_title": "Añadir Nuevo Grupo",
+        "name": "Nombre",
+        "description": "Descripción",
+        "count": "Monedas",
+        "empty_state": "No hay grupos. ¡Crea uno para organizar tu colección!",
+        "delete_modal": {
+            "title": "Eliminar Grupo",
+            "confirm": "¿Estás seguro de que quieres eliminar el grupo",
+            "warning": "Las monedas en este grupo quedarán sin asignar.",
+            "success": "Grupo eliminado correctamente.",
+            "error": "Error al eliminar grupo."
         }
     }
 }

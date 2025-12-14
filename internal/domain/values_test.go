@@ -8,27 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func mustYear(y int) domain.Year {
-	v, err := domain.NewYear(y)
-	if err != nil {
-		panic(err)
-	}
-	return v
-}
-
-func mustMintage(m int64) domain.Mintage {
-	v, err := domain.NewMintage(m)
-	if err != nil {
-		panic(err)
-	}
-	return v
-}
-
-func mustGrade(g string) domain.Grade {
-	v, _ := domain.NewGrade(g)
-	return v
-}
-
 func TestYear(t *testing.T) {
 	t.Run("Valid Year", func(t *testing.T) {
 		y, err := domain.NewYear(2000)

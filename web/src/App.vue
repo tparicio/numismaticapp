@@ -11,6 +11,7 @@
         <ul class="menu menu-horizontal px-1">
           <li><router-link to="/">{{ $t('nav.home') }}</router-link></li>
           <li><router-link to="/list">{{ $t('nav.collection') }}</router-link></li>
+          <li><router-link to="/groups">{{ $t('nav.groups') }}</router-link></li>
           <li><router-link to="/add" class="hidden sm:inline-flex btn btn-primary btn-sm text-white ml-2">{{ $t('nav.add_coin') }}</router-link></li>
         </ul>
         

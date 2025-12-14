@@ -25,14 +25,6 @@ func mustYear(y int) domain.Year {
 	return v
 }
 
-func mustMintage(m int64) domain.Mintage {
-	v, err := domain.NewMintage(m)
-	if err != nil {
-		panic(err)
-	}
-	return v
-}
-
 func mustGrade(g string) domain.Grade {
 	v, err := domain.NewGrade(g)
 	if err != nil {

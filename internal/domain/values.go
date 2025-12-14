@@ -3,7 +3,6 @@ package domain
 import (
 	"encoding/json"
 	"fmt"
-	"regexp"
 )
 
 // Year represents a numismatic year.
@@ -48,8 +47,6 @@ func (y *Year) UnmarshalJSON(data []byte) error {
 type KMCode struct {
 	value string
 }
-
-var kmRegex = regexp.MustCompile(`^(KM|Y|C|Fr|Cal)#?\s*[a-zA-Z0-9\.\-]+$`)
 
 func NewKMCode(code string) (KMCode, error) {
 	if code == "" {
@@ -120,11 +117,6 @@ type Grade struct {
 }
 
 // Valid grades (simplified/example list)
-var validGrades = map[string]bool{
-	"G": true, "VG": true, "F": true, "VF": true, "XF": true, "AU": true, "UNC": true, "BU": true, "Proof": true,
-	"SC": true, "EBC": true, "MBC": true, "BC": true, "RC": true, "MC": true, // Spanish
-	"": true,
-}
 
 func NewGrade(g string) (Grade, error) {
 	// Lenient for now as user might have custom input, but we wrap it.
