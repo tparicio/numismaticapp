@@ -135,7 +135,7 @@
                         <button v-if="numistaCount > 0" 
                                 @click="numistaModalOpen = true" 
                                 class="btn btn-xs btn-outline btn-accent gap-1">
-                            {{ numistaCount }} resultados numista
+                            {{ numistaCount }} resultados
                         </button>
                     </div>
                 </div>

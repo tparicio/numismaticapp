@@ -41,7 +41,7 @@
         </button>
       </div>
     </div>
-    <div class="container mx-auto p-4">
+    <div class="container mx-auto p-2 sm:p-4">
       <router-view></router-view>
     </div>
   </div>
