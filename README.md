@@ -4,7 +4,7 @@
 
 ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/tparicio/numismaticapp?sort=semver&logo=docker&label=Docker%20Hub)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Go Version](https://img.shields.io/github/go-mod/go-version/tparicio/numismaticapp)
+![Go Version](https://img.shields.io/github/go-mod/go-version/tparicio/numismaticapp/main)
 ![Vue Version](https://img.shields.io/badge/vue-3.x-42b883.svg?logo=vue.js)
 
 **Gestiona tu colección de monedas con el poder de la Inteligencia Artificial.**
@@ -17,7 +17,10 @@
 
 ## 📋 Descripción
 
-**NumismaticApp** es una aplicación web moderna diseñada para coleccionistas de monedas. Utiliza la IA de **Google Gemini** para analizar fotografías de monedas, extraer automáticamente metadatos (país, año, valor, ceca) y evaluar su estado de conservación.
+**NumismaticApp** es una aplicación web moderna diseñada para coleccionistas de monedas.
+- **Integración con Numista API:** Obtén datos detallados y referencias cruzadas de tus monedas directamente desde la mayor base de datos numismática.
+- **Identificación con IA:** Sube fotos de tus monedas y deja que Google Gemini AI identifique y extraiga los detalles clave (país, año, valor, etc.).
+Utiliza la IA de **Google Gemini** para analizar fotografías de monedas, extraer automáticamente metadatos (país, año, valor, ceca) y evaluar su estado de conservación.
 
 Olvídate de introducir datos manualmente. Simplemente sube una foto de tu moneda y deja que la IA haga el trabajo pesado, organizando tu colección en una base de datos segura y presentándola en un galería visualmente atractiva.
 
