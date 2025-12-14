@@ -54,15 +54,15 @@ docker-build: ## Build Docker image locally (AMD64)
 	docker build -f deployment/docker/Dockerfile -t $(DOCKER_IMAGE):$(DOCKER_TAG) .
 	@echo "$(COLOR_GREEN)✅ Image built: $(DOCKER_IMAGE):$(DOCKER_TAG)$(COLOR_RESET)"
 
-docker-push: ## Build & Push Multi-Arch (AMD64/ARM64) Image to DockerHub
-	@echo "$(COLOR_BLUE)🚀 Building and Pushing multi-arch image $(DOCKER_IMAGE):$(DOCKER_TAG)...$(COLOR_RESET)"
-	docker buildx build --platform linux/amd64,linux/arm64 \
+docker-push: ## Build & Push Image (AMD64) to DockerHub
+	@echo "$(COLOR_BLUE)🚀 Building and Pushing image $(DOCKER_IMAGE):$(DOCKER_TAG)...$(COLOR_RESET)"
+	docker buildx build --platform linux/amd64 \
 		-t $(DOCKER_IMAGE):$(DOCKER_TAG) \
 		-f deployment/docker/Dockerfile \
 		--push .
-	@echo "$(COLOR_GREEN)✅ Multi-arch image pushed!$(COLOR_RESET)"
+	@echo "$(COLOR_GREEN)✅ Image pushed!$(COLOR_RESET)"
 
-deploy: docker-init docker-push ## Initialize buildx and push multi-arch image
+deploy: docker-init docker-push ## Initialize buildx and push image
 
 ## 🛠️  Development
 ci-local: lint vet test-unit ## Run local CI checks (Lint, Vet, Test)
