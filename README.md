@@ -4,7 +4,7 @@
 
 ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/tparicio/numismaticapp?sort=semver&logo=docker&label=Docker%20Hub)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Go Version](https://img.shields.io/github/go-mod/go-version/antonioparicio/numismaticapp)
+![Go Version](https://img.shields.io/github/go-mod/go-version/tparicio/numismaticapp)
 ![Vue Version](https://img.shields.io/badge/vue-3.x-42b883.svg?logo=vue.js)
 
 **Gestiona tu colección de monedas con el poder de la Inteligencia Artificial.**
