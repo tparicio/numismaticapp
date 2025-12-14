@@ -197,6 +197,7 @@
             "top_rarity": "Top Rarity",
             "units": "units",
             "oldest": "Oldest Gem",
+            "oldest_gem": "Oldest Gem (High Quality)",
             "heaviest": "Heaviest:",
             "smallest": "Smallest:",
             "silver_reserve": "Silver Reserve",
@@ -210,7 +211,8 @@
         },
         "tabs": {
             "recent": "Recent",
-            "valuable": "Most Valuable"
+            "valuable": "Most Valuable",
+            "rare": "Rarest"
         },
         "charts": {
             "value_dist": "Value Distribution",

@@ -15,7 +15,8 @@ services:
       - APP_ENV=production
       - GEMINI_MODEL=${GEMINI_MODEL:-gemini-1.5-flash}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - ../../storage:/app/storage
 
@@ -31,6 +32,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   rembg:
     image: danielgatis/rembg:latest
@@ -39,8 +45,6 @@ services:
     ports:
       - "5000:5000"
     command: s -p 5000
-
-
 
 volumes:
   postgres_data:

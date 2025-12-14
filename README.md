@@ -64,12 +64,11 @@ La forma más rápida de empezar es utilizando la imagen pre-construida desde Do
         environment:
           - GEMINI_API_KEY=tu_api_key_aqui
           - NUMISTA_API_KEY=tu_api_key_numista_opcional
+          - REMBG_URL=http://rembg:5000/api/remove
           - POSTGRES_HOST=db
           - POSTGRES_USER=postgres
           - POSTGRES_PASSWORD=secret
           - POSTGRES_DB=numismatic
-          # Opcionalmente, puedes usar DATABASE_URL directamente:
-          # - DATABASE_URL=postgres://postgres:secret@db:5432/numismatic?sslmode=disable
         depends_on:
           db:
             condition: service_healthy
@@ -85,10 +84,16 @@ La forma más rápida de empezar es utilizando la imagen pre-construida desde Do
         volumes:
           - postgres_data:/var/lib/postgresql/data
         healthcheck:
-          test: ["CMD-SHELL", "pg_isready -U postgres"]
+          test: pg_isready -U postgres
           interval: 5s
           timeout: 5s
           retries: 5
+
+      rembg:
+        image: danielgatis/rembg:latest
+        command: s -p 5000
+        ports:
+          - "5000:5000"
 
     volumes:
       postgres_data:
@@ -144,6 +149,36 @@ Si prefieres compilar desde el código fuente:
 1.  Ve a la sección **"Grupos"**.
 2.  Crea colecciones temáticas (ej: "Pesetas de Juan Carlos I", "Dólares de Plata").
 3.  Asigna tus monedas a estos grupos para mantener tu colección organizada.
+
+## ❓ Solución de Problemas
+
+### Problemas de Permisos en Linux / NAS
+Si experimentas errores como `permission denied` al intentar guardar imágenes en `storage/`, es probable que el usuario dentro del contenedor (`appuser`, UID normalment 1000) no tenga permisos de escritura en la carpeta montada desde el host.
+
+**Solución Recomendada:**
+Asegúrate de que el contenedor se ejecute con el mismo UID/GID que tu usuario actual en el host. Modifica tu `docker-compose.yml` añadiendo la directiva `user`:
+
+```yaml
+services:
+  app:
+    image: tparicio/numismaticapp:latest
+    user: "${UID}:${GID}" # Usa el UID y GID de tu usuario actual
+    # ... resto de la configuración
+```
+
+Luego, crea un archivo `.env` o exporta las variables antes de levantar el contenedor:
+```bash
+export UID=$(id -u)
+export GID=$(id -g)
+docker compose up -d
+```
+
+**Solución Alternativa:**
+Cambia el propietario de la carpeta `storage` en tu host para que coincida con el usuario del contenedor (o dale permisos de escritura a todos `chmod 777 storage` - no recomendado para producción).
+
+```bash
+chown -R 1000:1000 ./storage
+```
 
 ## 🤝 Contribución
 

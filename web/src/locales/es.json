@@ -204,6 +204,7 @@
             "top_rarity": "Mayor Rareza",
             "units": "unidades",
             "oldest": "Joya Más Antigua",
+            "oldest_gem": "Joya Antigua (Alta Calidad)",
             "heaviest": "Más Pesada:",
             "smallest": "Más Pequeña:",
             "silver_reserve": "Reserva de Plata",
@@ -217,7 +218,8 @@
         },
         "tabs": {
             "recent": "Recientes",
-            "valuable": "Más Valiosas"
+            "valuable": "Más Valiosas",
+            "rare": "Más Raras"
         },
         "charts": {
             "value_dist": "Distribución de Valor",
