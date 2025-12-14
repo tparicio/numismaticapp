@@ -79,10 +79,9 @@ La forma más rápida de empezar es utilizando la imagen pre-construida desde Do
     services:
       app:
         image: tparicio/numismaticapp:latest
-        # Para NAS: especifica tu UID:GID
-        user: "1000:100"
+        user: ${UID:-1000}:${GID:-1000}
         ports:
-          - "8080:8080"
+          - "8080:8080" # change port if needed
         environment:
           - GEMINI_API_KEY=tu_api_key_aqui
           - NUMISTA_API_KEY=tu_api_key_numista_opcional
@@ -94,10 +93,7 @@ La forma más rápida de empezar es utilizando la imagen pre-construida desde Do
         depends_on:
           db:
             condition: service_healthy
-          rembg:
-            condition: service_healthy
         volumes:
-          # IMPORTANTE: Monta el directorio storage para persistencia
           - ./storage:/app/storage
 
       db:
@@ -118,12 +114,6 @@ La forma más rápida de empezar es utilizando la imagen pre-construida desde Do
       rembg:
         image: danielgatis/rembg:latest
         command: s --host 0.0.0.0 --port 5000
-        healthcheck:
-          test: ["CMD", "curl", "-f", "http://localhost:5000"]
-          interval: 10s
-          timeout: 5s
-          retries: 5
-          start_period: 10s
         ports:
           - "5000:5000"
 

@@ -322,12 +322,12 @@
             <figure class="lg:w-auto lg:shrink-0 bg-base-200 p-6 flex flex-col gap-4 justify-center items-center">
                 <div class="flex gap-4 flex-col sm:flex-row">
                     <div class="avatar cursor-pointer" @click="router.push(`/coin/${stats.random_coin.id}`)">
-                        <div class="w-40 sm:w-48 rounded-xl shadow-xl hover:scale-105 transition-transform duration-300">
+                        <div class="w-24 sm:w-32 rounded-xl shadow-xl hover:scale-105 transition-transform duration-300">
                             <img :src="getThumbnail(stats.random_coin, 'front')" class="object-contain" />
                         </div>
                     </div>
                     <div class="avatar cursor-pointer" @click="router.push(`/coin/${stats.random_coin.id}`)">
-                        <div class="w-40 sm:w-48 rounded-xl shadow-xl hover:scale-105 transition-transform duration-300">
+                        <div class="w-24 sm:w-32 rounded-xl shadow-xl hover:scale-105 transition-transform duration-300">
                             <img :src="getThumbnail(stats.random_coin, 'back')" class="object-contain" />
                         </div>
                     </div>
@@ -374,10 +374,6 @@
                         <div class="badge badge-outline mt-1">{{ stats.random_coin.group_name }}</div>
                     </div>
                 </div>
-
-                <p class="mt-4 text-base-content/80 italic border-l-4 border-primary pl-4 py-2 bg-base-200/50 rounded-r">
-                    "{{ stats.random_coin.description || $t('dashboard.random.no_desc') }}"
-                </p>
 
                 <div class="card-actions justify-end mt-4">
                     <button class="btn btn-ghost border-primary/20 text-primary hover:bg-primary/10 gap-2" @click="router.push(`/coin/${stats.random_coin.id}`)">
@@ -763,14 +759,18 @@ const qualityChartData = computed(() => {
 
 
     const data = coins
-        .filter(c => c.year > 0 && c.grade && getGradeValue(c.grade) > 0)
-        .map(c => ({
-            x: c.year,
-            y: getGradeValue(c.grade),
-            name: c.name,
-            grade: c.grade,
-            id: c.id
-        }))
+        .filter(c => c.year > 0 && c.grade)
+        .map(c => {
+            const gradeValue = getGradeValue(c.grade)
+            return {
+                x: c.year,
+                y: gradeValue || 0,
+                name: c.name,
+                grade: c.grade,
+                id: c.id
+            }
+        })
+        .filter(point => point.y > 0)
 
     return {
         datasets: [{
