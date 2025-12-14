@@ -320,7 +320,7 @@
         <!-- Random Coin Feature -->
         <div v-if="stats.random_coin" class="card lg:card-side bg-base-100 shadow-xl overflow-hidden lg:col-span-3">
             <figure class="lg:w-auto lg:shrink-0 bg-base-200 p-6 flex flex-col gap-4 justify-center items-center">
-                <div class="flex gap-4 flex-row lg:flex-col">
+                <div class="flex gap-4 flex-col sm:flex-row">
                     <div class="avatar cursor-pointer" @click="router.push(`/coin/${stats.random_coin.id}`)">
                         <div class="w-40 sm:w-48 rounded-xl shadow-xl hover:scale-105 transition-transform duration-300">
                             <img :src="getThumbnail(stats.random_coin, 'front')" class="object-contain" />

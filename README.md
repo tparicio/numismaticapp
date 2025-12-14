@@ -72,6 +72,8 @@ La forma más rápida de empezar es utilizando la imagen pre-construida desde Do
         depends_on:
           db:
             condition: service_healthy
+          rembg:
+            condition: service_healthy
         volumes:
           - ./storage:/app/storage
 
@@ -93,6 +95,12 @@ La forma más rápida de empezar es utilizando la imagen pre-construida desde Do
       rembg:
         image: danielgatis/rembg:latest
         command: s --host 0.0.0.0 --port 5000
+        healthcheck:
+          test: ["CMD", "curl", "-f", "http://localhost:5000"]
+          interval: 10s
+          timeout: 5s
+          retries: 5
+          start_period: 10s
         ports:
           - "5000:5000"
 

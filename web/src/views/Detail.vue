@@ -24,7 +24,7 @@
             </div>
         </div>
 
-        <div class="flex flex-col sm:flex-row justify-center gap-8 items-center">
+        <div class="flex flex-row justify-center gap-4 sm:gap-8 items-center">
             <!-- Front -->
             <div class="text-center relative group">
                 <figure class="cursor-zoom-in relative inline-block" @click="openViewer('front')">
@@ -35,12 +35,12 @@
                         </svg>
                     </div>
                     <img :src="getCurrentImageUrl('front')" 
-                         class="shadow-lg max-w-xs hover:scale-105 transition-transform duration-300" 
+                         class="shadow-lg max-w-[42vw] sm:max-w-xs lg:hover:scale-105 transition-transform duration-300" 
                          :class="{ 'rounded-full': activeImageSource !== 'original', 'rounded-xl': activeImageSource === 'original' }"
                          :style="{ transform: `rotate(${rotations.front}deg)` }"
                          alt="Front" @error="handleImageError" />
                 </figure>
-                <button @click.stop="openRotationEditor('front')" class="absolute top-2 right-10 btn btn-circle btn-sm btn-neutral bg-opacity-70 border-none hover:bg-opacity-100 opacity-0 group-hover:opacity-100 transition-opacity z-20" title="Corregir Rotación">
+                <button @click.stop="openRotationEditor('front')" class="absolute top-2 right-10 btn btn-circle btn-sm btn-neutral bg-opacity-70 border-none hover:bg-opacity-100 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity z-20" title="Corregir Rotación">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
                     </svg>
@@ -69,12 +69,12 @@
                         </svg>
                     </div>
                     <img :src="getCurrentImageUrl('back')" 
-                         class="shadow-lg max-w-xs hover:scale-105 transition-transform duration-300" 
+                         class="shadow-lg max-w-[42vw] sm:max-w-xs lg:hover:scale-105 transition-transform duration-300" 
                          :class="{ 'rounded-full': activeImageSource !== 'original', 'rounded-xl': activeImageSource === 'original' }"
                          :style="{ transform: `rotate(${rotations.back}deg)` }"
                          alt="Back" @error="handleImageError" />
                 </figure>
-                <button @click.stop="openRotationEditor('back')" class="absolute top-2 right-10 btn btn-circle btn-sm btn-neutral bg-opacity-70 border-none hover:bg-opacity-100 opacity-0 group-hover:opacity-100 transition-opacity z-20" title="Corregir Rotación">
+                <button @click.stop="openRotationEditor('back')" class="absolute top-2 right-10 btn btn-circle btn-sm btn-neutral bg-opacity-70 border-none hover:bg-opacity-100 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity z-20" title="Corregir Rotación">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
                     </svg>
@@ -118,25 +118,27 @@
             </div>
             <div>
                 <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.km') }}</span>
-                <span class="flex items-center gap-2">
-                    {{ coin.km_code || 'N/A' }}
-                    <a v-if="getNumistaUrl()" 
-                       :href="getNumistaUrl()" 
-                       target="_blank" 
-                       class="btn btn-xs btn-outline btn-info gap-1"
-                       title="Ver en Numista"
-                    >
-                        N
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                        </svg>
-                    </a>
-                    <button v-if="numistaCount > 0" 
-                            @click="numistaModalOpen = true" 
-                            class="btn btn-xs btn-outline btn-accent gap-1">
-                        {{ numistaCount }} resultados numista
-                    </button>
-                </span>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                    <span>{{ coin.km_code || 'N/A' }}</span>
+                    <div class="flex gap-2">
+                        <a v-if="getNumistaUrl()" 
+                           :href="getNumistaUrl()" 
+                           target="_blank" 
+                           class="btn btn-xs btn-outline btn-info gap-1"
+                           title="Ver en Numista"
+                        >
+                            N
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                            </svg>
+                        </a>
+                        <button v-if="numistaCount > 0" 
+                                @click="numistaModalOpen = true" 
+                                class="btn btn-xs btn-outline btn-accent gap-1">
+                            {{ numistaCount }} resultados numista
+                        </button>
+                    </div>
+                </div>
             </div>
             <div v-if="coin.mint">
                 <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.mint') }}</span>
@@ -220,42 +222,32 @@
 
 
         <div v-if="coin.gemini_model" class="mt-4 flex flex-col text-xs text-gray-400">
-           <div class="flex items-center justify-between">
+           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                <div class="flex gap-2 items-center">
                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
                    </svg>
                    <span>AI Generated by {{ coin.gemini_model }} (Temp: {{ coin.gemini_temperature }})</span>
                </div>
-               <div class="tooltip" :data-tip="$t('details.reprocess_tooltip') || 'Reprocesar'">
-                   <button @click="openReprocessModal" class="btn btn-xs btn-outline btn-primary flex flex-row items-center gap-1 flex-nowrap">
-                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 flex-shrink-0">
-                           <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                       </svg>
-                       <span class="whitespace-nowrap">{{ $t('common.reprocess') || 'Reprocesar' }}</span>
-                   </button>
-               </div>
-                <!-- Numista Reprocess Action -->
-                <div class="tooltip" :data-tip="$t('details.reprocess_numista_tooltip') || 'Reprocesar Numista'">
-                    <button @click="syncNumista" class="btn btn-xs btn-outline btn-primary flex flex-row items-center gap-1 flex-nowrap" :disabled="syncing">
-                        <span v-if="syncing" class="loading loading-spinner loading-xs"></span>
-                        <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 flex-shrink-0">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                        </svg>
-                        <span class="whitespace-nowrap">{{ $t('common.reprocess') }}</span>
-                    </button>
-                </div>
-
-
-
-                <!-- Numista Search Results Action -->
-                <div class="tooltip" :data-tip="$t('details.show_results_tooltip') || 'Ver resultados de búsqueda'" v-if="numistaResults.length > 0">
-                    <button @click="numistaModalOpen = true" class="btn btn-xs btn-outline btn-accent flex flex-row items-center gap-1 flex-nowrap">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 flex-shrink-0">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 17.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                        </svg>
-                        <span class="whitespace-nowrap">{{ numistaResults.length }} Resultados</span>
-                    </button>
+               <div class="flex gap-2 self-start sm:self-auto">
+                   <div class="tooltip" :data-tip="$t('details.reprocess_tooltip') || 'Reprocesar'">
+                       <button @click="openReprocessModal" class="btn btn-xs btn-outline btn-primary flex flex-row items-center gap-1 flex-nowrap">
+                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 flex-shrink-0">
+                               <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                           </svg>
+                           <span class="whitespace-nowrap">{{ $t('common.reprocess') || 'Reprocesar' }}</span>
+                       </button>
+                   </div>
+                    <!-- Numista Reprocess Action -->
+                    <div class="tooltip" :data-tip="$t('details.reprocess_numista_tooltip') || 'Reprocesar Numista'">
+                        <button @click="syncNumista" class="btn btn-xs btn-outline btn-primary flex flex-row items-center gap-1 flex-nowrap" :disabled="syncing">
+                            <span v-if="syncing" class="loading loading-spinner loading-xs"></span>
+                            <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 flex-shrink-0">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                            </svg>
+                            <span class="whitespace-nowrap">{{ $t('common.reprocess') }}</span>
+                        </button>
+                    </div>
                 </div>
            </div>
            <div v-if="coin.gemini_details && coin.gemini_details.error" class="mt-1 text-error">
@@ -298,7 +290,7 @@
         </button>
         
         <!-- Editor Area -->
-        <div class="relative flex justify-center items-center overflow-hidden bg-gray-900 rounded-2xl shadow-2xl h-[400px] sm:h-[500px] border border-gray-700">
+        <div class="relative flex justify-center items-center overflow-hidden bg-gray-900 rounded-2xl shadow-2xl h-[50vh] sm:h-[500px] border border-gray-700">
              <!-- Grid Overlay -->
              <div class="absolute inset-0 pointer-events-none z-10 opacity-20" 
                   style="background-image: linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px); background-size: 33.3% 33.3%;">

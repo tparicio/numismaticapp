@@ -17,6 +17,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      rembg:
+        condition: service_healthy
     volumes:
       - ../../storage:/app/storage
 
@@ -45,6 +47,12 @@ services:
     ports:
       - "5000:5000"
     command: s --host 0.0.0.0 --port 5000
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:5000" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
   postgres_data:
