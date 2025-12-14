@@ -15,8 +15,10 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source code
-COPY . .
+# Copy source code (Optimized to avoid cache invalidation)
+COPY cmd ./cmd
+COPY internal ./internal
+COPY sqlc.yaml schema.sql ./
 
 # Generate SQLC code
 RUN sqlc generate
@@ -46,6 +48,9 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
+# Create a non-root user
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
 WORKDIR /app
 
 # Copy binary from builder
@@ -57,6 +62,13 @@ COPY --from=frontend-builder /app/dist /app/web/dist
 # Copy migrations
 # Copy migrations (Embedded in binary now, but keeping folder structure if needed for other tools)
 # COPY --from=builder /app/migrations /app/migrations
+
+# Create storage directory and set permissions
+RUN mkdir -p /app/storage && \
+    chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
 
 # Expose port
 EXPOSE 8080
