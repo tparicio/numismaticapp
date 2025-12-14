@@ -449,17 +449,17 @@ func toDBParams(coin *domain.Coin) (db.CreateCoinParams, error) {
 		ID:                pgtype.UUID{Bytes: coin.ID, Valid: true},
 		Name:              toNullString(coin.Name),
 		Mint:              toNullString(coin.Mint),
-		Mintage:           toNullInt8(coin.Mintage),
+		Mintage:           toNullInt8(coin.Mintage.Int64()),
 		Country:           toNullString(coin.Country),
-		Year:              toNullInt4(coin.Year),
+		Year:              toNullInt4(coin.Year.Int()),
 		FaceValue:         toNullString(coin.FaceValue),
 		Currency:          toNullString(coin.Currency),
 		Material:          toNullString(coin.Material),
 		Description:       toNullString(coin.Description),
-		KmCode:            toNullString(coin.KMCode),
+		KmCode:            toNullString(coin.KMCode.String()),
 		MinValue:          toNumeric(coin.MinValue),
 		MaxValue:          toNumeric(coin.MaxValue),
-		Grade:             toNullString(coin.Grade),
+		Grade:             toNullString(coin.Grade.String()),
 		TechnicalNotes:    toNullString(coin.TechnicalNotes),
 		GeminiDetails:     geminiDetailsBytes,
 		GroupID:           toNullInt4Ptr(coin.GroupID),
@@ -527,23 +527,44 @@ func toDomainCoin(row db.Coin) (*domain.Coin, error) {
 		soldAt = &t
 	}
 
+	// Handle factory errors by logging or defaulting?
+	// For database retrieval, we trust the DB somewhat, but we should handle invalid data.
+	// Since NewYear/NewMintage return errors for invalid data, we should ideally handle them.
+	// However, toDomainCoin has a signature to assume data is somewhat valid or we bubble error.
+
+	yearVO, err := domain.NewYear(int(row.Year.Int32))
+	if err != nil {
+		// If DB has invalid year, maybe return error or 0?
+		// Let's allow it but log? No, domain shouldn't depend on log.
+		// NewYear(0) is valid.
+		yearVO, _ = domain.NewYear(0)
+	}
+
+	mintageVO, _ := domain.NewMintage(row.Mintage.Int64)
+	kmVO, _ := domain.NewKMCode(row.KmCode.String)
+	gradeVO, _ := domain.NewGrade(row.Grade.String)
+
 	return &domain.Coin{
 		ID:                uuid.UUID(row.ID.Bytes),
 		Name:              row.Name.String,
 		Mint:              row.Mint.String,
-		Mintage:           row.Mintage.Int64,
+		Mintage:           mintageVO,
 		Country:           row.Country.String,
-		Year:              int(row.Year.Int32),
+		Year:              yearVO,
 		FaceValue:         row.FaceValue.String,
 		Currency:          row.Currency.String,
 		Material:          row.Material.String,
 		Description:       row.Description.String,
-		KMCode:            row.KmCode.String,
+		KMCode:            kmVO,
 		NumistaNumber:     int(row.NumistaNumber.Int32),
 		NumistaDetails:    numistaDetails,
+		Ruler:             "", // populated if needed
+		Orientation:       "",
+		Series:            "",
+		CommemoratedTopic: "",
 		MinValue:          minVal.Float64,
 		MaxValue:          maxVal.Float64,
-		Grade:             row.Grade.String,
+		Grade:             gradeVO,
 		TechnicalNotes:    row.TechnicalNotes.String,
 		GeminiDetails:     geminiDetails,
 		GroupID:           groupID,

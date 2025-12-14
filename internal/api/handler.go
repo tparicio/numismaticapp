@@ -6,16 +6,21 @@ import (
 
 	"github.com/antonioparicio/numismaticapp/internal/application"
 	"github.com/antonioparicio/numismaticapp/internal/domain"
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
 
 type CoinHandler struct {
-	service *application.CoinService
+	service  *application.CoinService
+	validate *validator.Validate
 }
 
 func NewCoinHandler(service *application.CoinService) *CoinHandler {
-	return &CoinHandler{service: service}
+	return &CoinHandler{
+		service:  service,
+		validate: validator.New(),
+	}
 }
 
 func (h *CoinHandler) AddCoin(c *fiber.Ctx) error {
@@ -99,8 +104,8 @@ func (h *CoinHandler) ListGroups(c *fiber.Ctx) error {
 }
 
 type RotateCoinRequest struct {
-	Side  string  `json:"side"`
-	Angle float64 `json:"angle"`
+	Side  string  `json:"side" validate:"required,oneof=front back"`
+	Angle float64 `json:"angle" validate:"required"`
 }
 
 func (h *CoinHandler) RotateCoin(c *fiber.Ctx) error {
@@ -115,8 +120,8 @@ func (h *CoinHandler) RotateCoin(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "cannot parse body"})
 	}
 
-	if req.Side != "front" && req.Side != "back" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "side must be front or back"})
+	if err := h.validate.Struct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	if err := h.service.RotateCoinImage(c.Context(), id, req.Side, req.Angle); err != nil {
@@ -127,14 +132,18 @@ func (h *CoinHandler) RotateCoin(c *fiber.Ctx) error {
 }
 
 type CreateGroupRequest struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	Name        string `json:"name" validate:"required,min=3,max=50"`
+	Description string `json:"description" validate:"max=200"`
 }
 
 func (h *CoinHandler) CreateGroup(c *fiber.Ctx) error {
 	var req CreateGroupRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "cannot parse body"})
+	}
+
+	if err := h.validate.Struct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	group, err := h.service.CreateGroup(c.Context(), req.Name, req.Description)
@@ -155,6 +164,10 @@ func (h *CoinHandler) UpdateGroup(c *fiber.Ctx) error {
 	var req CreateGroupRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "cannot parse body"})
+	}
+
+	if err := h.validate.Struct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	group, err := h.service.UpdateGroup(c.Context(), id, req.Name, req.Description)
@@ -312,8 +325,8 @@ func (h *CoinHandler) DeleteCoin(c *fiber.Ctx) error {
 }
 
 type ReanalyzeRequest struct {
-	ModelName   string  `json:"model_name"`
-	Temperature float32 `json:"temperature"`
+	ModelName   string  `json:"model_name" validate:"required"`
+	Temperature float32 `json:"temperature" validate:"gte=0,lte=1"`
 }
 
 func (h *CoinHandler) ReanalyzeCoin(c *fiber.Ctx) error {
@@ -326,6 +339,10 @@ func (h *CoinHandler) ReanalyzeCoin(c *fiber.Ctx) error {
 	var req ReanalyzeRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid body"})
+	}
+
+	if err := h.validate.Struct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	if req.Temperature == 0 {

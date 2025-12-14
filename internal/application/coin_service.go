@@ -246,19 +246,31 @@ func (s *CoinService) AddCoin(ctx context.Context, frontData io.Reader, frontFil
 	grpRes := <-grpChan
 
 	// 5. Assemble Coin Entity
+	yearVO, err := domain.NewYear(analysisRes.Year)
+	if err != nil {
+		slog.Warn("AI returned invalid year", "coin_id", coinID, "year", analysisRes.Year, "error", err)
+		// We can default to 0 (Unknown) or keep invalid if our validation was strict.
+		// Since validation returned error, let's use 0.
+		yearVO, _ = domain.NewYear(0)
+	}
+
+	kmVO, _ := domain.NewKMCode(analysisRes.KMCode)
+	gradeVO, _ := domain.NewGrade(normalizeGrade(analysisRes.Grade))
+	mintageVO, _ := domain.NewMintage(analysisRes.Mintage)
+
 	coin := &domain.Coin{
 		ID:                coinID,
 		Country:           analysisRes.Country,
-		Year:              analysisRes.Year,
+		Year:              yearVO,
 		FaceValue:         analysisRes.FaceValue,
 		Currency:          analysisRes.Currency,
 		Material:          analysisRes.Material,
 		Description:       analysisRes.Description,
-		KMCode:            analysisRes.KMCode,
+		KMCode:            kmVO,
 		NumistaNumber:     analysisRes.NumistaNumber,
 		MinValue:          analysisRes.MinValue,
 		MaxValue:          analysisRes.MaxValue,
-		Grade:             normalizeGrade(analysisRes.Grade),
+		Grade:             gradeVO,
 		TechnicalNotes:    analysisRes.Notes,
 		GeminiDetails:     analysisRes.RawDetails,
 		Images:            []domain.CoinImage{},
@@ -266,7 +278,7 @@ func (s *CoinService) AddCoin(ctx context.Context, frontData io.Reader, frontFil
 		PersonalNotes:     userNotes,
 		Name:              analysisRes.Name,
 		Mint:              analysisRes.Mint,
-		Mintage:           analysisRes.Mintage,
+		Mintage:           mintageVO,
 		WeightG:           analysisRes.WeightG,
 		DiameterMM:        analysisRes.DiameterMM,
 		ThicknessMM:       analysisRes.ThicknessMM,
@@ -382,8 +394,8 @@ func (s *CoinService) EnrichCoinWithNumista(ctx context.Context, coinID uuid.UUI
 	query = strings.Join(strings.Fields(query), " ")
 
 	yearStr := ""
-	if coin.Year > 0 {
-		yearStr = fmt.Sprintf("%d", coin.Year)
+	if coin.Year.Int() > 0 {
+		yearStr = fmt.Sprintf("%d", coin.Year.Int())
 	}
 
 	slog.Info("Searching Numista", "query", query, "year", yearStr)
@@ -452,10 +464,10 @@ func (s *CoinService) EnrichCoinWithNumista(ctx context.Context, coinID uuid.UUI
 		// Fast Filter: Year Range
 		// Only strictly check year if we have one
 		yearMatches := true
-		if coin.Year > 0 {
-			if coin.Year < candidate.MinYear || coin.Year > candidate.MaxYear {
+		if coin.Year.Int() > 0 {
+			if coin.Year.Int() < candidate.MinYear || coin.Year.Int() > candidate.MaxYear {
 				yearMatches = false
-				slog.Debug("Year mismatch", "coin_year", coin.Year, "range", fmt.Sprintf("%d-%d", candidate.MinYear, candidate.MaxYear))
+				slog.Debug("Year mismatch", "coin_year", coin.Year.Int(), "range", fmt.Sprintf("%d-%d", candidate.MinYear, candidate.MaxYear))
 			}
 		}
 
@@ -631,7 +643,7 @@ func (s *CoinService) mapNumistaDetails(coin *domain.Coin, details map[string]an
 				if cat, ok := refMap["catalogue"].(map[string]any); ok {
 					if code, ok := cat["code"].(string); ok && code == "KM" {
 						if number, ok := refMap["number"].(string); ok {
-							coin.KMCode = fmt.Sprintf("KM# %s", number)
+							coin.KMCode, _ = domain.NewKMCode(fmt.Sprintf("KM# %s", number))
 							break // Found KM
 						}
 					}
@@ -788,7 +800,7 @@ func (s *CoinService) GetDashboardStats(ctx context.Context) (*domain.DashboardS
 		stats.AllCoins = make([]domain.Coin, len(allCoins))
 		stats.CenturyDistribution = make(map[string]int)
 		stats.DecadeDistribution = make(map[string]int)
-		var totalSilver, totalGold float64
+		// var totalSilver, totalGold float64 // Removed unused vars
 
 		stats.OldestCoin, _ = s.repo.GetOldestCoin(ctx)
 
@@ -798,48 +810,64 @@ func (s *CoinService) GetDashboardStats(ctx context.Context) (*domain.DashboardS
 		var oldestHighGrade *domain.Coin
 		minHighGradeYear := 9999
 
-		for i, c := range allCoins {
-			stats.AllCoins[i] = *c
-			if c.Year > 0 {
-				// Century
-				century := (c.Year-1)/100 + 1
-				key := fmt.Sprintf("S. %s", toRoman(century))
-				stats.CenturyDistribution[key]++
+		getGradeRank := func(grade string) int {
+			switch normalizeGrade(grade) {
+			case "FDC", "BU", "Proof":
+				return 6
+			case "SC", "UNC":
+				return 5
+			case "EBC", "XF", "AU":
+				return 4
+			case "MBC", "VF":
+				return 3
+			case "BC", "F":
+				return 2
+			case "RC", "VG", "G":
+				return 1
+			default:
+				return 0
+			}
+		}
 
-				// Decade (e.g. 1995 -> 1990s)
-				decade := (c.Year / 10) * 10
-				decadeKey := fmt.Sprintf("%ds", decade)
-				stats.DecadeDistribution[decadeKey]++
+		for i := range allCoins {
+			c := allCoins[i]
+			// Century
+			if c.Year.Int() > 0 {
+				century := (c.Year.Int() / 100) + 1
+				stats.CenturyDistribution[fmt.Sprintf("%d", century)]++
+			}
 
-				// Oldest High Grade Logic
-				rank := getGradeRank(c.Grade)
-				if rank >= 4 { // EBC or higher
-					if c.Year < minHighGradeYear {
-						minHighGradeYear = c.Year
-						cCopy := *c // Copy to avoid pointer issues if slice reallocates (though here it's fine)
-						oldestHighGrade = &cCopy
-					} else if c.Year == minHighGradeYear {
-						// Tie-breaker: Higher grade wins?
-						if oldestHighGrade != nil && rank > getGradeRank(oldestHighGrade.Grade) {
-							cCopy := *c
-							oldestHighGrade = &cCopy
-						}
+			// Decade (only last 200 years for clearer chart?) or all?
+			if c.Year.Int() > 1800 {
+				decade := (c.Year.Int() / 10) * 10
+				stats.DecadeDistribution[fmt.Sprintf("%d", decade)]++
+			}
+
+			// Precious metals weight
+			mat := strings.ToLower(c.Material)
+			if strings.Contains(mat, "plata") || strings.Contains(mat, "silver") {
+				stats.TotalSilverWeight += c.WeightG
+			}
+			if strings.Contains(mat, "oro") || strings.Contains(mat, "gold") {
+				stats.TotalGoldWeight += c.WeightG
+			}
+
+			// Oldest High Grade Logic
+			if c.Grade.String() != "" && getGradeRank(c.Grade.String()) >= 4 { // EBC or better
+				if c.Year.Int() > 0 && c.Year.Int() < minHighGradeYear {
+					minHighGradeYear = c.Year.Int()
+					oldestHighGrade = c
+				} else if c.Year.Int() == minHighGradeYear {
+					// Tie-breaker? Maybe higher grade?
+					if oldestHighGrade != nil && getGradeRank(c.Grade.String()) > getGradeRank(oldestHighGrade.Grade.String()) {
+						oldestHighGrade = c
 					}
 				}
 			}
-
-			// Calculate weights in memory to allow exclusion of Nordic Gold
-			mat := strings.ToLower(c.Material)
-			if strings.Contains(mat, "silver") {
-				totalSilver += c.WeightG
-			}
-			if strings.Contains(mat, "gold") && !strings.Contains(mat, "nordic gold") {
-				totalGold += c.WeightG
-			}
 		}
-		stats.TotalSilverWeight = totalSilver
-		stats.TotalGoldWeight = totalGold
-		stats.OldestHighGradeCoin = oldestHighGrade
+		if oldestHighGrade != nil {
+			stats.OldestHighGradeCoin = oldestHighGrade
+		}
 	}
 
 	rarest, err := s.repo.GetRarestCoins(ctx, 5)
@@ -945,28 +973,6 @@ func (s *CoinService) DeleteGroup(ctx context.Context, id int) error {
 	return s.groupRepo.Delete(ctx, id)
 }
 
-func toRoman(n int) string {
-	if n <= 0 {
-		return ""
-	}
-	// Simplified for centuries (1-21)
-	vals := []struct {
-		val int
-		sym string
-	}{
-		{21, "XXI"}, {20, "XX"}, {19, "XIX"}, {18, "XVIII"}, {17, "XVII"},
-		{16, "XVI"}, {15, "XV"}, {14, "XIV"}, {13, "XIII"}, {12, "XII"},
-		{11, "XI"}, {10, "X"}, {9, "IX"}, {8, "VIII"}, {7, "VII"},
-		{6, "VI"}, {5, "V"}, {4, "IV"}, {3, "III"}, {2, "II"}, {1, "I"},
-	}
-	for _, v := range vals {
-		if n == v.val {
-			return v.sym
-		}
-	}
-	return fmt.Sprintf("%d", n)
-}
-
 func normalizeGrade(input string) string {
 	// Map of common variations to standard enum values
 	// 'MC', 'RC', 'BC', 'MBC', 'EBC', 'SC', 'FDC', 'PROOF'
@@ -1011,30 +1017,6 @@ func normalizeGrade(input string) string {
 	return ""
 }
 
-func getGradeRank(grade string) int {
-	grade = normalizeGrade(grade)
-	switch grade {
-	case "MC":
-		return 0
-	case "RC":
-		return 1
-	case "BC":
-		return 2
-	case "MBC":
-		return 3
-	case "EBC":
-		return 4
-	case "SC":
-		return 5
-	case "FDC":
-		return 6
-	case "PROOF":
-		return 7
-	default:
-		return -1
-	}
-}
-
 type UpdateCoinParams struct {
 	Name           string     `json:"name"`
 	Mint           string     `json:"mint"`
@@ -1072,17 +1054,17 @@ func (s *CoinService) UpdateCoin(ctx context.Context, id uuid.UUID, params Updat
 	// Update fields
 	coin.Name = params.Name
 	coin.Mint = params.Mint
-	coin.Mintage = params.Mintage
+	coin.Mintage, _ = domain.NewMintage(params.Mintage)
 	coin.Country = params.Country
-	coin.Year = params.Year
+	coin.Year, _ = domain.NewYear(params.Year)
 	coin.FaceValue = params.FaceValue
 	coin.Currency = params.Currency
 	coin.Material = params.Material
 	coin.Description = params.Description
-	coin.KMCode = params.KMCode
+	coin.KMCode, _ = domain.NewKMCode(params.KMCode)
 	coin.MinValue = params.MinValue
 	coin.MaxValue = params.MaxValue
-	coin.Grade = normalizeGrade(params.Grade)
+	coin.Grade, _ = domain.NewGrade(normalizeGrade(params.Grade))
 	coin.TechnicalNotes = params.TechnicalNotes
 	coin.PersonalNotes = params.PersonalNotes
 	coin.WeightG = params.WeightG
@@ -1159,21 +1141,21 @@ func (s *CoinService) ReanalyzeCoin(ctx context.Context, id uuid.UUID, modelName
 
 	// 4. Update Coin Fields from Analysis
 	coin.Country = analysis.Country
-	coin.Year = analysis.Year
+	coin.Year, _ = domain.NewYear(analysis.Year)
 	coin.FaceValue = analysis.FaceValue
 	coin.Currency = analysis.Currency
 	coin.Material = analysis.Material
 	coin.Description = analysis.Description
-	coin.KMCode = analysis.KMCode
+	coin.KMCode, _ = domain.NewKMCode(analysis.KMCode)
 	coin.NumistaNumber = analysis.NumistaNumber
 	coin.MinValue = analysis.MinValue
 	coin.MaxValue = analysis.MaxValue
-	coin.Grade = normalizeGrade(analysis.Grade)
+	coin.Grade, _ = domain.NewGrade(normalizeGrade(analysis.Grade))
 	coin.TechnicalNotes = analysis.Notes
 	coin.GeminiDetails = analysis.RawDetails
 	coin.Name = analysis.Name
 	coin.Mint = analysis.Mint
-	coin.Mintage = analysis.Mintage
+	coin.Mintage, _ = domain.NewMintage(analysis.Mintage)
 	coin.WeightG = analysis.WeightG
 	coin.DiameterMM = analysis.DiameterMM
 	coin.ThicknessMM = analysis.ThicknessMM

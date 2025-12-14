@@ -12,14 +12,14 @@ type Coin struct {
 	ID             uuid.UUID      `json:"id"`
 	Name           string         `json:"name"`
 	Mint           string         `json:"mint"`
-	Mintage        int64          `json:"mintage"`
+	Mintage        Mintage        `json:"mintage"`
 	Country        string         `json:"country"`
-	Year           int            `json:"year"`
+	Year           Year           `json:"year"`
 	FaceValue      string         `json:"face_value"`
 	Currency       string         `json:"currency"`
 	Material       string         `json:"material"`
 	Description    string         `json:"description"`
-	KMCode         string         `json:"km_code"`
+	KMCode         KMCode         `json:"km_code"`
 	NumistaNumber  int            `json:"numista_number"`
 	NumistaDetails map[string]any `json:"numista_details"`
 	// Detailed fields
@@ -29,7 +29,7 @@ type Coin struct {
 	CommemoratedTopic string         `json:"commemorated_topic"`
 	MinValue          float64        `json:"min_value"`
 	MaxValue          float64        `json:"max_value"`
-	Grade             string         `json:"grade"`
+	Grade             Grade          `json:"grade"`
 	TechnicalNotes    string         `json:"technical_notes"`
 	GeminiDetails     map[string]any `json:"gemini_details"` // Raw JSON from Gemini
 	GeminiModel       string         `json:"gemini_model"`

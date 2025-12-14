@@ -16,6 +16,31 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
+// Helper functions for testing Value Objects
+func mustYear(y int) domain.Year {
+	v, err := domain.NewYear(y)
+	if err != nil {
+		panic(err)
+	}
+	return v
+}
+
+func mustMintage(m int64) domain.Mintage {
+	v, err := domain.NewMintage(m)
+	if err != nil {
+		panic(err)
+	}
+	return v
+}
+
+func mustGrade(g string) domain.Grade {
+	v, err := domain.NewGrade(g)
+	if err != nil {
+		panic(err)
+	}
+	return v
+}
+
 func setupTest(t *testing.T) (
 	*application.CoinService,
 	*mocks.MockCoinRepository,
@@ -120,14 +145,17 @@ func TestGetDashboardStats(t *testing.T) {
 	mockRepo.EXPECT().ListRecent(ctx).Return([]*domain.Coin{}, nil)
 	mockRepo.EXPECT().GetMaterialDistribution(ctx).Return(map[string]int{"Gold": 5}, nil)
 	mockRepo.EXPECT().GetGradeDistribution(ctx).Return(map[string]int{"XF": 5}, nil)
-	mockRepo.EXPECT().GetAllValues(ctx).Return([]float64{10, 20}, nil)
+	mockRepo.EXPECT().GetAllValues(ctx).Return([]float64{5, 25, 75, 200, 600}, nil)
 	mockRepo.EXPECT().GetCountryDistribution(ctx).Return(map[string]int{"Spain": 5}, nil)
 
 	mockRepo.EXPECT().GetAllCoins(ctx).Return([]*domain.Coin{
-		{Year: 2000, Material: "Gold", WeightG: 10},
+		{Year: mustYear(2000), Material: "Gold", WeightG: 10, Grade: mustGrade("FDC")},
+		{Year: mustYear(1900), Material: "Silver", WeightG: 5, Grade: mustGrade("BC")},
+		{Year: mustYear(1850), Material: "Copper", WeightG: 2, Grade: mustGrade("EBC")}, // Oldest High Grade check
+		{Year: mustYear(1850), Material: "Copper", WeightG: 2, Grade: mustGrade("SC")},  // Tie breaker check (SC > EBC)
 	}, nil)
 
-	mockRepo.EXPECT().GetOldestCoin(ctx).Return(&domain.Coin{Year: 1800}, nil)
+	mockRepo.EXPECT().GetOldestCoin(ctx).Return(&domain.Coin{Year: mustYear(1800)}, nil)
 	mockRepo.EXPECT().GetRarestCoins(ctx, 5).Return([]*domain.Coin{}, nil)
 	mockRepo.EXPECT().GetGroupDistribution(ctx).Return(map[string]int{"Group 1": 1}, nil)
 	mockRepo.EXPECT().GetGroupStats(ctx).Return([]domain.GroupStat{}, nil)
@@ -159,7 +187,7 @@ func TestAddCoin_Flows(t *testing.T) {
 		mockRepo.EXPECT().Save(gomock.Any(), gomock.Any()).Return(nil)
 		// Async Numista might call Update or GetByID, allow it
 		mockRepo.EXPECT().Update(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-		mockRepo.EXPECT().GetByID(gomock.Any(), gomock.Any()).Return(&domain.Coin{Year: 2024, FaceValue: "1"}, nil).AnyTimes()
+		mockRepo.EXPECT().GetByID(gomock.Any(), gomock.Any()).Return(&domain.Coin{Year: mustYear(2024), FaceValue: "1"}, nil).AnyTimes()
 		mockNumistaClient.EXPECT().SearchTypes(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&numista.TypeSearchResponse{}, nil).AnyTimes()
 
 		_, err := service.AddCoin(ctx, bytes.NewReader(frontData), "f.jpg", bytes.NewReader(backData), "b.jpg", "G", "", "", "", 0, "m", 0)
@@ -215,7 +243,7 @@ func TestEnrichCoinWithNumista(t *testing.T) {
 	t.Run("Match Found", func(t *testing.T) {
 		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
 		ctx := context.Background()
-		coin := &domain.Coin{ID: coinID, FaceValue: "20 Euro Cent", Year: 2008}
+		coin := &domain.Coin{ID: coinID, FaceValue: "20 Euro Cent", Year: mustYear(2008)}
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(coin, nil)
 
 		mockNumistaClient.EXPECT().SearchTypes(ctx, gomock.Any(), gomock.Any(), "2008", gomock.Any(), gomock.Any()).Return(&numista.TypeSearchResponse{
@@ -239,7 +267,7 @@ func TestEnrichCoinWithNumista(t *testing.T) {
 	t.Run("No Match Found", func(t *testing.T) {
 		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
 		ctx := context.Background()
-		coin := &domain.Coin{ID: coinID, FaceValue: "Rare Coin", Year: 1900}
+		coin := &domain.Coin{ID: coinID, FaceValue: "Rare Coin", Year: mustYear(1900)}
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(coin, nil)
 		mockNumistaClient.EXPECT().SearchTypes(ctx, gomock.Any(), gomock.Any(), "1900", gomock.Any(), gomock.Any()).Return(&numista.TypeSearchResponse{Count: 0}, nil)
 		mockRepo.EXPECT().Update(ctx, gomock.Any()).Return(nil)
@@ -258,7 +286,7 @@ func TestEnrichCoinWithNumista(t *testing.T) {
 	t.Run("Search Error", func(t *testing.T) {
 		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
 		ctx := context.Background()
-		mockRepo.EXPECT().GetByID(ctx, coinID).Return(&domain.Coin{FaceValue: "V", Year: 2000}, nil)
+		mockRepo.EXPECT().GetByID(ctx, coinID).Return(&domain.Coin{FaceValue: "V", Year: mustYear(2000)}, nil)
 		mockNumistaClient.EXPECT().SearchTypes(ctx, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, assert.AnError)
 		err := service.EnrichCoinWithNumista(ctx, coinID)
 		assert.Error(t, err)
@@ -267,7 +295,7 @@ func TestEnrichCoinWithNumista(t *testing.T) {
 	t.Run("Repo Update Error", func(t *testing.T) {
 		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
 		ctx := context.Background()
-		coin := &domain.Coin{ID: coinID, FaceValue: "20", Year: 2000}
+		coin := &domain.Coin{ID: coinID, FaceValue: "20", Year: mustYear(2000)}
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(coin, nil)
 		mockNumistaClient.EXPECT().SearchTypes(ctx, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&numista.TypeSearchResponse{Count: 0}, nil)
 		mockRepo.EXPECT().Update(ctx, gomock.Any()).Return(errors.New("db error"))
@@ -337,7 +365,7 @@ func TestApplyNumistaCandidate(t *testing.T) {
 			assert.Equal(t, "Round", c.Shape)
 			assert.Equal(t, "Gold", c.Material)
 			assert.Equal(t, "Royal Mint", c.Mint)
-			assert.Equal(t, "KM# 123", c.KMCode)
+			assert.Equal(t, "KM# 123", c.KMCode.String())
 			assert.Equal(t, "King Charles", c.Ruler)
 			assert.Equal(t, "Coin alignment", c.Orientation)
 			assert.Equal(t, "Commemorative", c.Series)
@@ -529,13 +557,17 @@ func TestUpdateCoin_Grades(t *testing.T) {
 			{"SC Coin", "SC"},
 			{"BC Coin", "BC"},
 			{"RC Coin", "RC"},
+			{"RC Coin", "RC"},
 			{"MC Coin", "MC"},
+			{"PROOF Set", "PROOF"},
+			{"MC", "MC"},   // Exact match to hit start of loop
+			{"FDC", "FDC"}, // Exact match
 		}
 
 		for _, tc := range testCases {
 			mockRepo.EXPECT().GetByID(ctx, id).Return(&domain.Coin{ID: id}, nil)
 			mockRepo.EXPECT().Update(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, c *domain.Coin) error {
-				assert.Equal(t, tc.expected, c.Grade)
+				assert.Equal(t, tc.expected, c.Grade.String()) // Update to use String()
 				return nil
 			})
 
@@ -562,7 +594,7 @@ func TestGetDashboardStats_Century(t *testing.T) {
 	mockRepo.EXPECT().GetGradeDistribution(ctx).Return(map[string]int{}, nil)
 	mockRepo.EXPECT().GetAllValues(ctx).Return([]float64{}, nil)
 	mockRepo.EXPECT().GetCountryDistribution(ctx).Return(map[string]int{}, nil)
-	mockRepo.EXPECT().GetOldestCoin(ctx).Return(&domain.Coin{Year: 1800}, nil)
+	mockRepo.EXPECT().GetOldestCoin(ctx).Return(&domain.Coin{Year: mustYear(1800)}, nil)
 	mockRepo.EXPECT().GetRarestCoins(ctx, 5).Return([]*domain.Coin{}, nil)
 	mockRepo.EXPECT().GetGroupDistribution(ctx).Return(map[string]int{}, nil)
 	mockRepo.EXPECT().GetGroupStats(ctx).Return([]domain.GroupStat{}, nil)
@@ -572,7 +604,7 @@ func TestGetDashboardStats_Century(t *testing.T) {
 
 	// Inject a futuristic coin to trigger toRoman fallback (22nd century)
 	mockRepo.EXPECT().GetAllCoins(ctx).Return([]*domain.Coin{
-		{Year: 2199, Material: "Gold", WeightG: 10}, // 22nd Century -> "22"
+		{Year: mustYear(2199), Material: "Gold", WeightG: 10}, // 22nd Century -> "22"
 	}, nil)
 
 	stats, err := service.GetDashboardStats(ctx)
@@ -699,7 +731,7 @@ func TestEnrichCoinWithNumista_Complex(t *testing.T) {
 		ctx := context.Background()
 
 		// Coin: 2005, Value 1 (Unit)
-		coin := &domain.Coin{ID: coinID, FaceValue: "1 Euro", Year: 2005, Currency: "Euro", Country: "Spain"}
+		coin := &domain.Coin{ID: coinID, FaceValue: "1 Euro", Year: mustYear(2005), Currency: "Euro", Country: "Spain"}
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(coin, nil)
 
 		// Search returns:
@@ -736,7 +768,7 @@ func TestEnrichCoinWithNumista_Complex(t *testing.T) {
 		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
 		ctx := context.Background()
 
-		coin := &domain.Coin{ID: coinID, FaceValue: "20", Year: 2000}
+		coin := &domain.Coin{ID: coinID, FaceValue: "20", Year: mustYear(2000)}
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(coin, nil)
 
 		mockNumistaClient.EXPECT().SearchTypes(ctx, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&numista.TypeSearchResponse{
@@ -937,8 +969,9 @@ func TestGetDashboardStats_Errors(t *testing.T) {
 		// GetAllCoins fails, but GetDashboardStats should proceed (soft error handled by if err == nil check)
 		mockRepo.EXPECT().GetAllCoins(ctx).Return(nil, errors.New("db error"))
 
+		// GetOldestCoin is called after GetAllCoins soft-fail
 		// Remaining calls
-		mockRepo.EXPECT().GetOldestCoin(ctx).Return(&domain.Coin{}, nil)
+		// mockRepo.EXPECT().GetOldestCoin(ctx).Return(&domain.Coin{}, nil) // Skipped on error
 		mockRepo.EXPECT().GetRarestCoins(ctx, 5).Return([]*domain.Coin{}, nil)
 		mockRepo.EXPECT().GetGroupDistribution(ctx).Return(map[string]int{}, nil)
 		mockRepo.EXPECT().GetGroupStats(ctx).Return([]domain.GroupStat{}, nil)
