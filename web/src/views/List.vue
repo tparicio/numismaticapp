@@ -121,11 +121,11 @@
           <tr>
             <th>{{ $t('list.table.images') }}</th>
             <th>{{ $t('list.table.name') }}</th>
-            <th class="hidden md:table-cell">{{ $t('list.table.mint') }}</th>
+            <th class="hidden lg:table-cell">{{ $t('list.table.mint') }}</th>
             <th class="hidden lg:table-cell">{{ $t('list.table.mintage') }}</th>
-            <th class="hidden sm:table-cell">{{ $t('list.table.country') }}</th>
-            <th class="hidden sm:table-cell">{{ $t('list.table.value') }}</th>
-            <th class="hidden md:table-cell">{{ $t('list.table.year') }}</th>
+            <th class="hidden md:table-cell">{{ $t('list.table.country') }}</th>
+            <th class="hidden md:table-cell">{{ $t('list.table.value') }}</th>
+            <th class="hidden lg:table-cell">{{ $t('list.table.year') }}</th>
             <th class="hidden lg:table-cell">{{ $t('list.table.currency') }}</th>
             <th class="hidden lg:table-cell">{{ $t('list.table.grade') }}</th>
             <th class="hidden lg:table-cell">{{ $t('list.table.material') }}</th>
@@ -148,12 +148,19 @@
                     </div>
                 </div>
             </td>
-            <td class="font-bold text-primary">{{ coin.name || '-' }}</td>
-            <td class="hidden md:table-cell">{{ coin.mint || '-' }}</td>
+            <td>
+                <div class="font-bold text-primary">{{ coin.name || '-' }}</div>
+                <!-- Mobile-only info: show country and value below name on small screens -->
+                <div class="text-xs opacity-70 md:hidden mt-1">
+                    <div>{{ coin.country }}</div>
+                    <div class="text-success font-semibold">{{ coin.min_value }}€ - {{ coin.max_value }}€</div>
+                </div>
+            </td>
+            <td class="hidden lg:table-cell">{{ coin.mint || '-' }}</td>
             <td class="hidden lg:table-cell">{{ formatMintage(coin.mintage) }}</td>
-            <td class="font-semibold hidden sm:table-cell">{{ coin.country }}</td>
-            <td class="font-bold text-success hidden sm:table-cell">{{ coin.min_value }} - {{ coin.max_value }} €</td>
-            <td class="hidden md:table-cell">{{ (coin.year && coin.year !== 0) ? coin.year : '-' }}</td>
+            <td class="font-semibold hidden md:table-cell">{{ coin.country }}</td>
+            <td class="font-bold text-success hidden md:table-cell">{{ coin.min_value }} - {{ coin.max_value }} €</td>
+            <td class="hidden lg:table-cell">{{ (coin.year && coin.year !== 0) ? coin.year : '-' }}</td>
             <td class="hidden lg:table-cell">{{ coin.currency }}</td>
             <td class="hidden lg:table-cell"><div class="badge badge-ghost" v-if="coin.grade">{{ coin.grade }}</div><span v-else>-</span></td>
             <td class="hidden lg:table-cell">{{ coin.material }}</td>
