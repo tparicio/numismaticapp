@@ -1,16 +1,14 @@
 -- Drop everything to ensure clean slate (User requested reset)
+DROP TABLE IF EXISTS schema_migrations CASCADE;
 DROP TABLE IF EXISTS coin_images CASCADE;
 DROP TABLE IF EXISTS coins CASCADE;
 DROP TABLE IF EXISTS groups CASCADE;
 DROP TYPE IF EXISTS image_type CASCADE;
 DROP TYPE IF EXISTS coin_side CASCADE;
 
--- We don't drop schema_migrations because the tool relies on it existing to track state.
--- Although we could, but it's safer to leave it to the tool management.
-
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Ensure schema_migrations exists (idempotent check, though tool likely creates it)
+-- Ensure schema_migrations exists with the correct schema
 CREATE TABLE IF NOT EXISTS schema_migrations (
     version BIGINT PRIMARY KEY,
     dirty BOOLEAN NOT NULL DEFAULT false,
@@ -58,6 +56,15 @@ CREATE TABLE coins (
     sold_price NUMERIC(10, 2),
     gemini_model VARCHAR(100),
     gemini_temperature NUMERIC(3, 2),
+    
+    -- Consolidated columns from previous migrations
+    numista_search TEXT,   -- from 002
+    ruler TEXT NOT NULL DEFAULT '', -- from 003
+    orientation TEXT NOT NULL DEFAULT '', -- from 003
+    series TEXT NOT NULL DEFAULT '', -- from 003
+    commemorated_topic TEXT NOT NULL DEFAULT '', -- from 003
+    numista_details JSONB, -- from 004
+
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
