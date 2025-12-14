@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"os"
+	"time"
 
 	"github.com/antonioparicio/numismaticapp/internal/api"
 	"github.com/antonioparicio/numismaticapp/internal/application"
@@ -45,10 +46,29 @@ func main() {
 		os.Exit(1)
 	}
 
-	// 2. Database
-	dbPool, err := pgxpool.New(ctx, dbURL)
+	// 2. Database with Retry Logic
+	var dbPool *pgxpool.Pool
+	var err error
+
+	maxRetries := 15
+	for i := 0; i < maxRetries; i++ {
+		dbPool, err = pgxpool.New(ctx, dbURL)
+		if err == nil {
+			err = dbPool.Ping(ctx)
+			if err == nil {
+				slog.Info("Successfully connected to database")
+				break
+			}
+		}
+
+		slog.Warn("Failed to connect to database, retrying...", "attempt", i+1, "error", err)
+		if i < maxRetries-1 {
+			time.Sleep(2 * time.Second)
+		}
+	}
+
 	if err != nil {
-		slog.Error("Unable to connect to database", "error", err)
+		slog.Error("Unable to connect to database after retries", "error", err)
 		os.Exit(1)
 	}
 	defer dbPool.Close()

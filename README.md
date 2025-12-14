@@ -71,7 +71,8 @@ La forma más rápida de empezar es utilizando la imagen pre-construida desde Do
           # Opcionalmente, puedes usar DATABASE_URL directamente:
           # - DATABASE_URL=postgres://postgres:secret@db:5432/numismatic?sslmode=disable
         depends_on:
-          - db
+          db:
+            condition: service_healthy
         volumes:
           - ./storage:/app/storage
 
@@ -83,6 +84,11 @@ La forma más rápida de empezar es utilizando la imagen pre-construida desde Do
           - POSTGRES_DB=numismatic
         volumes:
           - postgres_data:/var/lib/postgresql/data
+        healthcheck:
+          test: ["CMD-SHELL", "pg_isready -U postgres"]
+          interval: 5s
+          timeout: 5s
+          retries: 5
 
     volumes:
       postgres_data:

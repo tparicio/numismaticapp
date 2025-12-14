@@ -382,37 +382,102 @@ func TestApplyNumistaCandidate(t *testing.T) {
 }
 
 func TestListGroups(t *testing.T) {
-	service, _, mockGroupRepo, _, _, _, _, _ := setupTest(t)
-	ctx := context.Background()
-	mockGroupRepo.EXPECT().List(ctx).Return([]*domain.Group{{Name: "G1"}}, nil)
-	groups, err := service.ListGroups(ctx)
-	assert.NoError(t, err)
-	assert.Len(t, groups, 1)
+	t.Run("Success", func(t *testing.T) {
+		service, mockCoinRepo, mockGroupRepo, _, _, _, _, _ := setupTest(t)
+		ctx := context.Background()
+
+		mockGroupRepo.EXPECT().List(ctx).Return([]*domain.Group{
+			{ID: 1, Name: "G1"},
+			{ID: 2, Name: "G2"},
+		}, nil)
+
+		mockCoinRepo.EXPECT().GetGroupStats(ctx).Return([]domain.GroupStat{
+			{GroupID: 1, Count: 5},
+		}, nil)
+
+		groups, err := service.ListGroups(ctx)
+		assert.NoError(t, err)
+		assert.Len(t, groups, 2)
+		assert.Equal(t, 5, groups[0].CoinCount)
+		assert.Equal(t, 0, groups[1].CoinCount)
+	})
+
+	t.Run("List Error", func(t *testing.T) {
+		service, _, mockGroupRepo, _, _, _, _, _ := setupTest(t)
+		ctx := context.Background()
+
+		mockGroupRepo.EXPECT().List(ctx).Return(nil, errors.New("list error"))
+
+		groups, err := service.ListGroups(ctx)
+		assert.Error(t, err)
+		assert.Nil(t, groups)
+		assert.Contains(t, err.Error(), "list error")
+	})
+
+	t.Run("Stats Error", func(t *testing.T) {
+		service, mockCoinRepo, mockGroupRepo, _, _, _, _, _ := setupTest(t)
+		ctx := context.Background()
+
+		mockGroupRepo.EXPECT().List(ctx).Return([]*domain.Group{{ID: 1, Name: "G1"}}, nil)
+		mockCoinRepo.EXPECT().GetGroupStats(ctx).Return(nil, errors.New("stats error"))
+
+		groups, err := service.ListGroups(ctx)
+		assert.NoError(t, err)
+		assert.Len(t, groups, 1)
+		// Should still return groups, coin count 0
+		assert.Equal(t, 0, groups[0].CoinCount)
+	})
 }
 
 func TestCreateGroup(t *testing.T) {
-	service, _, mockGroupRepo, _, _, _, _, _ := setupTest(t)
-	ctx := context.Background()
-	mockGroupRepo.EXPECT().Create(ctx, "G1", "Desc").Return(&domain.Group{ID: 1}, nil)
-	g, err := service.CreateGroup(ctx, "G1", "Desc")
-	assert.NoError(t, err)
-	assert.Equal(t, 1, g.ID)
+	t.Run("Success", func(t *testing.T) {
+		service, _, mockGroupRepo, _, _, _, _, _ := setupTest(t)
+		ctx := context.Background()
+		mockGroupRepo.EXPECT().Create(ctx, "G1", "Desc").Return(&domain.Group{ID: 1}, nil)
+		g, err := service.CreateGroup(ctx, "G1", "Desc")
+		assert.NoError(t, err)
+		assert.Equal(t, 1, g.ID)
+	})
+
+	t.Run("Repo Error", func(t *testing.T) {
+		service, _, mockGroupRepo, _, _, _, _, _ := setupTest(t)
+		ctx := context.Background()
+		mockGroupRepo.EXPECT().Create(ctx, "G1", "Desc").Return(nil, errors.New("create error"))
+		g, err := service.CreateGroup(ctx, "G1", "Desc")
+		assert.Error(t, err)
+		assert.Nil(t, g)
+		assert.Contains(t, err.Error(), "create error")
+	})
 }
 
 func TestUpdateGroup(t *testing.T) {
-	service, _, mockGroupRepo, _, _, _, _, _ := setupTest(t)
-	ctx := context.Background()
-	mockGroupRepo.EXPECT().Update(ctx, gomock.Any()).Return(nil)
-	_, err := service.UpdateGroup(ctx, 1, "G2", "Desc2")
-	assert.NoError(t, err)
+	t.Run("Success", func(t *testing.T) {
+		service, _, mockGroupRepo, _, _, _, _, _ := setupTest(t)
+		ctx := context.Background()
+		mockGroupRepo.EXPECT().Update(ctx, gomock.Any()).Return(nil)
+		_, err := service.UpdateGroup(ctx, 1, "G2", "Desc2")
+		assert.NoError(t, err)
+	})
+	// TestUpdateGroup_RepoError is already defined below at line ~1123, so we don't add it here.
 }
 
 func TestDeleteGroup(t *testing.T) {
-	service, _, mockGroupRepo, _, _, _, _, _ := setupTest(t)
-	ctx := context.Background()
-	mockGroupRepo.EXPECT().Delete(ctx, 1).Return(nil)
-	err := service.DeleteGroup(ctx, 1)
-	assert.NoError(t, err)
+	t.Run("Success", func(t *testing.T) {
+		service, _, mockGroupRepo, _, _, _, _, _ := setupTest(t)
+		ctx := context.Background()
+		mockGroupRepo.EXPECT().Delete(ctx, 1).Return(nil)
+		err := service.DeleteGroup(ctx, 1)
+		assert.NoError(t, err)
+	})
+
+	t.Run("Repo Error", func(t *testing.T) {
+		service, _, mockGroupRepo, _, _, _, _, _ := setupTest(t)
+		ctx := context.Background()
+		mockGroupRepo.EXPECT().Delete(ctx, 1).Return(errors.New("delete error"))
+		err := service.DeleteGroup(ctx, 1)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "delete error")
+	})
 }
 
 func TestUpdateCoin(t *testing.T) {
@@ -1111,4 +1176,177 @@ func TestRotateCoinImage_Error(t *testing.T) {
 	err := service.RotateCoinImage(ctx, id, "front", 90.0)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to rotate image")
+}
+
+func TestApplyNumistaCandidate_Flows(t *testing.T) {
+	coinID := uuid.New()
+	numistaID := 123
+
+	t.Run("Success", func(t *testing.T) {
+		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
+		ctx := context.Background()
+
+		coin := &domain.Coin{ID: coinID}
+		mockRepo.EXPECT().GetByID(ctx, coinID).Return(coin, nil)
+		mockNumistaClient.EXPECT().GetType(ctx, numistaID).Return(map[string]any{"title": "Coin"}, nil)
+		mockRepo.EXPECT().Update(ctx, coin).Return(nil)
+
+		updatedCoin, err := service.ApplyNumistaCandidate(ctx, coinID, numistaID)
+		assert.NoError(t, err)
+		assert.NotNil(t, updatedCoin)
+		assert.Equal(t, numistaID, updatedCoin.NumistaNumber)
+	})
+
+	t.Run("GetByID Error", func(t *testing.T) {
+		service, mockRepo, _, _, _, _, _, _ := setupTest(t)
+		ctx := context.Background()
+
+		mockRepo.EXPECT().GetByID(ctx, coinID).Return(nil, errors.New("db error"))
+
+		_, err := service.ApplyNumistaCandidate(ctx, coinID, numistaID)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to get coin")
+	})
+
+	t.Run("Numista Error", func(t *testing.T) {
+		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
+		ctx := context.Background()
+
+		coin := &domain.Coin{ID: coinID}
+		mockRepo.EXPECT().GetByID(ctx, coinID).Return(coin, nil)
+		mockNumistaClient.EXPECT().GetType(ctx, numistaID).Return(nil, errors.New("api error"))
+
+		_, err := service.ApplyNumistaCandidate(ctx, coinID, numistaID)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to get numista details")
+	})
+
+	t.Run("Update Error", func(t *testing.T) {
+		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
+		ctx := context.Background()
+
+		coin := &domain.Coin{ID: coinID}
+		mockRepo.EXPECT().GetByID(ctx, coinID).Return(coin, nil)
+		mockNumistaClient.EXPECT().GetType(ctx, numistaID).Return(map[string]any{"title": "Coin"}, nil)
+		mockRepo.EXPECT().Update(ctx, coin).Return(errors.New("db update error"))
+
+		_, err := service.ApplyNumistaCandidate(ctx, coinID, numistaID)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to update coin")
+	})
+}
+
+func TestAddCoin_ImageDetailedErrors(t *testing.T) {
+	frontData := []byte("f")
+	backData := []byte("b")
+
+	tests := []struct {
+		name          string
+		setupMocks    func(*mocks.MockStorageService, *mocks.MockImageService, *mocks.MockBackgroundRemover)
+		expectedError string
+	}{
+		{
+			name: "Crop Front Error",
+			setupMocks: func(ms *mocks.MockStorageService, mis *mocks.MockImageService, mbr *mocks.MockBackgroundRemover) {
+				ms.EXPECT().SaveFile(gomock.Any(), gomock.Any(), gomock.Any()).Return("p", nil).Times(2) // Originals
+				mbr.EXPECT().RemoveBackground(gomock.Any(), gomock.Any()).Return([]byte("p"), nil)
+				mis.EXPECT().CropToContent(gomock.Any()).Return(nil, errors.New("crop error"))
+			},
+			expectedError: "failed to crop front",
+		},
+		{
+			name: "Save Processed Front Error",
+			setupMocks: func(ms *mocks.MockStorageService, mis *mocks.MockImageService, mbr *mocks.MockBackgroundRemover) {
+				ms.EXPECT().SaveFile(gomock.Any(), gomock.Any(), gomock.Any()).Return("p", nil).Times(2) // Originals
+				mbr.EXPECT().RemoveBackground(gomock.Any(), gomock.Any()).Return([]byte("p"), nil)
+				mis.EXPECT().CropToContent(gomock.Any()).Return([]byte("c"), nil)
+				ms.EXPECT().SaveFile(gomock.Any(), "processed_front.png", gomock.Any()).Return("", errors.New("save processed error"))
+			},
+			expectedError: "failed to save processed front",
+		},
+		{
+			name: "Thumbnail Front Error",
+			setupMocks: func(ms *mocks.MockStorageService, mis *mocks.MockImageService, mbr *mocks.MockBackgroundRemover) {
+				ms.EXPECT().SaveFile(gomock.Any(), gomock.Any(), gomock.Any()).Return("p", nil).Times(2)
+				mbr.EXPECT().RemoveBackground(gomock.Any(), gomock.Any()).Return([]byte("p"), nil)
+				mis.EXPECT().CropToContent(gomock.Any()).Return([]byte("c"), nil)
+				ms.EXPECT().SaveFile(gomock.Any(), "processed_front.png", gomock.Any()).Return("pf", nil)
+				mis.EXPECT().GenerateThumbnail("pf", 300).Return("", errors.New("thumb error"))
+			},
+			expectedError: "failed to thumb front",
+		},
+		{
+			name: "Bg Remove Back Error",
+			setupMocks: func(ms *mocks.MockStorageService, mis *mocks.MockImageService, mbr *mocks.MockBackgroundRemover) {
+				ms.EXPECT().SaveFile(gomock.Any(), gomock.Any(), gomock.Any()).Return("p", nil).Times(2)
+				// Front succeeds
+				mbr.EXPECT().RemoveBackground(gomock.Any(), gomock.Any()).Return([]byte("p"), nil) // Front
+				mis.EXPECT().CropToContent(gomock.Any()).Return([]byte("c"), nil)
+				ms.EXPECT().SaveFile(gomock.Any(), "processed_front.png", gomock.Any()).Return("pf", nil)
+				mis.EXPECT().GenerateThumbnail("pf", 300).Return("tf", nil)
+
+				// Back fails
+				mbr.EXPECT().RemoveBackground(gomock.Any(), gomock.Any()).Return(nil, errors.New("bg back error")) // Back
+			},
+			expectedError: "failed to bg remove back",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			service, _, _, mockImageService, mockAIService, mockStorage, mockBgRemover, _ := setupTest(t)
+			ctx := context.Background()
+
+			// Common AI mock
+			mockAIService.EXPECT().AnalyzeCoin(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&domain.CoinAnalysisResult{Name: "C"}, nil).AnyTimes()
+
+			tc.setupMocks(mockStorage, mockImageService, mockBgRemover)
+
+			_, err := service.AddCoin(ctx, bytes.NewReader(frontData), "f.jpg", bytes.NewReader(backData), "b.jpg", "", "", "", "", 0, "m", 0)
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), tc.expectedError)
+		})
+	}
+}
+
+func TestAddCoin_GroupError(t *testing.T) {
+	frontData := []byte("f")
+	backData := []byte("b")
+
+	t.Run("Group Creation Error", func(t *testing.T) {
+		service, mockRepo, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, _ := setupTest(t)
+		ctx := context.Background()
+
+		// Image/Storage Success
+		mockStorage.EXPECT().SaveFile(gomock.Any(), gomock.Any(), gomock.Any()).Return("p", nil).Times(4) // 2 orig, 2 proc
+		mockBgRemover.EXPECT().RemoveBackground(gomock.Any(), gomock.Any()).Return([]byte("p"), nil).Times(2)
+		mockImageService.EXPECT().CropToContent(gomock.Any()).Return([]byte("c"), nil).Times(2)
+		mockImageService.EXPECT().GenerateThumbnail(gomock.Any(), 300).Return("t", nil).Times(2)
+		mockImageService.EXPECT().GetMetadata(gomock.Any()).Return(100, 100, int64(100), "png", nil).AnyTimes()
+
+		// AI Success
+		mockAIService.EXPECT().AnalyzeCoin(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&domain.CoinAnalysisResult{Name: "C"}, nil)
+
+		// Group Failure
+		mockGroupRepo.EXPECT().GetByName(gomock.Any(), "NewGroup").Return(nil, errors.New("not found"))
+		mockGroupRepo.EXPECT().Create(gomock.Any(), "NewGroup", "").Return(nil, errors.New("creation failed"))
+
+		// Since group failed, AddCoin should return error.
+		// Note that Save/Update might NOT be called if we handle sync wait properly or return early.
+		// Current implementations waits for all tasks. Logic at end:
+		// for err := range errChan { return nil, err }
+		// So it should return "failed to create group" error.
+
+		// Allow Save/Update if race condition happens before error return?
+		// No, if Group fails, it sends error to errChan. AddCoin loop picks it up and returns.
+		// However, other goroutines (AI, Img) finishes.
+		// If AI or Img finishes first, they send to aiChan/imgChan.
+		// But errChan check is loop.
+
+		mockRepo.EXPECT().Save(gomock.Any(), gomock.Any()).Times(0) // Should not save coin if group failed
+
+		_, err := service.AddCoin(ctx, bytes.NewReader(frontData), "f.jpg", bytes.NewReader(backData), "b.jpg", "NewGroup", "", "", "", 0, "m", 0)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "failed to create group")
+	})
 }

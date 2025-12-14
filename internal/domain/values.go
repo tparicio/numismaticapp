@@ -70,10 +70,7 @@ func (k *KMCode) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &val); err != nil {
 		return err
 	}
-	res, err := NewKMCode(val)
-	if err != nil {
-		return err
-	}
+	res, _ := NewKMCode(val)
 	*k = res
 	return nil
 }
@@ -136,10 +133,7 @@ func (g *Grade) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &val); err != nil {
 		return err
 	}
-	res, err := NewGrade(val)
-	if err != nil {
-		return err
-	}
+	res, _ := NewGrade(val)
 	*g = res
 	return nil
 }
