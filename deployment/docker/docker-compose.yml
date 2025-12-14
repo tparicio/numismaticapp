@@ -5,6 +5,9 @@ services:
       dockerfile: deployment/docker/Dockerfile
     container_name: numismatic-app
     restart: unless-stopped
+    # For NAS deployments: uncomment and set to your UID:GID (e.g., "1000:100")
+    # For local development: use ${UID:-1000}:${GID:-1000}
+    # user: "1000:100"
     ports:
       - "80:8080"
     env_file:
@@ -20,6 +23,8 @@ services:
       rembg:
         condition: service_healthy
     volumes:
+      # Storage volume for coin images and data - ensure this directory exists with correct permissions
+      # For NAS: mkdir -p ../../storage && chown 1000:100 ../../storage
       - ../../storage:/app/storage
 
   db:

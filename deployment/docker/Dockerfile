@@ -48,9 +48,6 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Create a non-root user
-RUN groupadd -r appuser && useradd -r -g appuser appuser
-
 WORKDIR /app
 
 # Copy binary from builder
@@ -63,12 +60,12 @@ COPY --from=frontend-builder /app/dist /app/web/dist
 # Copy migrations (Embedded in binary now, but keeping folder structure if needed for other tools)
 # COPY --from=builder /app/migrations /app/migrations
 
-# Create storage directory and set permissions
-RUN mkdir -p /app/storage && \
-    chown -R appuser:appuser /app
+# Copy entrypoint script
+COPY deployment/docker/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
-# Switch to non-root user
-USER appuser
+# Create storage directory (permissions will be handled by volume mount and user directive)
+RUN mkdir -p /app/storage
 
 # Expose port
 EXPOSE 8080
@@ -77,4 +74,5 @@ EXPOSE 8080
 ENV PORT=8080
 ENV APP_ENV=production
 
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["/app/server"]
