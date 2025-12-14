@@ -68,6 +68,8 @@ La forma más rápida de empezar es utilizando la imagen pre-construida desde Do
           - POSTGRES_USER=postgres
           - POSTGRES_PASSWORD=secret
           - POSTGRES_DB=numismatic
+          # Opcionalmente, puedes usar DATABASE_URL directamente:
+          # - DATABASE_URL=postgres://postgres:secret@db:5432/numismatic?sslmode=disable
         depends_on:
           - db
         volumes:

@@ -26,8 +26,18 @@ func main() {
 	// 1. Config
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
-		slog.Error("DATABASE_URL is not set")
-		os.Exit(1)
+		// Fallback: Construct from individual variables
+		pgUser := os.Getenv("POSTGRES_USER")
+		pgPass := os.Getenv("POSTGRES_PASSWORD")
+		pgHost := os.Getenv("POSTGRES_HOST")
+		pgDB := os.Getenv("POSTGRES_DB")
+
+		if pgUser != "" && pgHost != "" && pgDB != "" {
+			dbURL = "postgres://" + pgUser + ":" + pgPass + "@" + pgHost + ":5432/" + pgDB + "?sslmode=disable"
+		} else {
+			slog.Error("DATABASE_URL is not set, and individual POSTGRES_* variables are missing")
+			os.Exit(1)
+		}
 	}
 	geminiKey := os.Getenv("GEMINI_API_KEY")
 	if geminiKey == "" {
