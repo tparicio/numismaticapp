@@ -128,7 +128,7 @@
 
                 <div class="divide-y divide-base-200" v-if="activeTab === 'recent'">
                     <div v-for="coin in stats.recent_coins" :key="coin.id" 
-                         class="flex items-center gap-3 py-3 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
+                         class="flex items-center gap-3 py-4 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
                          @click="router.push(`/coin/${coin.id}`)">
                       <div class="avatar">
                         <div class="mask mask-squircle w-12 h-12 overflow-hidden">
@@ -147,7 +147,7 @@
 
                 <div class="divide-y divide-base-200" v-if="activeTab === 'valuable'">
                     <div v-for="coin in stats.top_valuable_coins" :key="coin.id" 
-                         class="flex items-center gap-3 py-3 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
+                         class="flex items-center gap-3 py-4 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
                          @click="router.push(`/coin/${coin.id}`)">
                       <div class="avatar">
                         <div class="mask mask-squircle w-12 h-12 overflow-hidden">
@@ -167,7 +167,7 @@
 
                 <div class="divide-y divide-base-200" v-if="activeTab === 'rare'">
                     <div v-for="coin in stats.rarest_coins" :key="coin.id" 
-                         class="flex items-center gap-3 py-3 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
+                         class="flex items-center gap-3 py-4 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
                          @click="router.push(`/coin/${coin.id}`)">
                          <div class="flex-1 min-w-0">
                             <div class="font-bold truncate">{{ coin.name }}</div>
@@ -644,11 +644,17 @@ const valueChartData = computed(() => {
   const dist = stats.value.value_distribution
   if (!dist) return null
   
-  // Ensure order
   // Ensure order & Format Value Ranges with €
   const rawLabels = ["0-10", "10-50", "50-100", "100-500", "500+"]
   const data = rawLabels.map(l => dist[l] || 0)
-  const labels = rawLabels.map(l => l.includes('+') ? `${l} €` : `${l} €`.replace('-', ' € - '))
+  const labels = rawLabels.map(l => {
+    if (l.includes('+')) {
+      return `${l.replace('+', '')}€+`
+    } else {
+      const [min, max] = l.split('-')
+      return `${min}€ - ${max}€`
+    }
+  })
 
   return {
     labels,
