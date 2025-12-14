@@ -109,6 +109,21 @@
             </div>
         </div>
 
+        <!-- Estimated Value - Highlighted -->
+        <div v-if="coin.min_value > 0 || coin.max_value > 0" class="alert alert-success shadow-lg mb-6">
+            <div class="flex flex-col items-center w-full gap-2">
+                <div class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span class="text-sm font-semibold uppercase tracking-wide">{{ $t('details.labels.est_value') }}</span>
+                </div>
+                <div class="text-3xl font-bold">
+                    {{ coin.min_value }}€ - {{ coin.max_value }}€
+                </div>
+            </div>
+        </div>
+
         <div class="divider">{{ $t('details.sections.details') }}</div>
 
         <div class="grid grid-cols-2 gap-4">
@@ -147,10 +162,6 @@
             <div v-if="coin.mintage && coin.mintage > 0">
                 <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.mintage') }}</span>
                 <span>{{ formatMintage(coin.mintage) }}</span>
-            </div>
-            <div v-if="coin.min_value > 0 || coin.max_value > 0">
-                <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.est_value') }}</span>
-                <span>{{ coin.min_value }} - {{ coin.max_value }}</span>
             </div>
              <div>
                 <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.added_on') }}</span>
