@@ -11,10 +11,12 @@ import (
 	"github.com/antonioparicio/numismaticapp/internal/infrastructure"
 	"github.com/antonioparicio/numismaticapp/internal/infrastructure/gemini"
 	"github.com/antonioparicio/numismaticapp/internal/infrastructure/image"
+	infrastructure_migrations "github.com/antonioparicio/numismaticapp/internal/infrastructure/migrations"
 	"github.com/antonioparicio/numismaticapp/internal/infrastructure/numista"
 	"github.com/antonioparicio/numismaticapp/internal/infrastructure/storage"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
 )
 
 func main() {
@@ -74,7 +76,15 @@ func main() {
 	defer dbPool.Close()
 
 	// Initialize Infrastructure
-	// Initialize Infrastructure
+	// Run Migrations
+	// Convert pgxpool to database/sql for migration
+	stdlibDB := stdlib.OpenDBFromPool(dbPool)
+	migrationService := infrastructure_migrations.NewMigrationService(stdlibDB)
+	if err := migrationService.RunMigrations(); err != nil {
+		slog.Error("Failed to run migrations", "error", err)
+		os.Exit(1)
+	}
+
 	coinRepo := infrastructure.NewPostgresCoinRepository(dbPool)
 	groupRepo := infrastructure.NewPostgresGroupRepository(dbPool)
 

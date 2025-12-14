@@ -84,14 +84,15 @@ La forma más rápida de empezar es utilizando la imagen pre-construida desde Do
         volumes:
           - postgres_data:/var/lib/postgresql/data
         healthcheck:
-          test: pg_isready -U postgres
-          interval: 5s
+          test: ["CMD-SHELL", "pg_isready -U postgres"]
+          interval: 10s
           timeout: 5s
           retries: 5
+          start_period: 30s
 
       rembg:
         image: danielgatis/rembg:latest
-        command: s -p 5000
+        command: s --host 0.0.0.0 --port 5000
         ports:
           - "5000:5000"
 

@@ -1,0 +1,1 @@
+ALTER TABLE coins ADD COLUMN IF NOT EXISTS numista_details JSONB;
