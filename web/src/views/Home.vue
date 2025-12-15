@@ -456,6 +456,36 @@ const barOptions = computed(() => ({
   },
   plugins: {
     legend: { display: false }
+  },
+  onClick: (event, elements, chart) => {
+    if (elements.length > 0) {
+      const index = elements[0].index
+      const label = chart.data.labels[index]
+      
+      // Detect chart type by checking dataset label or data structure
+      const datasetLabel = chart.data.datasets[0]?.label || ''
+      
+      // Timeline chart - labels are decade numbers like "1990", "2000"
+      if (label && !isNaN(parseInt(label)) && parseInt(label) >= 1800) {
+        const decade = parseInt(label)
+        router.push({ path: '/list', query: { min_year: decade, max_year: decade + 9 } })
+      }
+      // Value distribution - labels contain "€"
+      else if (label && label.includes('€')) {
+        const cleanLabel = label.replace(/€/g, '').replace(/\s/g, '').trim()
+        if (cleanLabel.includes('+')) {
+          const min = cleanLabel.replace('+', '')
+          router.push({ path: '/list', query: { min_price: min } })
+        } else if (cleanLabel.includes('-')) {
+          const [min, max] = cleanLabel.split('-')
+          router.push({ path: '/list', query: { min_price: min, max_price: max } })
+        }
+      }
+      // Grade distribution - labels are grade codes (FDC, SC, EBC, etc.)
+      else if (label && ['FDC', 'SC', 'EBC', 'MBC', 'BC', 'RC', 'MC'].includes(label)) {
+        router.push({ path: '/list', query: { grade: label } })
+      }
+    }
   }
 }))
 const chartOptions = computed(() => ({

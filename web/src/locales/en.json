@@ -67,7 +67,8 @@
             "country": "Country",
             "min_price": "Min €",
             "max_price": "Max €",
-            "all_grades": "All grades"
+            "all_grades": "All grades",
+            "all_materials": "All materials"
         },
         "sort": {
             "label": "Sort by",

@@ -20,9 +20,22 @@
           </button>
         </div>
         
-        <!-- Search -->
+        <!-- Search (always visible) -->
         <input type="text" v-model="filters.query" :placeholder="$t('list.search_placeholder')" class="input input-bordered w-full md:w-48 input-sm" :class="{ 'input-primary': filters.query }" />
         
+        <!-- Filter Toggle Button (all screens) -->
+        <button @click="showMobileFilters = !showMobileFilters" class="btn btn-sm btn-outline gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
+          </svg>
+          Filtros
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 transition-transform" :class="{ 'rotate-180': showMobileFilters }">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+          </svg>
+        </button>
+        
+        <!-- Advanced Filters (collapsible on all screens) -->
+        <div class="w-full md:w-auto contents" v-show="showMobileFilters">
         <!-- Group Filter -->
         <select v-model="filters.group_id" class="select select-bordered select-sm w-full md:w-40" :class="{ 'select-primary': filters.group_id }">
           <option value="">{{ $t('list.all_groups') }}</option>
@@ -44,6 +57,12 @@
           <option value="RC">RC</option>
         </select>
         
+        <!-- Material Filter -->
+        <select v-model="filters.material" class="select select-bordered select-sm w-36" :class="{ 'select-primary': filters.material }">
+          <option value="">{{ $t('list.filters.all_materials') }}</option>
+          <option v-for="material in uniqueMaterials" :key="material" :value="material">{{ material }}</option>
+        </select>
+        
         <input type="number" v-model="filters.min_price" :placeholder="$t('list.filters.min_price')" class="input input-bordered input-sm w-20" :class="{ 'input-primary': filters.min_price }" />
         <input type="number" v-model="filters.max_price" :placeholder="$t('list.filters.max_price')" class="input input-bordered input-sm w-20" :class="{ 'input-primary': filters.max_price }" />
 
@@ -57,6 +76,7 @@
           <option value="country">{{ $t('list.sort.country') }}</option>
           <option value="name">{{ $t('list.sort.name') }}</option>
         </select>
+        </div>
         
         <button class="btn btn-sm btn-square" @click="toggleOrder" :title="filters.order === 'asc' ? 'Ascending' : 'Descending'">
             <svg v-if="filters.order === 'asc'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
@@ -148,22 +168,62 @@
 
     <!-- Table View -->
     <div v-else class="overflow-x-auto bg-base-100 rounded-box shadow-xl">
-      <table class="table table-zebra w-full">
-        <thead>
-          <tr>
-            <th>{{ $t('list.table.images') }}</th>
-            <th>{{ $t('list.table.name') }}</th>
-            <th class="hidden lg:table-cell">{{ $t('list.table.mint') }}</th>
-            <th class="hidden lg:table-cell">{{ $t('list.table.mintage') }}</th>
-            <th class="hidden md:table-cell">{{ $t('list.table.country') }}</th>
-            <th class="hidden md:table-cell">{{ $t('list.table.value') }}</th>
-            <th class="hidden lg:table-cell">{{ $t('list.table.year') }}</th>
-            <th class="hidden lg:table-cell">{{ $t('list.table.currency') }}</th>
-            <th class="hidden lg:table-cell">{{ $t('list.table.grade') }}</th>
-            <th class="hidden lg:table-cell">{{ $t('list.table.material') }}</th>
-            <th>{{ $t('list.table.actions') }}</th>
-          </tr>
-        </thead>
+        <table class="table table-zebra">
+          <thead>
+            <tr>
+              <th>{{ $t('list.table.images') }}</th>
+              <th class="cursor-pointer hover:bg-base-200" @click="toggleSort('name')">
+                <div class="flex items-center gap-1">
+                  {{ $t('list.table.name') }}
+                  <svg v-if="filters.sort_by === 'name' && filters.order === 'asc'" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                  </svg>
+                  <svg v-else-if="filters.sort_by === 'name' && filters.order === 'desc'" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </th>
+              <th class="hidden lg:table-cell">{{ $t('list.table.mint') }}</th>
+              <th class="hidden lg:table-cell">{{ $t('list.table.mintage') }}</th>
+              <th class="cursor-pointer hover:bg-base-200 hidden md:table-cell" @click="toggleSort('country')">
+                <div class="flex items-center gap-1">
+                  {{ $t('list.table.country') }}
+                  <svg v-if="filters.sort_by === 'country' && filters.order === 'asc'" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                  </svg>
+                  <svg v-else-if="filters.sort_by === 'country' && filters.order === 'desc'" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </th>
+              <th class="cursor-pointer hover:bg-base-200 hidden md:table-cell" @click="toggleSort('max_value')">
+                <div class="flex items-center gap-1">
+                  {{ $t('list.table.value') }}
+                  <svg v-if="filters.sort_by === 'max_value' && filters.order === 'asc'" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                  </svg>
+                  <svg v-else-if="filters.sort_by === 'max_value' && filters.order === 'desc'" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </th>
+              <th class="cursor-pointer hover:bg-base-200 hidden lg:table-cell" @click="toggleSort('year')">
+                <div class="flex items-center gap-1">
+                  {{ $t('list.table.year') }}
+                  <svg v-if="filters.sort_by === 'year' && filters.order === 'asc'" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                  </svg>
+                  <svg v-else-if="filters.sort_by === 'year' && filters.order === 'desc'" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </th>
+              <th class="hidden lg:table-cell">{{ $t('list.table.currency') }}</th>
+              <th class="hidden lg:table-cell">{{ $t('list.table.grade') }}</th>
+              <th class="hidden lg:table-cell">{{ $t('list.table.material') }}</th>
+              <th>{{ $t('list.table.actions') }}</th>
+            </tr>
+          </thead>
         <tbody>
           <tr v-for="coin in coins" :key="coin.id" class="hover cursor-pointer" @click="goToDetail(coin.id)">
             <td>
@@ -191,14 +251,21 @@
             <td class="hidden lg:table-cell">{{ coin.mint || '-' }}</td>
             <td class="hidden lg:table-cell">{{ formatMintage(coin.mintage) }}</td>
             <td class="font-semibold hidden md:table-cell">{{ coin.country }}</td>
-            <td class="font-bold text-success hidden md:table-cell">{{ coin.min_value }} - {{ coin.max_value }} €</td>
+            <td class="hidden md:table-cell whitespace-nowrap font-bold text-success">
+              <span v-if="coin.min_value > 0 || coin.max_value > 0">
+                <span v-if="coin.min_value === 0 && coin.max_value > 0">&lt; {{ coin.max_value }}€</span>
+                <span v-else-if="coin.min_value > 0 && coin.max_value > 0">{{ coin.min_value }} - {{ coin.max_value }}€</span>
+                <span v-else-if="coin.max_value > 0">{{ coin.max_value }}€</span>
+              </span>
+            </td>
             <td class="hidden lg:table-cell">{{ (coin.year && coin.year !== 0) ? coin.year : '-' }}</td>
             <td class="hidden lg:table-cell">{{ coin.currency }}</td>
             <td class="hidden lg:table-cell"><div class="badge badge-ghost" v-if="coin.grade">{{ coin.grade }}</div><span v-else>-</span></td>
             <td class="hidden lg:table-cell">
-              <div class="tooltip" :data-tip="coin.material">
-                <span class="truncate block max-w-[200px]">{{ coin.material }}</span>
+              <div class="tooltip" v-if="coin.material" :data-tip="coin.material">
+                <div class="badge badge-ghost truncate max-w-[120px]">{{ coin.material?.split('(')[0].trim() || coin.material }}</div>
               </div>
+              <span v-else>-</span>
             </td>
             <td>
                 <div class="flex gap-1">
@@ -253,6 +320,15 @@ const coins = ref([])
 const groups = ref([])
 const loading = ref(true)
 const router = useRouter()
+const showMobileFilters = ref(false)
+
+// Detect mobile viewport
+const isMobile = computed(() => {
+  if (typeof window !== 'undefined') {
+    return window.innerWidth < 768
+  }
+  return false
+})
 
 // View Mode with localStorage persistence
 const viewMode = ref(localStorage.getItem('coinListViewMode') || 'table')
@@ -287,8 +363,20 @@ const filters = ref({
     min_year: cleanFilterValue(route.query.min_year) || '',
     max_year: cleanFilterValue(route.query.max_year) || '',
     sort_by: route.query.sort_by || '',
-    order: route.query.order || 'desc'
+    order: route.query.order || 'asc'
 })
+
+// Toggle sort function
+const toggleSort = (column) => {
+  if (filters.value.sort_by === column) {
+    // Toggle order if same column
+    filters.value.order = filters.value.order === 'asc' ? 'desc' : 'asc'
+  } else {
+    // New column, default to asc
+    filters.value.sort_by = column
+    filters.value.order = 'asc'
+  }
+}
 
 // Computed property to check if any filters are active
 const hasActiveFilters = computed(() => {
@@ -348,29 +436,42 @@ const fetchGroups = async () => {
     }
 }
 
+// Compute unique materials (text before parenthesis)
+const uniqueMaterials = computed(() => {
+  const materials = new Set()
+  coins.value.forEach(coin => {
+    if (coin.material) {
+      // Extract text before parenthesis
+      const cleanMaterial = coin.material.split('(')[0].trim()
+      if (cleanMaterial) materials.add(cleanMaterial)
+    }
+  })
+  return Array.from(materials).sort()
+})
+
+// Fetch coins
 const fetchCoins = async () => {
     loading.value = true
     try {
-        const params = new URLSearchParams()
-        params.append('limit', 50)
-        
-        if (filters.value.query) params.append('q', filters.value.query)
-        if (filters.value.group_id) params.append('group_id', filters.value.group_id)
-        if (filters.value.year) params.append('year', filters.value.year)
-        if (filters.value.country) params.append('country', filters.value.country)
-        if (filters.value.min_price) params.append('min_price', filters.value.min_price)
-        if (filters.value.max_price) params.append('max_price', filters.value.max_price)
-        if (filters.value.grade) params.append('grade', filters.value.grade)
-        if (filters.value.material) params.append('material', filters.value.material)
-        if (filters.value.min_year) params.append('min_year', filters.value.min_year)
-        if (filters.value.max_year) params.append('max_year', filters.value.max_year)
-        if (filters.value.sort_by) params.append('sort_by', filters.value.sort_by)
-        if (filters.value.order) params.append('order', filters.value.order)
+        const params = {}
+        if (filters.value.query) params.q = filters.value.query
+        if (filters.value.group_id) params.group_id = filters.value.group_id
+        if (filters.value.year) params.year = filters.value.year
+        if (filters.value.country) params.country = filters.value.country
+        if (filters.value.min_price) params.min_price = filters.value.min_price
+        if (filters.value.max_price) params.max_price = filters.value.max_price
+        if (filters.value.grade) params.grade = filters.value.grade
+        if (filters.value.material) params.material = filters.value.material
+        if (filters.value.min_year) params.min_year = filters.value.min_year
+        if (filters.value.max_year) params.max_year = filters.value.max_year
+        if (filters.value.sort_by) params.sort_by = filters.value.sort_by
+        if (filters.value.order) params.sort_order = filters.value.order // Changed from 'order' to 'sort_order'
 
-        const res = await axios.get(`${API_URL}/coins?${params.toString()}`)
-        coins.value = res.data
+        const res = await axios.get(`${API_URL}/coins`, { params })
+        coins.value = res.data || []
     } catch (e) {
-        console.error(e)
+        console.error("Failed to fetch coins", e)
+        coins.value = [] // Ensure coins is an empty array on error
     } finally {
         loading.value = false
     }

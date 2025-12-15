@@ -68,7 +68,8 @@
             "min_price": "Min €",
             "max_price": "Max €",
             "all_groups": "Todos los grupos",
-            "all_grades": "Todos los estados"
+            "all_grades": "Todos los estados",
+            "all_materials": "Todos los materiales"
         },
         "sort": {
             "label": "Ordenar por",
