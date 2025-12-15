@@ -610,7 +610,7 @@ const doughnutOptions = {
 
 onMounted(async () => {
     try {
-        const response = await axios.get(`${API_URL}/dashboard/stats`)
+        const response = await axios.get(`${API_URL}/dashboard`)
         stats.value = response.data
     } catch (error) {
         console.error('Error fetching stats:', error)
