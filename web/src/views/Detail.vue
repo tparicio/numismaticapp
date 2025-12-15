@@ -1,5 +1,9 @@
 <template>
-  <div v-if="coin" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+  <div v-if="loading" class="flex justify-center items-center min-h-screen">
+    <span class="loading loading-spinner loading-lg text-primary"></span>
+  </div>
+  
+  <div v-else-if="coin" class="max-w-6xl mx-auto space-y-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
     <!-- Images Section -->
     <div class="card bg-base-100 shadow-xl">
       <div class="card-body">
@@ -483,6 +487,7 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const coin = ref(null)
+const loading = ref(true)
 const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
 const STORAGE_URL = ''
 
@@ -664,12 +669,15 @@ const getGradeDescription = (code) => {
 
 
 onMounted(async () => {
-  try {
-    const res = await axios.get(`${API_URL}/coins/${route.params.id}`)
-    coin.value = res.data
-  } catch (e) {
-    console.error(e)
-  }
+    try {
+        const response = await axios.get(`${API_URL}/coins/${route.params.id}`)
+        coin.value = response.data
+    } catch (error) {
+        console.error('Error fetching coin:', error)
+        router.push('/list')
+    } finally {
+        loading.value = false
+    }
 })
 // Numista Manual Selection
 const numistaModalOpen = ref(false)

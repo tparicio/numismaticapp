@@ -1,5 +1,9 @@
 <template>
-  <div class="space-y-8">
+  <div v-if="loading" class="flex justify-center items-center min-h-screen">
+    <span class="loading loading-spinner loading-lg text-primary"></span>
+  </div>
+  
+  <div v-else class="space-y-8">
     <!-- Header -->
     <!-- Header -->
     <div class="flex flex-col md:flex-row justify-between items-center gap-4">
@@ -419,6 +423,7 @@ const { t } = useI18n()
 
 const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
 const activeTab = ref('recent')
+const loading = ref(true)
 
 const stats = ref({
   total_coins: 0,
@@ -604,12 +609,14 @@ const doughnutOptions = {
 }
 
 onMounted(async () => {
-  try {
-    const res = await axios.get(`${API_URL}/dashboard`)
-    stats.value = res.data
-  } catch (e) {
-    console.error("Failed to load dashboard stats", e)
-  }
+    try {
+        const response = await axios.get(`${API_URL}/dashboard/stats`)
+        stats.value = response.data
+    } catch (error) {
+        console.error('Error fetching stats:', error)
+    } finally {
+        loading.value = false
+    }
 })
 
 const formatCurrency = (val) => {
