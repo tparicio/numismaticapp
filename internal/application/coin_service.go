@@ -33,6 +33,7 @@ type NumistaService interface {
 type StorageService interface {
 	SaveFile(coinID uuid.UUID, filename string, content io.Reader) (string, error)
 	EnsureDir(coinID uuid.UUID) (string, error)
+	DeleteCoinDirectory(coinID uuid.UUID) error
 }
 
 type CoinService struct {
@@ -853,6 +854,9 @@ func (s *CoinService) GetDashboardStats(ctx context.Context) (*domain.DashboardS
 
 		for i := range allCoins {
 			c := allCoins[i]
+			// Copy to stats.AllCoins
+			stats.AllCoins[i] = *c
+
 			// Century
 			if c.Year.Int() > 0 {
 				century := (c.Year.Int() / 100) + 1
@@ -1122,8 +1126,19 @@ func (s *CoinService) UpdateCoin(ctx context.Context, id uuid.UUID, params Updat
 }
 
 func (s *CoinService) DeleteCoin(ctx context.Context, id uuid.UUID) error {
-	// Optional: Delete images from storage (omitted for MVP safety)
-	return s.repo.Delete(ctx, id)
+	// Delete from database first
+	if err := s.repo.Delete(ctx, id); err != nil {
+		return err
+	}
+
+	// Then delete files from storage
+	if err := s.storage.DeleteCoinDirectory(id); err != nil {
+		// Log error but don't fail the deletion
+		// The coin is already deleted from DB
+		slog.Error("failed to delete coin files", "coin_id", id, "error", err)
+	}
+
+	return nil
 }
 
 func (s *CoinService) GetGeminiModels(ctx context.Context) ([]domain.GeminiModelInfo, error) {

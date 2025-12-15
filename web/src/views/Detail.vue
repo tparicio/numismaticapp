@@ -35,9 +35,9 @@
                         </svg>
                     </div>
                     <img :src="getCurrentImageUrl('front')" 
-                         class="shadow-lg max-w-[42vw] sm:max-w-xs lg:hover:scale-105 transition-transform duration-300" 
+                         class="shadow-lg lg:hover:scale-105 transition-transform duration-300 object-contain" 
                          :class="{ 'rounded-full': activeImageSource !== 'original', 'rounded-xl': activeImageSource === 'original' }"
-                         :style="{ transform: `rotate(${rotations.front}deg)` }"
+                         :style="{ transform: `rotate(${rotations.front}deg)`, width: '300px', height: '300px' }"
                          alt="Front" @error="handleImageError" />
                 </figure>
                 <button @click.stop="openRotationEditor('front')" class="absolute top-2 right-10 btn btn-circle btn-sm btn-neutral bg-opacity-70 border-none hover:bg-opacity-100 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity z-20" title="Corregir Rotación">
@@ -69,9 +69,9 @@
                         </svg>
                     </div>
                     <img :src="getCurrentImageUrl('back')" 
-                         class="shadow-lg max-w-[42vw] sm:max-w-xs lg:hover:scale-105 transition-transform duration-300" 
+                         class="shadow-lg lg:hover:scale-105 transition-transform duration-300 object-contain" 
                          :class="{ 'rounded-full': activeImageSource !== 'original', 'rounded-xl': activeImageSource === 'original' }"
-                         :style="{ transform: `rotate(${rotations.back}deg)` }"
+                         :style="{ transform: `rotate(${rotations.back}deg)`, width: '300px', height: '300px' }"
                          alt="Back" @error="handleImageError" />
                 </figure>
                 <button @click.stop="openRotationEditor('back')" class="absolute top-2 right-10 btn btn-circle btn-sm btn-neutral bg-opacity-70 border-none hover:bg-opacity-100 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity z-20" title="Corregir Rotación">
@@ -129,7 +129,9 @@
         <div class="grid grid-cols-2 gap-4">
             <div>
                 <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.material') }}</span>
-                <span>{{ coin.material }}</span>
+                <div class="tooltip tooltip-right" :data-tip="coin.material">
+                    <span class="block break-words">{{ coin.material }}</span>
+                </div>
             </div>
             <div>
                 <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.km') }}</span>

@@ -26,6 +26,24 @@ func (s *LocalFileStorage) EnsureDir(coinID uuid.UUID) (string, error) {
 	return path, nil
 }
 
+// DeleteCoinDirectory removes the entire directory for a coin
+func (s *LocalFileStorage) DeleteCoinDirectory(coinID uuid.UUID) error {
+	dir := filepath.Join(s.BaseDir, "coins", coinID.String())
+
+	// Check if directory exists
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		// Directory doesn't exist, nothing to delete
+		return nil
+	}
+
+	// Remove the entire coin directory
+	if err := os.RemoveAll(dir); err != nil {
+		return fmt.Errorf("failed to delete coin directory: %w", err)
+	}
+
+	return nil
+}
+
 func (s *LocalFileStorage) SaveFile(coinID uuid.UUID, filename string, content io.Reader) (string, error) {
 	dir, err := s.EnsureDir(coinID)
 	if err != nil {

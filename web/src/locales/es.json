@@ -66,7 +66,9 @@
             "year": "Año",
             "country": "País",
             "min_price": "Min €",
-            "max_price": "Max €"
+            "max_price": "Max €",
+            "all_groups": "Todos los grupos",
+            "all_grades": "Todos los estados"
         },
         "sort": {
             "label": "Ordenar por",

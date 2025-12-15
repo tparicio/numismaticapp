@@ -75,7 +75,7 @@
         <div class="card-body">
           <h2 class="card-title">{{ $t('dashboard.charts.value_dist') }}</h2>
           <div class="h-64 relative">
-            <Bar v-if="valueChartData" :data="valueChartData" :options="valueChartOptions" />
+            <Bar v-if="valueChartData" :data="valueChartData" :options="barOptions" />
           </div>
         </div>
       </div>
@@ -85,7 +85,7 @@
         <div class="card-body">
           <h2 class="card-title">{{ $t('dashboard.charts.grades') }}</h2>
           <div class="h-64 relative">
-            <Bar v-if="gradeChartData" :data="gradeChartData" :options="gradeChartOptions" />
+            <Bar v-if="gradeChartData" :data="gradeChartData" :options="barOptions" />
           </div>
         </div>
       </div>
@@ -186,7 +186,7 @@
             <div class="card-body">
                 <h2 class="card-title">{{ $t('dashboard.charts.timeline') }}</h2>
                 <div class="h-64 relative">
-                    <Bar v-if="timelineChartData" :data="timelineChartData" :options="chartOptions" />
+                    <Bar v-if="timelineChartData" :data="timelineChartData" :options="barOptions" />
                 </div>
                 <div v-if="stats.oldest_coin" class="alert alert-info mt-4">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -210,7 +210,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     <div>
                         <h3 class="font-bold text-success-content">{{ $t('dashboard.stats.oldest_gem') || 'Joya Antigua (Calidad Alta)' }}</h3>
-                        <div class="text-xs text-base-content/70">{{ stats.oldest_high_grade_coin.year }}: {{ stats.oldest_high_grade_coin.name }} ({{ stats.oldest_high_grade_coin.grade }})</div>
+                        <div class="text-sm text-success-content opacity-90">{{ stats.oldest_high_grade_coin.year }}: {{ stats.oldest_high_grade_coin.name }} ({{ stats.oldest_high_grade_coin.grade }})</div>
                     </div>
                 </div>
             </div>
@@ -319,16 +319,16 @@
 
         <!-- Random Coin Feature -->
         <div v-if="stats.random_coin" class="card lg:card-side bg-base-100 shadow-xl overflow-hidden lg:col-span-3">
-            <figure class="lg:w-auto lg:shrink-0 bg-base-200 p-6 flex flex-col gap-4 justify-center items-center">
-                <div class="flex gap-4 flex-col sm:flex-row">
+            <figure class="lg:w-1/3 bg-base-200 flex flex-col sm:flex-row lg:flex-col items-center justify-center gap-4 p-8">
+                <div class="flex flex-col sm:flex-row lg:flex-col gap-4 items-center">
                     <div class="avatar cursor-pointer" @click="router.push(`/coin/${stats.random_coin.id}`)">
-                        <div class="w-24 sm:w-32 rounded-xl shadow-xl hover:scale-105 transition-transform duration-300">
-                            <img :src="getThumbnail(stats.random_coin, 'front')" class="object-contain" />
+                        <div class="mask mask-circle w-40 h-40 flex items-center justify-center">
+                            <img :src="getThumbnail(stats.random_coin, 'front')" class="object-contain w-full h-full" />
                         </div>
                     </div>
                     <div class="avatar cursor-pointer" @click="router.push(`/coin/${stats.random_coin.id}`)">
-                        <div class="w-24 sm:w-32 rounded-xl shadow-xl hover:scale-105 transition-transform duration-300">
-                            <img :src="getThumbnail(stats.random_coin, 'back')" class="object-contain" />
+                        <div class="mask mask-circle w-40 h-40 flex items-center justify-center">
+                            <img :src="getThumbnail(stats.random_coin, 'back')" class="object-contain w-full h-full" />
                         </div>
                     </div>
                 </div>
@@ -443,6 +443,21 @@ const stats = ref({
   all_coins: []
 })
 
+const barOptions = computed(() => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  scales: {
+    y: {
+      beginAtZero: true,
+      ticks: {
+        precision: 0  // Force integer values only
+      }
+    }
+  },
+  plugins: {
+    legend: { display: false }
+  }
+}))
 const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
@@ -610,7 +625,23 @@ const scatterOptions = computed(() => ({
             type: 'linear',
             title: { display: true, text: t('dashboard.charts.labels.grade') },
             min: 0,
-            max: 75
+            max: 75,
+            ticks: {
+                stepSize: 10,
+                callback: function(value) {
+                    // Map numeric values to grade labels
+                    const gradeMap = {
+                        70: 'FDC',
+                        60: 'SC',
+                        50: 'EBC',
+                        40: 'MBC',
+                        30: 'BC',
+                        20: 'RC',
+                        10: 'MC'
+                    }
+                    return gradeMap[value] || ''
+                }
+            }
         }
     },
     plugins: {
@@ -618,8 +649,17 @@ const scatterOptions = computed(() => ({
         tooltip: {
             callbacks: {
                 label: (context) => {
-                    const point = context.raw
-                    return `${point.name} (${point.grade}): ${point.x}`
+                    const gradeMap = {
+                        70: 'FDC',
+                        60: 'SC',
+                        50: 'EBC',
+                        40: 'MBC',
+                        30: 'BC',
+                        20: 'RC',
+                        10: 'MC'
+                    }
+                    const grade = gradeMap[context.parsed.y] || context.parsed.y
+                    return `${context.raw.name} (${context.parsed.x}) - ${grade}`
                 }
             }
         }
@@ -644,9 +684,46 @@ const valueChartData = computed(() => {
   const dist = stats.value.value_distribution
   if (!dist) return null
   
-  // Ensure order & Format Value Ranges with €
-  const rawLabels = ["0-10", "10-50", "50-100", "100-500", "500+"]
-  const data = rawLabels.map(l => dist[l] || 0)
+  // Get all coin values to determine dynamic ranges
+  const allValues = stats.value.all_coins?.map(c => c.max_value).filter(v => v > 0) || []
+  if (allValues.length === 0) return null
+  
+  const maxValue = Math.max(...allValues)
+  
+  // Create dynamic ranges based on max value
+  let rawLabels = []
+  if (maxValue <= 10) {
+    rawLabels = ['0-2', '2-5', '5-10']
+  } else if (maxValue <= 50) {
+    rawLabels = ['0-10', '10-20', '20-50']
+  } else if (maxValue <= 100) {
+    rawLabels = ['0-10', '10-50', '50-100']
+  } else if (maxValue <= 500) {
+    rawLabels = ['0-50', '50-100', '100-500']
+  } else {
+    rawLabels = ['0-100', '100-500', '500+']
+  }
+  
+  // Count coins in each range
+  const distribution = {}
+  rawLabels.forEach(r => distribution[r] = 0)
+  
+  allValues.forEach(value => {
+    for (const range of rawLabels) {
+      const parts = range.split('-')
+      const min = parseFloat(parts[0])
+      const max = parts[1] === '+' ? Infinity : parseFloat(parts[1])
+      if (value >= min && value < max) {
+        distribution[range]++
+        break
+      } else if (range.endsWith('+') && value >= min) {
+        distribution[range]++
+        break
+      }
+    }
+  })
+  
+  // Format labels with €
   const labels = rawLabels.map(l => {
     if (l.includes('+')) {
       return `${l.replace('+', '')}€+`
@@ -655,12 +732,14 @@ const valueChartData = computed(() => {
       return `${min}€ - ${max}€`
     }
   })
+  
+  const data = rawLabels.map(l => distribution[l] || 0)
 
   return {
     labels,
     datasets: [{
       label: t('dashboard.charts.labels.coins'),
-      backgroundColor: '#7c3aed', // Violeta (Money)
+      backgroundColor: '#7c3aed',
       data
     }]
   }
@@ -744,15 +823,28 @@ const timelineChartData = computed(() => {
     const dist = stats.value.decade_distribution
     if (!dist) return null
 
-    // Sort decades
-    const labels = Object.keys(dist).sort()
-    const data = labels.map(l => dist[l])
+    // Sort decades and find range
+    const existingDecades = Object.keys(dist).map(Number).sort((a, b) => a - b)
+    if (existingDecades.length === 0) return null
+    
+    const minDecade = existingDecades[0]
+    const maxDecade = existingDecades[existingDecades.length - 1]
+    
+    // Create all decades in range
+    const allDecades = []
+    for (let decade = minDecade; decade <= maxDecade; decade += 10) {
+        allDecades.push(decade)
+    }
+    
+    // Map data, filling 0 for missing decades
+    const labels = allDecades.map(d => d.toString())
+    const data = allDecades.map(d => dist[d.toString()] || 0)
 
     return {
         labels,
         datasets: [{
-            label: t('dashboard.charts.labels.coins_per_decade'),
-            backgroundColor: '#4F46E5', // Indigo
+            label: t('dashboard.charts.labels.coins'),
+            backgroundColor: '#3b82f6',
             data
         }]
     }
@@ -760,14 +852,21 @@ const timelineChartData = computed(() => {
 
 const qualityChartData = computed(() => {
     const coins = stats.value.all_coins
-    if (!coins || coins.length === 0) return null
-
-
+    
+    // Debug logging
+    console.log('Quality chart - all_coins:', coins)
+    console.log('Quality chart - all_coins length:', coins ? coins.length : 0)
+    
+    if (!coins || coins.length === 0) {
+        console.log('Quality chart - no coins data')
+        return null
+    }
 
     const data = coins
         .filter(c => c.year > 0 && c.grade)
         .map(c => {
             const gradeValue = getGradeValue(c.grade)
+            console.log(`Coin ${c.name}: grade=${c.grade}, gradeValue=${gradeValue}, year=${c.year}`)
             return {
                 x: c.year,
                 y: gradeValue || 0,
@@ -777,6 +876,14 @@ const qualityChartData = computed(() => {
             }
         })
         .filter(point => point.y > 0)
+    
+    console.log('Quality chart - final data points:', data.length)
+    console.log('Quality chart - data:', data)
+    
+    if (data.length === 0) {
+        console.log('Quality chart - no valid data points after filtering')
+        return null
+    }
 
     return {
         datasets: [{

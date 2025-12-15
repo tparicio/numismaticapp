@@ -66,7 +66,8 @@
             "year": "Year",
             "country": "Country",
             "min_price": "Min €",
-            "max_price": "Max €"
+            "max_price": "Max €",
+            "all_grades": "All grades"
         },
         "sort": {
             "label": "Sort by",

@@ -4,20 +4,48 @@
       <h2 class="text-3xl font-bold">{{ $t('list.title') }}</h2>
       
       <div class="flex flex-wrap gap-2 w-full md:w-auto items-center">
+        <!-- Active Filters Indicator -->
+        <div v-if="hasActiveFilters" class="flex items-center gap-2">
+          <div class="badge badge-primary gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
+            </svg>
+            Filtros activos
+          </div>
+          <button @click="clearFilters" class="btn btn-ghost btn-xs gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Limpiar
+          </button>
+        </div>
+        
         <!-- Search -->
-        <input type="text" v-model="filters.query" :placeholder="$t('list.search_placeholder')" class="input input-bordered w-full md:w-48 input-sm" />
+        <input type="text" v-model="filters.query" :placeholder="$t('list.search_placeholder')" class="input input-bordered w-full md:w-48 input-sm" :class="{ 'input-primary': filters.query }" />
         
         <!-- Group Filter -->
-        <select v-model="filters.group_id" class="select select-bordered select-sm w-full md:w-40">
+        <select v-model="filters.group_id" class="select select-bordered select-sm w-full md:w-40" :class="{ 'select-primary': filters.group_id }">
           <option value="">{{ $t('list.all_groups') }}</option>
           <option v-for="group in groups" :key="group.id" :value="group.id">{{ group.name }}</option>
         </select>
 
         <!-- Advanced Filters (Simple for now) -->
-        <input type="number" v-model="filters.year" :placeholder="$t('list.filters.year')" class="input input-bordered input-sm w-24" />
-        <input type="text" v-model="filters.country" :placeholder="$t('list.filters.country')" class="input input-bordered input-sm w-32" />
-        <input type="number" v-model="filters.min_price" :placeholder="$t('list.filters.min_price')" class="input input-bordered input-sm w-20" />
-        <input type="number" v-model="filters.max_price" :placeholder="$t('list.filters.max_price')" class="input input-bordered input-sm w-20" />
+        <input type="number" v-model="filters.year" :placeholder="$t('list.filters.year')" class="input input-bordered input-sm w-24" :class="{ 'input-primary': filters.year }" />
+        <input type="text" v-model="filters.country" :placeholder="$t('list.filters.country')" class="input input-bordered input-sm w-32" :class="{ 'input-primary': filters.country }" />
+        
+        <!-- Grade Filter -->
+        <select v-model="filters.grade" class="select select-bordered select-sm w-32" :class="{ 'select-primary': filters.grade }">
+          <option value="">{{ $t('list.filters.all_grades') }}</option>
+          <option value="FDC">FDC</option>
+          <option value="SC">SC</option>
+          <option value="EBC">EBC</option>
+          <option value="MBC">MBC</option>
+          <option value="BC">BC</option>
+          <option value="RC">RC</option>
+        </select>
+        
+        <input type="number" v-model="filters.min_price" :placeholder="$t('list.filters.min_price')" class="input input-bordered input-sm w-20" :class="{ 'input-primary': filters.min_price }" />
+        <input type="number" v-model="filters.max_price" :placeholder="$t('list.filters.max_price')" class="input input-bordered input-sm w-20" :class="{ 'input-primary': filters.max_price }" />
 
         <!-- Sort -->
         <select v-model="filters.sort_by" class="select select-bordered select-sm w-full md:w-32">
@@ -91,13 +119,17 @@
             </span>
           </h2>
           <p class="text-sm text-gray-500">{{ coin.currency }}</p>
-          <div class="mt-1 font-bold text-success">
+          <div v-if="coin.min_value > 0 || coin.max_value > 0" class="mt-1 font-bold text-success">
             {{ coin.min_value }} - {{ coin.max_value }} €
           </div>
-          <div class="card-actions justify-end mt-2">
-            <div class="badge badge-outline" v-if="coin.grade">{{ coin.grade }}</div>
-            <div class="badge badge-outline">{{ coin.material }}</div>
-            <div class="flex gap-2 ml-auto">
+          <div class="card-actions justify-between items-center mt-2">
+            <div class="flex gap-2 flex-wrap">
+              <div class="badge badge-outline" v-if="coin.grade">{{ coin.grade }}</div>
+              <div class="tooltip" :data-tip="coin.material">
+                <div class="badge badge-outline truncate max-w-[120px]">{{ coin.material?.split('(')[0].trim() || coin.material }}</div>
+              </div>
+            </div>
+            <div class="flex gap-2">
                 <button @click.stop="router.push(`/edit/${coin.id}`)" class="btn btn-square btn-sm btn-ghost text-info">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
@@ -163,7 +195,11 @@
             <td class="hidden lg:table-cell">{{ (coin.year && coin.year !== 0) ? coin.year : '-' }}</td>
             <td class="hidden lg:table-cell">{{ coin.currency }}</td>
             <td class="hidden lg:table-cell"><div class="badge badge-ghost" v-if="coin.grade">{{ coin.grade }}</div><span v-else>-</span></td>
-            <td class="hidden lg:table-cell">{{ coin.material }}</td>
+            <td class="hidden lg:table-cell">
+              <div class="tooltip" :data-tip="coin.material">
+                <span class="truncate block max-w-[200px]">{{ coin.material }}</span>
+              </div>
+            </td>
             <td>
                 <div class="flex gap-1">
                     <button @click.stop="router.push(`/edit/${coin.id}`)" class="btn btn-square btn-sm btn-ghost text-info">
@@ -207,7 +243,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import axios from 'axios'
 import { useRouter, useRoute } from 'vue-router'
 import ImageViewer from '../components/ImageViewer.vue'
@@ -216,30 +252,75 @@ import { formatMintage } from '../utils/formatters'
 const coins = ref([])
 const groups = ref([])
 const loading = ref(true)
-const viewMode = ref('grid')
 const router = useRouter()
+
+// View Mode with localStorage persistence
+const viewMode = ref(localStorage.getItem('coinListViewMode') || 'table')
+
+// Watch for changes and save to localStorage
+watch(viewMode, (newMode) => {
+  localStorage.setItem('coinListViewMode', newMode)
+})
 const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
 const STORAGE_URL = '' // Base URL for static files (relative)
 
 const viewerOpen = ref(false)
 const viewerImage = ref('')
 
+// Helper to clean filter values from URL (remove €, +, spaces, etc.)
+const cleanFilterValue = (value) => {
+  if (!value) return ''
+  return String(value).replace(/[€+\s]/g, '').trim()
+}
+
 // Filters
 const route = useRoute()
 const filters = ref({
     query: route.query.q || '',
     group_id: route.query.group_id || '',
-    year: route.query.year || '',
+    year: cleanFilterValue(route.query.year) || '',
     country: route.query.country || '',
-    min_price: route.query.min_price || '',
-    max_price: route.query.max_price || '',
+    min_price: cleanFilterValue(route.query.min_price) || '',
+    max_price: cleanFilterValue(route.query.max_price) || '',
     grade: route.query.grade || '',
     material: route.query.material || '',
-    min_year: route.query.min_year || '',
-    max_year: route.query.max_year || '',
+    min_year: cleanFilterValue(route.query.min_year) || '',
+    max_year: cleanFilterValue(route.query.max_year) || '',
     sort_by: route.query.sort_by || '',
     order: route.query.order || 'desc'
 })
+
+// Computed property to check if any filters are active
+const hasActiveFilters = computed(() => {
+    return filters.value.query || 
+           filters.value.group_id || 
+           filters.value.year || 
+           filters.value.country || 
+           filters.value.min_price || 
+           filters.value.max_price || 
+           filters.value.grade || 
+           filters.value.material || 
+           filters.value.min_year || 
+           filters.value.max_year
+})
+
+// Clear all filters
+const clearFilters = () => {
+    filters.value = {
+        query: '',
+        group_id: '',
+        year: '',
+        country: '',
+        min_price: '',
+        max_price: '',
+        grade: '',
+        material: '',
+        min_year: '',
+        max_year: '',
+        sort_by: filters.value.sort_by, // Keep sort
+        order: filters.value.order // Keep order
+    }
+}
 
 const toggleOrder = () => {
     filters.value.order = filters.value.order === 'asc' ? 'desc' : 'asc'
