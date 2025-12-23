@@ -161,6 +161,18 @@
         },
         "ai_settings": "Configuración de Gemini"
     },
+    "sell": {
+        "title": "Vender Moneda",
+        "button": "Vender",
+        "price_label": "Precio de venta",
+        "channel_label": "Canal de venta",
+        "channel_placeholder": "Selecciona o escribe un canal",
+        "new_channel": "Nuevo canal",
+        "confirm": "Confirmar venta",
+        "cancel": "Cancelar",
+        "success": "Moneda vendida correctamente",
+        "error": "Error al vender la moneda"
+    },
     "details": {
         "obverse": "Anverso",
         "reverse": "Reverso",
@@ -175,7 +187,12 @@
             "description": "Descripción",
             "notes": "Notas",
             "numista_details": "Detalles Numista",
-            "view_sample": "Ver Muestra"
+            "view_sample": "Ver Muestra",
+            "dimensions": "Dimensiones Físicas",
+            "numismatic_info": "Información Numismática",
+            "transaction_history": "Historial de Transacciones",
+            "technical_notes": "Notas Técnicas",
+            "personal_notes": "Notas Personales"
         },
         "labels": {
             "material": "Material",
@@ -183,7 +200,23 @@
             "mint": "Ceca",
             "mintage": "Tirada",
             "est_value": "Valor Est.",
-            "added_on": "Añadida el"
+            "added_on": "Añadida el",
+            "diameter": "Diámetro",
+            "weight": "Peso",
+            "thickness": "Grosor",
+            "edge": "Canto",
+            "shape": "Forma",
+            "ruler": "Gobernante",
+            "series": "Serie",
+            "commemorated": "Conmemora",
+            "orientation": "Orientación",
+            "acquired": "Adquirida",
+            "sold": "Vendida",
+            "price_paid": "Precio pagado",
+            "sold_price": "Precio de venta",
+            "in_collection": "En colección",
+            "sold_status": "Vendida",
+            "sale_channel": "Canal de venta"
         },
         "no_notes": "Sin notas disponibles.",
         "back_gallery": "Volver a la Galería",
@@ -213,7 +246,13 @@
             "silver_reserve": "Reserva de Plata",
             "gold_reserve": "Reserva de Oro",
             "pure_silver": "Plata Pura (.999 aprox)",
-            "pure_gold": "Oro Puro"
+            "pure_gold": "Oro Puro",
+            "total_sales": "Total Ventas",
+            "sales_count": "Monedas vendidas",
+            "total_sales_amount": "Importe Total",
+            "total_revenue": "Ingresos totales",
+            "avg_sale_value": "Valor Medio Venta",
+            "per_sale": "Por venta"
         },
         "lists": {
             "top_rarity": "Top Rareza (Menor Tirada)",
@@ -222,7 +261,8 @@
         "tabs": {
             "recent": "Recientes",
             "valuable": "Más Valiosas",
-            "rare": "Más Raras"
+            "rare": "Más Raras",
+            "sales": "Ventas"
         },
         "charts": {
             "value_dist": "Distribución de Valor",

@@ -42,8 +42,10 @@ func SetupRouter(app *fiber.App, coinHandler *CoinHandler, healthHandler *Health
 	v1.Post("/coins/:id/reprocess-numista", coinHandler.ReprocessNumista)
 	v1.Post("/coins/:id/apply-numista/:numista_id", coinHandler.ApplyNumistaResult)
 	v1.Post("/coins/:id/rotate", coinHandler.RotateCoin)
+	v1.Post("/coins/:id/sell", coinHandler.SellCoin)
 	v1.Delete("/coins/:id", coinHandler.DeleteCoin)
 	v1.Get("/dashboard", coinHandler.GetDashboardStats)
+	v1.Get("/sale-channels", coinHandler.GetSaleChannels)
 
 	// SPA Fallback: Serve index.html for any other route not handled above
 	// This ensures that refreshing pages like /coins/add works

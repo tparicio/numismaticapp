@@ -100,6 +100,114 @@
       </div>
     </div>
 
+    <!-- Dimensions Card with SVG Diagram -->
+    <div v-if="coin.diameter_mm > 0 || coin.weight_g > 0" class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h2 class="card-title text-lg">{{ $t('details.sections.dimensions') }}</h2>
+        
+        <!-- SVG Diagram -->
+        <svg viewBox="0 0 400 320" class="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
+          <!-- Definitions for gradients -->
+          <defs>
+            <linearGradient id="coinGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#fbbf24;stop-opacity:0.3" />
+              <stop offset="50%" style="stop-color:#f59e0b;stop-opacity:0.5" />
+              <stop offset="100%" style="stop-color:#d97706;stop-opacity:0.3" />
+            </linearGradient>
+            <radialGradient id="coinShine" cx="30%" cy="30%">
+              <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.4" />
+              <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+            </radialGradient>
+          </defs>
+          
+          <!-- Main coin circle -->
+          <circle cx="200" cy="160" r="90" fill="url(#coinGradient)" stroke="currentColor" stroke-width="2" class="text-primary" opacity="0.8"/>
+          <circle cx="200" cy="160" r="90" fill="url(#coinShine)" />
+          <circle cx="200" cy="160" r="85" fill="none" stroke="currentColor" stroke-width="1" class="text-primary" opacity="0.3" stroke-dasharray="5,5"/>
+          
+          <!-- Diameter measurement line -->
+          <g v-if="coin.diameter_mm > 0">
+            <line x1="110" y1="160" x2="290" y2="160" stroke="currentColor" stroke-width="2" class="text-secondary" marker-start="url(#arrowStart)" marker-end="url(#arrowEnd)"/>
+            <line x1="110" y1="155" x2="110" y2="165" stroke="currentColor" stroke-width="2" class="text-secondary"/>
+            <line x1="290" y1="155" x2="290" y2="165" stroke="currentColor" stroke-width="2" class="text-secondary"/>
+            
+            <!-- Diameter label -->
+            <rect x="170" y="140" width="60" height="24" rx="4" fill="currentColor" class="text-secondary" opacity="0.9"/>
+            <text x="200" y="156" text-anchor="middle" class="fill-white font-bold text-sm">
+              Ø{{ coin.diameter_mm }}mm
+            </text>
+          </g>
+          
+          <!-- Weight indicator -->
+          <g v-if="coin.weight_g > 0" transform="translate(60, 40)">
+            <!-- Scale icon -->
+            <path d="M20,30 L10,10 L30,10 Z M10,10 L30,10 L30,12 L10,12 Z" fill="currentColor" class="text-info" opacity="0.8"/>
+            <rect x="8" y="28" width="24" height="4" rx="2" fill="currentColor" class="text-info" opacity="0.8"/>
+            
+            <!-- Weight label -->
+            <rect x="0" y="35" width="40" height="20" rx="4" fill="currentColor" class="text-info" opacity="0.9"/>
+            <text x="20" y="49" text-anchor="middle" class="fill-white font-bold text-xs">
+              {{ coin.weight_g }}g
+            </text>
+          </g>
+          
+          <!-- Material badge -->
+          <g transform="translate(200, 270)">
+            <rect x="-80" y="0" width="160" height="32" rx="16" fill="currentColor" class="text-accent" opacity="0.9"/>
+            <text x="0" y="21" text-anchor="middle" class="fill-white font-bold text-sm">
+              {{ coin.material || 'N/A' }}
+            </text>
+          </g>
+          
+          <!-- Thickness indicator (side view) -->
+          <g v-if="coin.thickness_mm > 0" transform="translate(320, 140)">
+            <rect x="0" y="0" width="60" height="40" rx="4" fill="currentColor" class="text-warning" opacity="0.2" stroke="currentColor" stroke-width="2"/>
+            <line x1="0" y1="0" x2="60" y2="0" stroke="currentColor" stroke-width="3" class="text-warning"/>
+            <line x1="0" y1="40" x2="60" y2="40" stroke="currentColor" stroke-width="3" class="text-warning"/>
+            
+            <!-- Thickness measurement -->
+            <line x1="65" y1="0" x2="65" y2="40" stroke="currentColor" stroke-width="2" class="text-warning"/>
+            <line x1="63" y1="0" x2="67" y2="0" stroke="currentColor" stroke-width="2" class="text-warning"/>
+            <line x1="63" y1="40" x2="67" y2="40" stroke="currentColor" stroke-width="2" class="text-warning"/>
+            
+            <text x="30" y="25" text-anchor="middle" class="fill-current font-bold text-xs">
+              {{ coin.thickness_mm }}mm
+            </text>
+          </g>
+          
+          <!-- Arrow markers for diameter line -->
+          <defs>
+            <marker id="arrowStart" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+              <polygon points="8,5 2,2 2,8" fill="currentColor" class="text-secondary"/>
+            </marker>
+            <marker id="arrowEnd" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+              <polygon points="2,5 8,2 8,8" fill="currentColor" class="text-secondary"/>
+            </marker>
+          </defs>
+        </svg>
+        
+        <!-- Textual specifications -->
+        <div class="grid grid-cols-2 gap-2 mt-4 text-sm">
+          <div v-if="coin.diameter_mm > 0" class="flex justify-between">
+            <span class="opacity-70">{{ $t('details.labels.diameter') }}:</span>
+            <span class="font-bold">{{ coin.diameter_mm }} mm</span>
+          </div>
+          <div v-if="coin.weight_g > 0" class="flex justify-between">
+            <span class="opacity-70">{{ $t('details.labels.weight') }}:</span>
+            <span class="font-bold">{{ coin.weight_g }} g</span>
+          </div>
+          <div v-if="coin.thickness_mm > 0" class="flex justify-between">
+            <span class="opacity-70">{{ $t('details.labels.thickness') }}:</span>
+            <span class="font-bold">{{ coin.thickness_mm }} mm</span>
+          </div>
+          <div v-if="coin.shape && coin.shape.toLowerCase() !== 'circular'" class="flex justify-between">
+            <span class="opacity-70">{{ $t('details.labels.shape') }}:</span>
+            <span class="font-bold">{{ coin.shape }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Details Section -->
     <div class="card bg-base-100 shadow-xl h-fit">
       <div class="card-body">
@@ -237,6 +345,71 @@
             </div>
         </template>
 
+        <!-- Numismatic Information Section -->
+        <template v-if="coin.ruler || coin.series || coin.commemorated_topic || coin.orientation">
+            <div class="divider mt-6">{{ $t('details.sections.numismatic_info') }}</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div v-if="coin.ruler">
+                    <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.ruler') }}</span>
+                    <span>{{ coin.ruler }}</span>
+                </div>
+                <div v-if="coin.series">
+                    <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.series') }}</span>
+                    <span>{{ coin.series }}</span>
+                </div>
+                <div v-if="coin.commemorated_topic">
+                    <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.commemorated') }}</span>
+                    <span>{{ coin.commemorated_topic }}</span>
+                </div>
+                <div v-if="coin.orientation">
+                    <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.orientation') }}</span>
+                    <span>{{ coin.orientation }}</span>
+                </div>
+                <div v-if="coin.edge">
+                    <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.edge') }}</span>
+                    <span>{{ coin.edge }}</span>
+                </div>
+            </div>
+        </template>
+
+        <!-- Transaction History Section -->
+        <template v-if="coin.acquired_at || coin.sold_at">
+            <div class="divider mt-6">{{ $t('details.sections.transaction_history') }}</div>
+            <div class="space-y-3">
+                <div v-if="coin.acquired_at" class="flex items-center gap-3 p-3 bg-success/10 rounded-lg">
+                    <div class="badge badge-success gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        {{ $t('details.labels.acquired') }}
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-bold">{{ new Date(coin.acquired_at).toLocaleDateString() }}</div>
+                        <div v-if="coin.price_paid > 0" class="text-sm opacity-70">{{ $t('details.labels.price_paid') }}: {{ formatCurrency(coin.price_paid) }}</div>
+                    </div>
+                </div>
+                
+                <div v-if="coin.sold_at" class="flex items-center gap-3 p-3 bg-warning/10 rounded-lg">
+                    <div class="badge badge-warning gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                        </svg>
+                        {{ $t('details.labels.sold') }}
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-bold">{{ new Date(coin.sold_at).toLocaleDateString() }}</div>
+                        <div v-if="coin.sold_price > 0" class="text-sm opacity-70">{{ $t('details.labels.sold_price') }}: {{ formatCurrency(coin.sold_price) }}</div>
+                        <div v-if="coin.sale_channel" class="text-sm opacity-70">{{ $t('details.labels.sale_channel') }}: {{ coin.sale_channel }}</div>
+                    </div>
+                </div>
+                
+                <div v-if="!coin.sold_at" class="alert alert-info">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>{{ $t('details.labels.in_collection') }}</span>
+                </div>
+            </div>
+        </template>
+
 
         <div v-if="coin.gemini_model" class="mt-4 flex flex-col text-xs text-gray-400">
            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
@@ -272,9 +445,29 @@
            </div>
         </div>
 
-        <template v-if="coin.notes">
-            <div class="divider">{{ $t('details.sections.notes') }}</div>
-            <p class="text-sm italic">{{ coin.notes }}</p>
+        <!-- Notes Sections -->
+        <template v-if="coin.technical_notes || coin.personal_notes">
+            <div class="divider mt-6">{{ $t('details.sections.notes') }}</div>
+            
+            <div v-if="coin.technical_notes" class="mb-4">
+                <h3 class="font-bold text-sm text-gray-500 mb-2 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
+                    </svg>
+                    {{ $t('details.sections.technical_notes') }}
+                </h3>
+                <p class="text-sm whitespace-pre-line bg-base-200 p-3 rounded-lg">{{ coin.technical_notes }}</p>
+            </div>
+            
+            <div v-if="coin.personal_notes" class="mb-4">
+                <h3 class="font-bold text-sm text-gray-500 mb-2 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                    </svg>
+                    {{ $t('details.sections.personal_notes') }}
+                </h3>
+                <p class="text-sm italic whitespace-pre-line bg-base-200 p-3 rounded-lg">{{ coin.personal_notes }}</p>
+            </div>
         </template>
         
         <div class="card-actions justify-end mt-8 gap-2">
@@ -726,5 +919,9 @@ const applyManualNumista = () => {
     if (manualNumistaId.value) {
         applyNumistaResult(manualNumistaId.value)
     }
+const formatCurrency = (val) => {
+  return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(val || 0)
+}
+
 }
 </script>

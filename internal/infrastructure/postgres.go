@@ -688,3 +688,32 @@ func toNullFloat8Ptr(f *float64) pgtype.Float8 {
 		Valid:   true,
 	}
 }
+
+// MarkAsSold marks a coin as sold with price and channel
+func (r *PostgresCoinRepository) MarkAsSold(ctx context.Context, id uuid.UUID, soldAt time.Time, soldPrice float64, saleChannel string) (*domain.Coin, error) {
+	row, err := r.q.MarkCoinAsSold(ctx, db.MarkCoinAsSoldParams{
+		ID:          pgtype.UUID{Bytes: id, Valid: true},
+		SoldAt:      pgtype.Date{Time: soldAt, Valid: true},
+		SoldPrice:   toNumeric(soldPrice),
+		SaleChannel: toNullString(saleChannel),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to mark coin as sold: %w", err)
+	}
+	return r.coinFromDB(ctx, row)
+}
+
+// GetSaleChannels returns list of distinct sale channels
+func (r *PostgresCoinRepository) GetSaleChannels(ctx context.Context) ([]string, error) {
+	rows, err := r.q.GetDistinctSaleChannels(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get sale channels: %w", err)
+	}
+	channels := make([]string, 0, len(rows))
+	for _, row := range rows {
+		if row.Valid && row.String != "" {
+			channels = append(channels, row.String)
+		}
+	}
+	return channels, nil
+}

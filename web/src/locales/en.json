@@ -160,6 +160,18 @@
         },
         "ai_settings": "Gemini Configuration"
     },
+    "sell": {
+        "title": "Sell Coin",
+        "button": "Sell",
+        "price_label": "Sale Price",
+        "channel_label": "Sale Channel",
+        "channel_placeholder": "Select or type a channel",
+        "new_channel": "New channel",
+        "confirm": "Confirm Sale",
+        "cancel": "Cancel",
+        "success": "Coin sold successfully",
+        "error": "Error selling coin"
+    },
     "details": {
         "obverse": "Obverse",
         "reverse": "Reverse",
@@ -168,7 +180,12 @@
             "details": "Details",
             "description": "Description",
             "notes": "Notes",
-            "view_sample": "View Sample"
+            "view_sample": "View Sample",
+            "dimensions": "Physical Dimensions",
+            "numismatic_info": "Numismatic Information",
+            "transaction_history": "Transaction History",
+            "technical_notes": "Technical Notes",
+            "personal_notes": "Personal Notes"
         },
         "labels": {
             "material": "Material",
@@ -176,7 +193,23 @@
             "mint": "Mint",
             "mintage": "Mintage",
             "est_value": "Est. Value",
-            "added_on": "Added On"
+            "added_on": "Added On",
+            "diameter": "Diameter",
+            "weight": "Weight",
+            "thickness": "Thickness",
+            "edge": "Edge",
+            "shape": "Shape",
+            "ruler": "Ruler",
+            "series": "Series",
+            "commemorated": "Commemorates",
+            "orientation": "Orientation",
+            "acquired": "Acquired",
+            "sold": "Sold",
+            "price_paid": "Price Paid",
+            "sold_price": "Sold Price",
+            "in_collection": "In Collection",
+            "sold_status": "Sold",
+            "sale_channel": "Sale Channel"
         },
         "no_notes": "No notes available.",
         "back_gallery": "Back to Gallery",
@@ -205,7 +238,13 @@
             "silver_reserve": "Silver Reserve",
             "gold_reserve": "Gold Reserve",
             "pure_silver": "Pure Silver (.999 approx)",
-            "pure_gold": "Pure Gold"
+            "pure_gold": "Pure Gold",
+            "total_sales": "Total Sales",
+            "sales_count": "Coins sold",
+            "total_sales_amount": "Total Amount",
+            "total_revenue": "Total revenue",
+            "avg_sale_value": "Average Sale Value",
+            "per_sale": "Per sale"
         },
         "lists": {
             "top_rarity": "Top Rarity (Lowest Mintage)",
@@ -214,7 +253,8 @@
         "tabs": {
             "recent": "Recent",
             "valuable": "Most Valuable",
-            "rare": "Rarest"
+            "rare": "Rarest",
+            "sales": "Sales"
         },
         "charts": {
             "value_dist": "Value Distribution",

@@ -54,6 +54,7 @@ CREATE TABLE coins (
     sold_at DATE,
     price_paid NUMERIC(10, 2),
     sold_price NUMERIC(10, 2),
+    sale_channel VARCHAR(100),
     gemini_model VARCHAR(100),
     gemini_temperature NUMERIC(3, 2),
     

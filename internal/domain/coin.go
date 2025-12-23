@@ -47,6 +47,7 @@ type Coin struct {
 	SoldAt            *time.Time     `json:"sold_at"`
 	PricePaid         float64        `json:"price_paid"`
 	SoldPrice         float64        `json:"sold_price"`
+	SaleChannel       string         `json:"sale_channel"`
 	CreatedAt         time.Time      `json:"created_at"`
 	UpdatedAt         time.Time      `json:"updated_at"`
 }
@@ -119,6 +120,9 @@ type CoinRepository interface {
 	GetRandomCoin(ctx context.Context) (*Coin, error)
 	GetAllCoins(ctx context.Context) ([]*Coin, error)
 	AddImage(ctx context.Context, image CoinImage) error
+	// Sell operations
+	MarkAsSold(ctx context.Context, id uuid.UUID, soldAt time.Time, soldPrice float64, saleChannel string) (*Coin, error)
+	GetSaleChannels(ctx context.Context) ([]string, error)
 }
 
 // GroupRepository defines the interface for persisting groups.

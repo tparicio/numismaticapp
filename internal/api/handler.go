@@ -392,6 +392,43 @@ func (h *CoinHandler) ApplyNumistaResult(c *fiber.Ctx) error {
 	return c.JSON(coin)
 }
 
+type SellCoinRequest struct {
+	SoldPrice   float64 `json:"sold_price" validate:"required,gt=0"`
+	SaleChannel string  `json:"sale_channel" validate:"required,min=1"`
+}
+
+func (h *CoinHandler) SellCoin(c *fiber.Ctx) error {
+	idStr := c.Params("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid uuid"})
+	}
+
+	var req SellCoinRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid body"})
+	}
+
+	if err := h.validate.Struct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	coin, err := h.service.MarkCoinAsSold(c.Context(), id, req.SoldPrice, req.SaleChannel)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(coin)
+}
+
+func (h *CoinHandler) GetSaleChannels(c *fiber.Ctx) error {
+	channels, err := h.service.GetSaleChannels(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(channels)
+}
+
 func strPtr(s string) *string {
 	if s == "" {
 		return nil

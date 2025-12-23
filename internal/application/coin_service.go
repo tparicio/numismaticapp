@@ -1212,3 +1212,14 @@ func (s *CoinService) ReanalyzeCoin(ctx context.Context, id uuid.UUID, modelName
 
 	return coin, nil
 }
+
+// MarkCoinAsSold marks a coin as sold
+func (s *CoinService) MarkCoinAsSold(ctx context.Context, id uuid.UUID, soldPrice float64, saleChannel string) (*domain.Coin, error) {
+	soldAt := time.Now()
+	return s.repo.MarkAsSold(ctx, id, soldAt, soldPrice, saleChannel)
+}
+
+// GetSaleChannels returns list of distinct sale channels
+func (s *CoinService) GetSaleChannels(ctx context.Context) ([]string, error) {
+	return s.repo.GetSaleChannels(ctx)
+}
