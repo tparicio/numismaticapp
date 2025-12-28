@@ -32,47 +32,54 @@
                 </div>
 
                 <!-- Combined Image Display (Flip-like or Grid) -->
-                <div class="relative w-full aspect-[4/3] bg-gray-900 flex items-center justify-center p-4 gap-4">
-                    <!-- Front Image -->
-                     <figure class="relative group/img cursor-zoom-in transition-all duration-300 hover:scale-105" @click="openViewer('front')">
-                        <img 
-                            :src="getCurrentImageUrl('front')" 
-                            class="w-32 h-32 sm:w-48 sm:h-48 object-contain drop-shadow-2xl"
-                             :class="{ 'rounded-full': activeImageSource !== 'original', 'rounded-xl': activeImageSource === 'original' }"
-                            :style="{ transform: `rotate(${rotations.front}deg)` }"
-                            alt="Anverso"
-                        />
-                        <button @click.stop="openRotationEditor('front')" class="absolute bottom-1 right-1 btn btn-circle btn-sm btn-neutral opacity-0 group-hover/img:opacity-100 transition-opacity z-10 shadow-lg border border-gray-600" title="Rotar">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                        </button>
-                    </figure>
+                <div class="relative w-full bg-gray-900 flex items-start justify-center p-4 gap-8">
+                    <!-- Front Column -->
+                    <div class="flex flex-col items-center gap-1">
+                        <figure class="relative group/img cursor-zoom-in transition-all duration-300 hover:scale-105" @click="openViewer('front')">
+                            <img 
+                                :src="getCurrentImageUrl('front')" 
+                                class="w-32 h-32 sm:w-48 sm:h-48 object-contain drop-shadow-2xl"
+                                :class="{ 'rounded-full': activeImageSource !== 'original', 'rounded-xl': activeImageSource === 'original' }"
+                                :style="{ transform: `rotate(${rotations.front}deg)` }"
+                                alt="Anverso"
+                            />
+                            <button @click.stop="openRotationEditor('front')" class="absolute bottom-0 right-0 btn btn-circle btn-sm btn-neutral opacity-0 group-hover/img:opacity-100 transition-opacity z-10 shadow-lg border border-gray-600" title="Rotar">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                            </button>
+                        </figure>
+                        <!-- Sample Link -->
+                         <a v-if="coin.numista_details && coin.numista_details.obverse?.picture" 
+                            :href="coin.numista_details.obverse.picture" 
+                            target="_blank" 
+                            class="link link-xs link-accent no-underline hover:underline flex items-center gap-1 mt-1 opacity-80 hover:opacity-100">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
+                            Muestra
+                        </a>
+                    </div>
 
-                    <!-- Back Image -->
-                     <figure class="relative group/img cursor-zoom-in transition-all duration-300 hover:scale-105" @click="openViewer('back')">
-                        <img 
-                            :src="getCurrentImageUrl('back')" 
-                            class="w-32 h-32 sm:w-48 sm:h-48 object-contain drop-shadow-2xl"
-                             :class="{ 'rounded-full': activeImageSource !== 'original', 'rounded-xl': activeImageSource === 'original' }"
-                            :style="{ transform: `rotate(${rotations.back}deg)` }"
-                            alt="Reverso"
-                        />
-                         <button @click.stop="openRotationEditor('back')" class="absolute bottom-1 right-1 btn btn-circle btn-sm btn-neutral opacity-0 group-hover/img:opacity-100 transition-opacity z-10 shadow-lg border border-gray-600" title="Rotar">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                        </button>
-                    </figure>
-                </div>
-
-                <!-- Sample Images Links (Numista Sources) -->
-                <div v-if="coin.numista_details && (coin.numista_details.obverse?.picture || coin.numista_details.reverse?.picture)" class="flex justify-center gap-4 py-2 border-t border-gray-800 bg-base-200/50">
-                    <a v-if="coin.numista_details.obverse?.picture" :href="coin.numista_details.obverse.picture" target="_blank" class="link link-xs link-accent no-underline hover:underline flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
-                        Muestra Anverso
-                    </a>
-                    <div class="divider divider-horizontal mx-0 h-4 my-auto self-center"></div>
-                    <a v-if="coin.numista_details.reverse?.picture" :href="coin.numista_details.reverse.picture" target="_blank" class="link link-xs link-accent no-underline hover:underline flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
-                        Muestra Reverso
-                    </a>
+                    <!-- Back Column -->
+                    <div class="flex flex-col items-center gap-1">
+                         <figure class="relative group/img cursor-zoom-in transition-all duration-300 hover:scale-105" @click="openViewer('back')">
+                            <img 
+                                :src="getCurrentImageUrl('back')" 
+                                class="w-32 h-32 sm:w-48 sm:h-48 object-contain drop-shadow-2xl"
+                                :class="{ 'rounded-full': activeImageSource !== 'original', 'rounded-xl': activeImageSource === 'original' }"
+                                :style="{ transform: `rotate(${rotations.back}deg)` }"
+                                alt="Reverso"
+                            />
+                             <button @click.stop="openRotationEditor('back')" class="absolute bottom-0 right-0 btn btn-circle btn-sm btn-neutral opacity-0 group-hover/img:opacity-100 transition-opacity z-10 shadow-lg border border-gray-600" title="Rotar">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                            </button>
+                        </figure>
+                        <!-- Sample Link -->
+                        <a v-if="coin.numista_details && coin.numista_details.reverse?.picture" 
+                           :href="coin.numista_details.reverse.picture" 
+                           target="_blank" 
+                           class="link link-xs link-accent no-underline hover:underline flex items-center gap-1 mt-1 opacity-80 hover:opacity-100">
+                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
+                           Muestra
+                       </a>
+                    </div>
                 </div>
             </div>
 
@@ -108,7 +115,7 @@
                             
                             <!-- Diameter label -->
                             <rect x="170" y="140" width="60" height="24" rx="4" fill="currentColor" class="text-secondary" opacity="0.9"/>
-                            <text x="200" y="156" text-anchor="middle" class="fill-white font-bold text-sm">Ø{{ coin.diameter_mm }}mm</text>
+                            <text x="200" y="156" text-anchor="middle" class="fill-white font-bold text-lg">Ø{{ coin.diameter_mm }}mm</text>
                         </g>
                         
                         <!-- Weight indicator -->
@@ -116,14 +123,14 @@
                             <path d="M20,30 L10,10 L30,10 Z M10,10 L30,10 L30,12 L10,12 Z" fill="currentColor" class="text-info" opacity="0.8"/>
                             <rect x="8" y="28" width="24" height="4" rx="2" fill="currentColor" class="text-info" opacity="0.8"/>
                             <rect x="0" y="35" width="40" height="20" rx="4" fill="currentColor" class="text-info" opacity="0.9"/>
-                            <text x="20" y="49" text-anchor="middle" class="fill-white font-bold text-xs">{{ coin.weight_g }}g</text>
+                            <text x="20" y="49" text-anchor="middle" class="fill-white font-bold text-sm">{{ coin.weight_g }}g</text>
                         </g>
                         
                         <!-- Material badge -->
                         <g transform="translate(200, 270)" class="cursor-help">
                             <title>{{ coin.material }}</title>
                             <rect x="-80" y="0" width="160" height="32" rx="16" fill="currentColor" class="text-accent" opacity="0.9"/>
-                            <text x="0" y="21" text-anchor="middle" class="fill-white font-bold text-sm">{{ coin.material ? coin.material.split('(')[0].trim() : 'N/A' }}</text>
+                            <text x="0" y="21" text-anchor="middle" class="fill-white font-bold text-lg">{{ coin.material ? coin.material.split('(')[0].trim() : 'N/A' }}</text>
                         </g>
                         
                         <!-- Thickness indicator (side view) -->
@@ -134,7 +141,7 @@
                             <line x1="65" y1="0" x2="65" y2="40" stroke="currentColor" stroke-width="2" class="text-warning"/>
                             <line x1="63" y1="0" x2="67" y2="0" stroke="currentColor" stroke-width="2" class="text-warning"/>
                             <line x1="63" y1="40" x2="67" y2="40" stroke="currentColor" stroke-width="2" class="text-warning"/>
-                            <text x="30" y="25" text-anchor="middle" class="fill-current font-bold text-xs">{{ coin.thickness_mm }}mm</text>
+                            <text x="30" y="25" text-anchor="middle" class="fill-current font-bold text-sm">{{ coin.thickness_mm }}mm</text>
                         </g>
                         
                         <defs>
@@ -261,7 +268,7 @@
             <!-- Tabs Navigation -->
             <div role="tablist" class="tabs tabs-lifted tabs-lg">
                 <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'overview' }" @click="activeTab = 'overview'">Resumen</a>
-                <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'technical' }" @click="activeTab = 'technical'">Detalles</a>
+                <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'technical' }" @click="activeTab = 'technical'">Numista</a>
                 <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'notes' }" @click="activeTab = 'notes'">Notas</a>
             </div>
 
@@ -300,24 +307,7 @@
 
                 <div v-if="activeTab === 'technical'" class="space-y-8 animate-in fade-in duration-300">
                     
-                    <!-- Numista Actions (Moved from Overview/Notes) -->
-                    <div class="flex flex-wrap items-center gap-4 mb-6 pb-6 border-b border-base-200">
-                        <div v-if="coin.numista_number" class="flex gap-2">
-                             <a :href="getNumistaUrl()" target="_blank" class="btn btn-sm btn-outline btn-info gap-2">
-                                <!-- N removed -->
-                                Ver en Numista
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
-                             </a>
-                             <button v-if="numistaCount > 0" @click="numistaModalOpen = true" class="btn btn-sm btn-ghost gap-1 text-xs">
-                                {{ numistaCount }} resultados alternativos
-                             </button>
-                        </div>
-                         <!-- Sync Button moved here -->
-                         <button @click="syncNumista" class="btn btn-sm btn-outline btn-secondary gap-1" :disabled="syncing" v-if="coin.numista_number">
-                            <span v-if="syncing" class="loading loading-spinner loading-xs"></span>
-                            Sync Numista
-                         </button>
-                    </div>
+
                     
                     <!-- Numismatic Info (Ruler, Series, etc) -->
                     <div v-if="coin.ruler || coin.series || coin.commemorated_topic || coin.orientation || coin.edge" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -343,9 +333,8 @@
                         </div>
                     </div>
 
-                     <!-- Numista Extended Details -->
-                    <div v-if="coin.numista_details">
-                        <div class="divider">{{ $t('details.sections.numista_details') || 'Detalles Numista' }}</div>
+                     <div v-if="coin.numista_details">
+
                         
                          <!-- Obverse -->
                         <div v-if="coin.numista_details.obverse" class="mb-4">
@@ -388,6 +377,25 @@
                             <h3 class="font-bold border-b border-gray-200 dark:border-gray-700 pb-1 mb-2 text-primary">Técnica</h3>
                             <p class="text-sm">{{ coin.numista_details.technique.text }}</p>
                         </div>
+                    </div>
+
+
+                    <!-- Numista Actions (Moved to bottom) -->
+                    <div class="flex flex-wrap items-center gap-4 mt-6 pt-6 border-t border-base-200" v-if="coin.numista_number">
+                         <div class="flex gap-2">
+                             <a :href="getNumistaUrl()" target="_blank" class="btn btn-sm btn-outline btn-info gap-2">
+                                Ver en Numista
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
+                             </a>
+                             <button v-if="numistaCount > 0" @click="numistaModalOpen = true" class="btn btn-sm btn-ghost gap-1 text-xs">
+                                {{ numistaCount }} resultados alternativos
+                             </button>
+                        </div>
+                         <!-- Sync Button renamed and styled -->
+                         <button @click="syncNumista" class="btn btn-xs btn-outline btn-primary gap-1 ml-auto" :disabled="syncing">
+                            <span v-if="syncing" class="loading loading-spinner loading-xs"></span>
+                            {{ $t('common.reprocess') || 'Reprocesar' }}
+                         </button>
                     </div>
                 </div>
 
@@ -432,16 +440,43 @@
                     <div v-if="coin.technical_notes || coin.personal_notes" class="space-y-4">
                         <div v-if="coin.technical_notes">
                             <h3 class="font-bold text-sm text-gray-500 mb-2 flex items-center gap-2">
+                                <span class="badge badge-neutral gap-1 text-xs"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.633-.73l-3.111-9.64a1.184 1.184 0 01-.722-1.463A1.184 1.184 0 0110 2zM4.08 6.647a1 1 0 011.666-.086l1.248 1.94 1.258-.636a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 018 17a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.633-.73L1.589 5.611a1 1 0 012.491-1.036z" clip-rule="evenodd" /></svg> Gemini</span>
                                 {{ $t('details.sections.technical_notes') }}
                             </h3>
                             <div class="text-sm whitespace-pre-line bg-base-200 p-3 rounded-lg">{{ coin.technical_notes }}</div>
                         </div>
                         
-                        <div v-if="coin.personal_notes">
+                        <div class="group relative">
                             <h3 class="font-bold text-sm text-gray-500 mb-2 flex items-center gap-2">
                                 {{ $t('details.sections.personal_notes') }}
+                                <button v-if="!editingNotes" @click="startEditingNotes" class="btn btn-ghost btn-xs btn-circle opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
+                                </button>
                             </h3>
-                            <div class="text-sm italic whitespace-pre-line bg-blue-50 dark:bg-blue-900/10 p-3 rounded-lg border border-blue-100 dark:border-blue-900/30">{{ coin.personal_notes }}</div>
+                            
+                            <div v-if="editingNotes" class="space-y-2">
+                                <textarea 
+                                    v-model="tempNotes" 
+                                    class="textarea textarea-bordered w-full h-32 text-sm" 
+                                    :placeholder="$t('form.placeholders.notes')"
+                                ></textarea>
+                                <div class="flex justify-end gap-2">
+                                    <button @click="cancelNotes" class="btn btn-xs btn-ghost">{{ $t('common.cancel') }}</button>
+                                    <button @click="saveNotes" class="btn btn-xs btn-primary" :disabled="savingNotes">
+                                        <span v-if="savingNotes" class="loading loading-spinner loading-xs"></span>
+                                        {{ $t('common.save') }}
+                                    </button>
+                                </div>
+                            </div>
+                            <div v-else>
+                                <div v-if="coin.personal_notes" class="text-sm italic whitespace-pre-line bg-blue-50 dark:bg-blue-900/10 p-3 rounded-lg border border-blue-100 dark:border-blue-900/30">
+                                    {{ coin.personal_notes }}
+                                </div>
+                                <div v-else @click="startEditingNotes" class="text-sm italic text-gray-400 bg-base-200/50 p-4 rounded-lg border border-dashed border-base-300 cursor-pointer hover:bg-base-200 transition-colors flex items-center justify-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
+                                    Añadir nota personal...
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -666,6 +701,43 @@ const temperature = ref(0.1)
 const availableModels = ref([])
 
 const aiSettingsOpen = ref(true)
+
+// Notes Editing State
+const editingNotes = ref(false)
+const tempNotes = ref('')
+const savingNotes = ref(false)
+
+const startEditingNotes = () => {
+    tempNotes.value = coin.value.personal_notes || ''
+    editingNotes.value = true
+}
+
+const cancelNotes = () => {
+    editingNotes.value = false
+    tempNotes.value = ''
+}
+
+const saveNotes = async () => {
+    if (!coin.value) return
+    savingNotes.value = true
+    try {
+        const updatedCoin = { ...coin.value, personal_notes: tempNotes.value } 
+        // We need to send the full object or backend compatible update
+        // Assuming PUT /coins/:id expects the full body or partial. 
+        // Based on EditCoin.vue, usually we send what we edit. 
+        // Let's try sending the updated fields.
+        
+        await axios.put(`${API_URL}/coins/${coin.value.id}`, updatedCoin)
+        
+        coin.value.personal_notes = tempNotes.value
+        editingNotes.value = false
+    } catch (e) {
+        console.error("Failed to save notes", e)
+        alert('Failed to save notes: ' + (e.response?.data?.error || e.message))
+    } finally {
+        savingNotes.value = false
+    }
+}
 
 // Numista Sync State
 const syncing = ref(false)
