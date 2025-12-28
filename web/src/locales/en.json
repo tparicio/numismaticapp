@@ -66,7 +66,9 @@
             "year": "Year",
             "country": "Country",
             "min_price": "Min €",
-            "max_price": "Max €"
+            "max_price": "Max €",
+            "all_grades": "All grades",
+            "all_materials": "All materials"
         },
         "sort": {
             "label": "Sort by",
@@ -158,6 +160,18 @@
         },
         "ai_settings": "Gemini Configuration"
     },
+    "sell": {
+        "title": "Sell Coin",
+        "button": "Sell",
+        "price_label": "Sale Price",
+        "channel_label": "Sale Channel",
+        "channel_placeholder": "Select or type a channel",
+        "new_channel": "New channel",
+        "confirm": "Confirm Sale",
+        "cancel": "Cancel",
+        "success": "Coin sold successfully",
+        "error": "Error selling coin"
+    },
     "details": {
         "obverse": "Obverse",
         "reverse": "Reverse",
@@ -166,7 +180,12 @@
             "details": "Details",
             "description": "Description",
             "notes": "Notes",
-            "view_sample": "View Sample"
+            "view_sample": "View Sample",
+            "dimensions": "Physical Dimensions",
+            "numismatic_info": "Numismatic Information",
+            "transaction_history": "Transaction History",
+            "technical_notes": "Technical Notes",
+            "personal_notes": "Personal Notes"
         },
         "labels": {
             "material": "Material",
@@ -174,7 +193,23 @@
             "mint": "Mint",
             "mintage": "Mintage",
             "est_value": "Est. Value",
-            "added_on": "Added On"
+            "added_on": "Added On",
+            "diameter": "Diameter",
+            "weight": "Weight",
+            "thickness": "Thickness",
+            "edge": "Edge",
+            "shape": "Shape",
+            "ruler": "Ruler",
+            "series": "Series",
+            "commemorated": "Commemorates",
+            "orientation": "Orientation",
+            "acquired": "Acquired",
+            "sold": "Sold",
+            "price_paid": "Price Paid",
+            "sold_price": "Sold Price",
+            "in_collection": "In Collection",
+            "sold_status": "Sold",
+            "sale_channel": "Sale Channel"
         },
         "no_notes": "No notes available.",
         "back_gallery": "Back to Gallery",
@@ -182,6 +217,16 @@
         "reprocess_modal": {
             "title": "Reprocess with Artificial Intelligence",
             "warning": "Warning! This will re-send original images to Gemini and OVERWRITE all coin details (Name, year, country, description, etc) with new response. Personal notes will be kept."
+        },
+        "links": {
+            "title": "Links",
+            "add": "Add Link",
+            "url_placeholder": "https://example.com",
+            "empty": "No links added.",
+            "empty_subtitle": "Add links to auctions, catalogs, or forums related to this coin.",
+            "name_label": "Name (Optional)",
+            "delete_confirm": "Are you sure you want to delete this link permanently?",
+            "delete_title": "Delete Link"
         }
     },
     "dashboard": {
@@ -203,7 +248,13 @@
             "silver_reserve": "Silver Reserve",
             "gold_reserve": "Gold Reserve",
             "pure_silver": "Pure Silver (.999 approx)",
-            "pure_gold": "Pure Gold"
+            "pure_gold": "Pure Gold",
+            "total_sales": "Total Sales",
+            "sales_count": "Coins sold",
+            "total_sales_amount": "Total Amount",
+            "total_revenue": "Total revenue",
+            "avg_sale_value": "Average Sale Value",
+            "per_sale": "Per sale"
         },
         "lists": {
             "top_rarity": "Top Rarity (Lowest Mintage)",
@@ -212,7 +263,8 @@
         "tabs": {
             "recent": "Recent",
             "valuable": "Most Valuable",
-            "rare": "Rarest"
+            "rare": "Rarest",
+            "sales": "Sales"
         },
         "charts": {
             "value_dist": "Value Distribution",
@@ -258,6 +310,7 @@
         "description": "Description",
         "count": "Coins",
         "empty_state": "No groups found. Create one to organize your collection!",
+        "view_collection": "View Collection",
         "delete_modal": {
             "title": "Delete Group",
             "confirm": "Are you sure you want to delete group",
@@ -265,5 +318,12 @@
             "success": "Group deleted successfully.",
             "error": "Failed to delete group."
         }
+    },
+    "settings": {
+        "title": "Settings",
+        "dark_mode": "Dark Mode",
+        "language": "Language",
+        "hide_values": "Hide Values",
+        "export": "Data Export"
     }
 }

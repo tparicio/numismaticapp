@@ -1,5 +1,9 @@
 <template>
-  <div class="space-y-8">
+  <div v-if="loading" class="flex justify-center items-center min-h-screen">
+    <span class="loading loading-spinner loading-lg text-primary"></span>
+  </div>
+  
+  <div v-else class="space-y-8">
     <!-- Header -->
     <!-- Header -->
     <div class="flex flex-col md:flex-row justify-between items-center gap-4">
@@ -68,6 +72,48 @@
       </div>
     </div>
 
+    <!-- Sales Stats Cards -->
+    <div v-if="stats.total_sales > 0" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="stats shadow">
+        <div class="stat">
+          <div class="stat-figure text-success">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+            </svg>
+          </div>
+          <div class="stat-title">{{ $t('dashboard.stats.total_sales') }}</div>
+          <div class="stat-value text-success">{{ stats.total_sales }}</div>
+          <div class="stat-desc">{{ $t('dashboard.stats.sales_count') }}</div>
+        </div>
+      </div>
+
+      <div class="stats shadow">
+        <div class="stat">
+          <div class="stat-figure text-warning">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div class="stat-title">{{ $t('dashboard.stats.total_sales_amount') }}</div>
+          <div class="stat-value text-warning">{{ formatCurrency(stats.total_sales_amount) }}</div>
+          <div class="stat-desc">{{ $t('dashboard.stats.total_revenue') }}</div>
+        </div>
+      </div>
+
+      <div class="stats shadow">
+        <div class="stat">
+          <div class="stat-figure text-info">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+            </svg>
+          </div>
+          <div class="stat-title">{{ $t('dashboard.stats.avg_sale_value') }}</div>
+          <div class="stat-value text-info">{{ formatCurrency(stats.average_sale_value) }}</div>
+          <div class="stat-desc">{{ $t('dashboard.stats.per_sale') }}</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Charts Row 1: Distributions (Value, Grade, Material) -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <!-- Value Distribution -->
@@ -75,7 +121,7 @@
         <div class="card-body">
           <h2 class="card-title">{{ $t('dashboard.charts.value_dist') }}</h2>
           <div class="h-64 relative">
-            <Bar v-if="valueChartData" :data="valueChartData" :options="valueChartOptions" />
+            <Bar v-if="valueChartData" :data="valueChartData" :options="barOptions" />
           </div>
         </div>
       </div>
@@ -85,7 +131,7 @@
         <div class="card-body">
           <h2 class="card-title">{{ $t('dashboard.charts.grades') }}</h2>
           <div class="h-64 relative">
-            <Bar v-if="gradeChartData" :data="gradeChartData" :options="gradeChartOptions" />
+            <Bar v-if="gradeChartData" :data="gradeChartData" :options="barOptions" />
           </div>
         </div>
       </div>
@@ -124,11 +170,12 @@
                     <a class="tab" :class="{ 'tab-active': activeTab === 'recent' }" @click="activeTab = 'recent'">{{ $t('dashboard.tabs.recent') || 'Recientes' }}</a>
                     <a class="tab" :class="{ 'tab-active': activeTab === 'valuable' }" @click="activeTab = 'valuable'">{{ $t('dashboard.tabs.valuable') || 'Mayor Valor' }}</a>
                     <a class="tab" :class="{ 'tab-active': activeTab === 'rare' }" @click="activeTab = 'rare'">{{ $t('dashboard.tabs.rare') || 'Top Rareza' }}</a>
+                    <a v-if="stats.total_sales > 0" class="tab" :class="{ 'tab-active': activeTab === 'sales' }" @click="activeTab = 'sales'">{{ $t('dashboard.tabs.sales') || 'Ventas' }}</a>
                 </div>
 
                 <div class="divide-y divide-base-200" v-if="activeTab === 'recent'">
                     <div v-for="coin in stats.recent_coins" :key="coin.id" 
-                         class="flex items-center gap-3 py-3 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
+                         class="flex items-center gap-3 py-4 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
                          @click="router.push(`/coin/${coin.id}`)">
                       <div class="avatar">
                         <div class="mask mask-squircle w-12 h-12 overflow-hidden">
@@ -147,7 +194,7 @@
 
                 <div class="divide-y divide-base-200" v-if="activeTab === 'valuable'">
                     <div v-for="coin in stats.top_valuable_coins" :key="coin.id" 
-                         class="flex items-center gap-3 py-3 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
+                         class="flex items-center gap-3 py-4 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
                          @click="router.push(`/coin/${coin.id}`)">
                       <div class="avatar">
                         <div class="mask mask-squircle w-12 h-12 overflow-hidden">
@@ -167,13 +214,30 @@
 
                 <div class="divide-y divide-base-200" v-if="activeTab === 'rare'">
                     <div v-for="coin in stats.rarest_coins" :key="coin.id" 
-                         class="flex items-center gap-3 py-3 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
+                         class="flex items-center gap-3 py-4 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
                          @click="router.push(`/coin/${coin.id}`)">
                          <div class="flex-1 min-w-0">
                             <div class="font-bold truncate">{{ coin.name }}</div>
                             <div class="text-xs opacity-50">{{ coin.year }} • {{ coin.country }}</div>
                          </div>
                          <div class="badge badge-accent badge-sm">{{ formatMintage(coin.mintage) }}</div>
+                    </div>
+                </div>
+
+                <div class="divide-y divide-base-200" v-if="activeTab === 'sales'">
+                    <div v-for="coin in stats.recent_sales" :key="coin.id" 
+                         class="flex items-center gap-3 py-4 cursor-pointer hover:bg-base-200 transition-colors rounded-lg px-2 -mx-2"
+                         @click="router.push(`/coin/${coin.id}`)">
+                      <div class="avatar">
+                        <div class="mask mask-squircle w-12 h-12 overflow-hidden">
+                          <img :src="getThumbnail(coin)" class="hover:scale-110 transition-transform duration-300" />
+                        </div>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="font-bold truncate">{{ coin.name || 'Unknown Coin' }}</div>
+                        <div class="text-xs opacity-50">{{ formatDate(coin.sold_at) }}</div>
+                      </div>
+                      <div class="font-bold text-success">{{ formatCurrency(coin.sold_price) }}</div>
                     </div>
                 </div>
             </div>
@@ -186,7 +250,7 @@
             <div class="card-body">
                 <h2 class="card-title">{{ $t('dashboard.charts.timeline') }}</h2>
                 <div class="h-64 relative">
-                    <Bar v-if="timelineChartData" :data="timelineChartData" :options="chartOptions" />
+                    <Bar v-if="timelineChartData" :data="timelineChartData" :options="barOptions" />
                 </div>
                 <div v-if="stats.oldest_coin" class="alert alert-info mt-4">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -210,7 +274,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     <div>
                         <h3 class="font-bold text-success-content">{{ $t('dashboard.stats.oldest_gem') || 'Joya Antigua (Calidad Alta)' }}</h3>
-                        <div class="text-xs text-base-content/70">{{ stats.oldest_high_grade_coin.year }}: {{ stats.oldest_high_grade_coin.name }} ({{ stats.oldest_high_grade_coin.grade }})</div>
+                        <div class="text-sm text-success-content opacity-90">{{ stats.oldest_high_grade_coin.year }}: {{ stats.oldest_high_grade_coin.name }} ({{ stats.oldest_high_grade_coin.grade }})</div>
                     </div>
                 </div>
             </div>
@@ -319,16 +383,16 @@
 
         <!-- Random Coin Feature -->
         <div v-if="stats.random_coin" class="card lg:card-side bg-base-100 shadow-xl overflow-hidden lg:col-span-3">
-            <figure class="lg:w-auto lg:shrink-0 bg-base-200 p-6 flex flex-col gap-4 justify-center items-center">
-                <div class="flex gap-4 flex-col sm:flex-row">
+            <figure class="lg:w-1/3 bg-base-200 flex flex-col sm:flex-row lg:flex-col items-center justify-center gap-4 p-8">
+                <div class="flex flex-col sm:flex-row lg:flex-col gap-4 items-center">
                     <div class="avatar cursor-pointer" @click="router.push(`/coin/${stats.random_coin.id}`)">
-                        <div class="w-40 sm:w-48 rounded-xl shadow-xl hover:scale-105 transition-transform duration-300">
-                            <img :src="getThumbnail(stats.random_coin, 'front')" class="object-contain" />
+                        <div class="mask mask-circle w-40 h-40 flex items-center justify-center">
+                            <img :src="getThumbnail(stats.random_coin, 'front')" class="object-contain w-full h-full" />
                         </div>
                     </div>
                     <div class="avatar cursor-pointer" @click="router.push(`/coin/${stats.random_coin.id}`)">
-                        <div class="w-40 sm:w-48 rounded-xl shadow-xl hover:scale-105 transition-transform duration-300">
-                            <img :src="getThumbnail(stats.random_coin, 'back')" class="object-contain" />
+                        <div class="mask mask-circle w-40 h-40 flex items-center justify-center">
+                            <img :src="getThumbnail(stats.random_coin, 'back')" class="object-contain w-full h-full" />
                         </div>
                     </div>
                 </div>
@@ -375,10 +439,6 @@
                     </div>
                 </div>
 
-                <p class="mt-4 text-base-content/80 italic border-l-4 border-primary pl-4 py-2 bg-base-200/50 rounded-r">
-                    "{{ stats.random_coin.description || $t('dashboard.random.no_desc') }}"
-                </p>
-
                 <div class="card-actions justify-end mt-4">
                     <button class="btn btn-ghost border-primary/20 text-primary hover:bg-primary/10 gap-2" @click="router.push(`/coin/${stats.random_coin.id}`)">
                         {{ $t('common.view_details') }}
@@ -423,6 +483,7 @@ const { t } = useI18n()
 
 const API_URL = import.meta.env.VITE_API_URL || '/api/v1'
 const activeTab = ref('recent')
+const loading = ref(true)
 
 const stats = ref({
   total_coins: 0,
@@ -447,6 +508,51 @@ const stats = ref({
   all_coins: []
 })
 
+const barOptions = computed(() => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  scales: {
+    y: {
+      beginAtZero: true,
+      ticks: {
+        precision: 0  // Force integer values only
+      }
+    }
+  },
+  plugins: {
+    legend: { display: false }
+  },
+  onClick: (event, elements, chart) => {
+    if (elements.length > 0) {
+      const index = elements[0].index
+      const label = chart.data.labels[index]
+      
+      // Detect chart type by checking dataset label or data structure
+      const datasetLabel = chart.data.datasets[0]?.label || ''
+      
+      // Timeline chart - labels are decade numbers like "1990", "2000"
+      if (label && !isNaN(parseInt(label)) && parseInt(label) >= 1800) {
+        const decade = parseInt(label)
+        router.push({ path: '/list', query: { min_year: decade, max_year: decade + 9 } })
+      }
+      // Value distribution - labels contain "€"
+      else if (label && label.includes('€')) {
+        const cleanLabel = label.replace(/€/g, '').replace(/\s/g, '').trim()
+        if (cleanLabel.includes('+')) {
+          const min = cleanLabel.replace('+', '')
+          router.push({ path: '/list', query: { min_price: min } })
+        } else if (cleanLabel.includes('-')) {
+          const [min, max] = cleanLabel.split('-')
+          router.push({ path: '/list', query: { min_price: min, max_price: max } })
+        }
+      }
+      // Grade distribution - labels are grade codes (FDC, SC, EBC, etc.)
+      else if (label && ['FDC', 'SC', 'EBC', 'MBC', 'BC', 'RC', 'MC'].includes(label)) {
+        router.push({ path: '/list', query: { grade: label } })
+      }
+    }
+  }
+}))
 const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
@@ -563,15 +669,22 @@ const doughnutOptions = {
 }
 
 onMounted(async () => {
-  try {
-    const res = await axios.get(`${API_URL}/dashboard`)
-    stats.value = res.data
-  } catch (e) {
-    console.error("Failed to load dashboard stats", e)
-  }
+    try {
+        const response = await axios.get(`${API_URL}/dashboard`)
+        stats.value = response.data
+    } catch (error) {
+        console.error('Error fetching stats:', error)
+    } finally {
+        loading.value = false
+    }
 })
 
+import { useSettingsStore } from '../stores/settings'
+import { storeToRefs } from 'pinia'
+
 const formatCurrency = (val) => {
+  const settingsStore = useSettingsStore()
+  if (settingsStore.privacyMode) return '***'
   return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(val || 0)
 }
 
@@ -614,7 +727,23 @@ const scatterOptions = computed(() => ({
             type: 'linear',
             title: { display: true, text: t('dashboard.charts.labels.grade') },
             min: 0,
-            max: 75
+            max: 75,
+            ticks: {
+                stepSize: 10,
+                callback: function(value) {
+                    // Map numeric values to grade labels
+                    const gradeMap = {
+                        70: 'FDC',
+                        60: 'SC',
+                        50: 'EBC',
+                        40: 'MBC',
+                        30: 'BC',
+                        20: 'RC',
+                        10: 'MC'
+                    }
+                    return gradeMap[value] || ''
+                }
+            }
         }
     },
     plugins: {
@@ -622,8 +751,17 @@ const scatterOptions = computed(() => ({
         tooltip: {
             callbacks: {
                 label: (context) => {
-                    const point = context.raw
-                    return `${point.name} (${point.grade}): ${point.x}`
+                    const gradeMap = {
+                        70: 'FDC',
+                        60: 'SC',
+                        50: 'EBC',
+                        40: 'MBC',
+                        30: 'BC',
+                        20: 'RC',
+                        10: 'MC'
+                    }
+                    const grade = gradeMap[context.parsed.y] || context.parsed.y
+                    return `${context.raw.name} (${context.parsed.x}) - ${grade}`
                 }
             }
         }
@@ -648,17 +786,62 @@ const valueChartData = computed(() => {
   const dist = stats.value.value_distribution
   if (!dist) return null
   
-  // Ensure order
-  // Ensure order & Format Value Ranges with €
-  const rawLabels = ["0-10", "10-50", "50-100", "100-500", "500+"]
-  const data = rawLabels.map(l => dist[l] || 0)
-  const labels = rawLabels.map(l => l.includes('+') ? `${l} €` : `${l} €`.replace('-', ' € - '))
+  // Get all coin values to determine dynamic ranges
+  const allValues = stats.value.all_coins?.map(c => c.max_value).filter(v => v > 0) || []
+  if (allValues.length === 0) return null
+  
+  const maxValue = Math.max(...allValues)
+  
+  // Create dynamic ranges based on max value
+  let rawLabels = []
+  if (maxValue <= 10) {
+    rawLabels = ['0-2', '2-5', '5-10']
+  } else if (maxValue <= 50) {
+    rawLabels = ['0-10', '10-20', '20-50']
+  } else if (maxValue <= 100) {
+    rawLabels = ['0-10', '10-50', '50-100']
+  } else if (maxValue <= 500) {
+    rawLabels = ['0-50', '50-100', '100-500']
+  } else {
+    rawLabels = ['0-100', '100-500', '500+']
+  }
+  
+  // Count coins in each range
+  const distribution = {}
+  rawLabels.forEach(r => distribution[r] = 0)
+  
+  allValues.forEach(value => {
+    for (const range of rawLabels) {
+      const parts = range.split('-')
+      const min = parseFloat(parts[0])
+      const max = parts[1] === '+' ? Infinity : parseFloat(parts[1])
+      if (value >= min && value < max) {
+        distribution[range]++
+        break
+      } else if (range.endsWith('+') && value >= min) {
+        distribution[range]++
+        break
+      }
+    }
+  })
+  
+  // Format labels with €
+  const labels = rawLabels.map(l => {
+    if (l.includes('+')) {
+      return `${l.replace('+', '')}€+`
+    } else {
+      const [min, max] = l.split('-')
+      return `${min}€ - ${max}€`
+    }
+  })
+  
+  const data = rawLabels.map(l => distribution[l] || 0)
 
   return {
     labels,
     datasets: [{
       label: t('dashboard.charts.labels.coins'),
-      backgroundColor: '#7c3aed', // Violeta (Money)
+      backgroundColor: '#7c3aed',
       data
     }]
   }
@@ -742,15 +925,28 @@ const timelineChartData = computed(() => {
     const dist = stats.value.decade_distribution
     if (!dist) return null
 
-    // Sort decades
-    const labels = Object.keys(dist).sort()
-    const data = labels.map(l => dist[l])
+    // Sort decades and find range
+    const existingDecades = Object.keys(dist).map(Number).sort((a, b) => a - b)
+    if (existingDecades.length === 0) return null
+    
+    const minDecade = existingDecades[0]
+    const maxDecade = existingDecades[existingDecades.length - 1]
+    
+    // Create all decades in range
+    const allDecades = []
+    for (let decade = minDecade; decade <= maxDecade; decade += 10) {
+        allDecades.push(decade)
+    }
+    
+    // Map data, filling 0 for missing decades
+    const labels = allDecades.map(d => d.toString())
+    const data = allDecades.map(d => dist[d.toString()] || 0)
 
     return {
         labels,
         datasets: [{
-            label: t('dashboard.charts.labels.coins_per_decade'),
-            backgroundColor: '#4F46E5', // Indigo
+            label: t('dashboard.charts.labels.coins'),
+            backgroundColor: '#3b82f6',
             data
         }]
     }
@@ -758,19 +954,38 @@ const timelineChartData = computed(() => {
 
 const qualityChartData = computed(() => {
     const coins = stats.value.all_coins
-    if (!coins || coins.length === 0) return null
-
-
+    
+    // Debug logging
+    console.log('Quality chart - all_coins:', coins)
+    console.log('Quality chart - all_coins length:', coins ? coins.length : 0)
+    
+    if (!coins || coins.length === 0) {
+        console.log('Quality chart - no coins data')
+        return null
+    }
 
     const data = coins
-        .filter(c => c.year > 0 && c.grade && getGradeValue(c.grade) > 0)
-        .map(c => ({
-            x: c.year,
-            y: getGradeValue(c.grade),
-            name: c.name,
-            grade: c.grade,
-            id: c.id
-        }))
+        .filter(c => c.year > 0 && c.grade)
+        .map(c => {
+            const gradeValue = getGradeValue(c.grade)
+            console.log(`Coin ${c.name}: grade=${c.grade}, gradeValue=${gradeValue}, year=${c.year}`)
+            return {
+                x: c.year,
+                y: gradeValue || 0,
+                name: c.name,
+                grade: c.grade,
+                id: c.id
+            }
+        })
+        .filter(point => point.y > 0)
+    
+    console.log('Quality chart - final data points:', data.length)
+    console.log('Quality chart - data:', data)
+    
+    if (data.length === 0) {
+        console.log('Quality chart - no valid data points after filtering')
+        return null
+    }
 
     return {
         datasets: [{
@@ -855,3 +1070,4 @@ const storageChartOptions = computed(() => ({
 
 
 </script>
+

@@ -109,13 +109,6 @@ func main() {
 	}
 	rembgClient := image.NewRembgClient(rembgURL)
 
-	// Run Migrations
-	migrator := infrastructure.NewMigrationService(dbPool)
-	if err := migrator.RunMigrations(ctx); err != nil {
-		slog.Error("Failed to run migrations", "error", err)
-		os.Exit(1)
-	}
-
 	// Initialize Numista Client
 	numistaKey := os.Getenv("NUMISTA_API_KEY")
 	numistaClient := numista.NewClient(numistaKey)

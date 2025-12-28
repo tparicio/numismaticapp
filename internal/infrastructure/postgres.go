@@ -688,3 +688,228 @@ func toNullFloat8Ptr(f *float64) pgtype.Float8 {
 		Valid:   true,
 	}
 }
+
+// MarkAsSold marks a coin as sold with price and channel
+func (r *PostgresCoinRepository) MarkAsSold(ctx context.Context, id uuid.UUID, soldAt time.Time, soldPrice float64, saleChannel string) (*domain.Coin, error) {
+	row, err := r.q.MarkCoinAsSold(ctx, db.MarkCoinAsSoldParams{
+		ID:          pgtype.UUID{Bytes: id, Valid: true},
+		SoldAt:      pgtype.Date{Time: soldAt, Valid: true},
+		SoldPrice:   toNumeric(soldPrice),
+		SaleChannel: toNullString(saleChannel),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to mark coin as sold: %w", err)
+	}
+	return r.coinFromDB(ctx, row)
+}
+
+// GetSaleChannels returns list of distinct sale channels
+func (r *PostgresCoinRepository) GetSaleChannels(ctx context.Context) ([]string, error) {
+	rows, err := r.q.GetDistinctSaleChannels(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get sale channels: %w", err)
+	}
+	channels := make([]string, 0, len(rows))
+	for _, row := range rows {
+		if row.Valid && row.String != "" {
+			channels = append(channels, row.String)
+		}
+	}
+	return channels, nil
+}
+
+// AddLink adds a new coin link
+func (r *PostgresCoinRepository) AddLink(ctx context.Context, link *domain.CoinLink) error {
+	params := db.AddCoinLinkParams{
+		CoinID:        pgtype.UUID{Bytes: link.CoinID, Valid: true},
+		Url:           link.URL,
+		Name:          toNullString(link.Name),
+		OgTitle:       toNullString(link.OGTitle),
+		OgDescription: toNullString(link.OGDescription),
+		OgImage:       toNullString(link.OGImage),
+	}
+
+	row, err := r.q.AddCoinLink(ctx, params)
+	if err != nil {
+		return fmt.Errorf("failed to add link: %w", err)
+	}
+
+	link.ID = uuid.UUID(row.ID.Bytes)
+	link.CreatedAt = row.CreatedAt.Time
+	return nil
+}
+
+// GetLink retrieves a single link by ID
+func (r *PostgresCoinRepository) GetLink(ctx context.Context, linkID uuid.UUID) (*domain.CoinLink, error) {
+	var l domain.CoinLink
+	var idBytes, coinIDBytes [16]byte
+	var pName, pOgTitle, pOgDesc, pOgImage pgtype.Text
+
+	err := r.db.QueryRow(ctx, `
+		SELECT id, coin_id, url, name, og_title, og_description, og_image, created_at
+		FROM coin_links
+		WHERE id = $1
+	`, pgtype.UUID{Bytes: linkID, Valid: true}).Scan(
+		&idBytes,
+		&coinIDBytes,
+		&l.URL,
+		&pName,
+		&pOgTitle,
+		&pOgDesc,
+		&pOgImage,
+		&l.CreatedAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get link: %w", err)
+	}
+
+	l.ID = uuid.UUID(idBytes)
+	l.CoinID = uuid.UUID(coinIDBytes)
+	l.Name = pName.String
+	l.OGTitle = pOgTitle.String
+	l.OGDescription = pOgDesc.String
+	l.OGImage = pOgImage.String
+
+	return &l, nil
+}
+
+// UpdateLink updates a coin link (e.g. refreshed OG data)
+func (r *PostgresCoinRepository) UpdateLink(ctx context.Context, link *domain.CoinLink) error {
+	// Manual SQL because sqlc is not available to regenerate
+	_, err := r.db.Exec(ctx, `
+		UPDATE coin_links 
+		SET url = $1, name = $2, og_title = $3, og_description = $4, og_image = $5
+		WHERE id = $6
+	`,
+		link.URL,
+		toNullString(link.Name),
+		toNullString(link.OGTitle),
+		toNullString(link.OGDescription),
+		toNullString(link.OGImage),
+		pgtype.UUID{Bytes: link.ID, Valid: true},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update link: %w", err)
+	}
+	return nil
+}
+
+// RemoveLink removes a coin link
+func (r *PostgresCoinRepository) RemoveLink(ctx context.Context, linkID uuid.UUID) error {
+	return r.q.DeleteCoinLink(ctx, pgtype.UUID{Bytes: linkID, Valid: true})
+}
+
+// ListLinks lists all links for a coin
+func (r *PostgresCoinRepository) ListLinks(ctx context.Context, coinID uuid.UUID) ([]*domain.CoinLink, error) {
+	rows, err := r.q.ListCoinLinks(ctx, pgtype.UUID{Bytes: coinID, Valid: true})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list links: %w", err)
+	}
+
+	links := make([]*domain.CoinLink, len(rows))
+	for i, row := range rows {
+		links[i] = &domain.CoinLink{
+			ID:            uuid.UUID(row.ID.Bytes),
+			CoinID:        uuid.UUID(row.CoinID.Bytes),
+			URL:           row.Url,
+			Name:          row.Name.String,
+			OGTitle:       row.OgTitle.String,
+			OGDescription: row.OgDescription.String,
+			OGImage:       row.OgImage.String,
+			CreatedAt:     row.CreatedAt.Time,
+		}
+	}
+	return links, nil
+}
+
+// GetAllImages returns all images for export features
+func (r *PostgresCoinRepository) GetAllImages(ctx context.Context) ([]domain.CoinImage, error) {
+	rows, err := r.db.Query(ctx, `
+		SELECT id, coin_id, image_type, side, path, extension, size, width, height, mime_type, original_filename, created_at, updated_at
+		FROM coin_images
+		ORDER BY coin_id, created_at
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list all images: %w", err)
+	}
+	defer rows.Close()
+
+	var images []domain.CoinImage
+	for rows.Next() {
+		var i domain.CoinImage
+		var idBytes, coinIDBytes [16]byte
+		var createdAt, updatedAt time.Time
+		var width, height int32
+
+		// Using generic scanning since we don't have the generated struct easily accessible/compatible without mapping
+		err := rows.Scan(
+			&idBytes,
+			&coinIDBytes,
+			&i.ImageType,
+			&i.Side,
+			&i.Path,
+			&i.Extension,
+			&i.Size,
+			&width,
+			&height,
+			&i.MimeType,
+			&i.OriginalFilename,
+			&createdAt,
+			&updatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan image: %w", err)
+		}
+		i.ID = uuid.UUID(idBytes)
+		i.CoinID = uuid.UUID(coinIDBytes)
+		i.Width = int(width)
+		i.Height = int(height)
+		i.CreatedAt = createdAt
+		i.UpdatedAt = updatedAt
+		images = append(images, i)
+	}
+	return images, rows.Err()
+}
+
+// GetAllLinks returns all links for export features
+func (r *PostgresCoinRepository) GetAllLinks(ctx context.Context) ([]*domain.CoinLink, error) {
+	rows, err := r.db.Query(ctx, `
+		SELECT id, coin_id, url, name, og_title, og_description, og_image, created_at
+		FROM coin_links
+		ORDER BY coin_id, created_at
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list all links: %w", err)
+	}
+	defer rows.Close()
+
+	var links []*domain.CoinLink
+	for rows.Next() {
+		l := &domain.CoinLink{}
+		var idBytes, coinIDBytes [16]byte
+		var pName, pOgTitle, pOgDesc, pOgImage pgtype.Text
+
+		err := rows.Scan(
+			&idBytes,
+			&coinIDBytes,
+			&l.URL,
+			&pName,
+			&pOgTitle,
+			&pOgDesc,
+			&pOgImage,
+			&l.CreatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan link: %w", err)
+		}
+		l.ID = uuid.UUID(idBytes)
+		l.CoinID = uuid.UUID(coinIDBytes)
+		l.Name = pName.String
+		l.OGTitle = pOgTitle.String
+		l.OGDescription = pOgDesc.String
+		l.OGImage = pOgImage.String
+
+		links = append(links, l)
+	}
+	return links, rows.Err()
+}

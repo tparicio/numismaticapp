@@ -1,0 +1,525 @@
+=== RUN   TestAddCoin_AICoverage
+=== RUN   TestAddCoin_AICoverage/AI_Returns_Invalid_Year/Mintage
+2025/12/28 15:48:28 INFO Starting AddCoin process coin_id=88720fae-bea1-4430-bbfa-856914a3fea1
+2025/12/28 15:48:28 INFO Starting Task C: Group Management coin_id=88720fae-bea1-4430-bbfa-856914a3fea1
+2025/12/28 15:48:28 INFO Completed Task C: Group Management coin_id=88720fae-bea1-4430-bbfa-856914a3fea1 group_id=1
+2025/12/28 15:48:28 INFO Starting Task A: AI Analysis coin_id=88720fae-bea1-4430-bbfa-856914a3fea1 model=m
+2025/12/28 15:48:28 INFO Completed Task A: AI Analysis coin_id=88720fae-bea1-4430-bbfa-856914a3fea1
+2025/12/28 15:48:28 INFO Starting Task B: Image Processing coin_id=88720fae-bea1-4430-bbfa-856914a3fea1
+2025/12/28 15:48:28 INFO Completed Task B: Image Processing coin_id=88720fae-bea1-4430-bbfa-856914a3fea1
+2025/12/28 15:48:28 WARN AI returned invalid year coin_id=88720fae-bea1-4430-bbfa-856914a3fea1 year=50000 error="year 50000 is out of plausible range"
+2025/12/28 15:48:28 INFO Successfully saved coin coin_id=88720fae-bea1-4430-bbfa-856914a3fea1
+2025/12/28 15:48:28 INFO Starting Numista enrichment coin_id=88720fae-bea1-4430-bbfa-856914a3fea1
+2025/12/28 15:48:28 INFO Searching Numista query="" year=""
+2025/12/28 15:48:28 INFO Numista returned nil result coin_id=88720fae-bea1-4430-bbfa-856914a3fea1
+2025/12/28 15:48:28 INFO Successfully enriched coin with Numista coin_id=88720fae-bea1-4430-bbfa-856914a3fea1
+--- PASS: TestAddCoin_AICoverage (0.05s)
+    --- PASS: TestAddCoin_AICoverage/AI_Returns_Invalid_Year/Mintage (0.05s)
+=== RUN   TestUpdateCoin_GroupCreateError
+--- PASS: TestUpdateCoin_GroupCreateError (0.00s)
+=== RUN   TestEnrichCoinWithNumista_MoreCoverage
+=== RUN   TestEnrichCoinWithNumista_MoreCoverage/Candidate_Detail_Fetch_Error
+2025/12/28 15:48:28 INFO Starting Numista enrichment coin_id=76cdc47b-8c28-4fee-83e6-4f06d235a758
+2025/12/28 15:48:28 INFO Searching Numista query="10 USD" year=2000
+2025/12/28 15:48:28 INFO Numista search completed count=2 results_len=2
+2025/12/28 15:48:28 INFO Set NumistaSearch field length=346
+2025/12/28 15:48:28 INFO Target numeric value raw="10 USD" parsed=10
+2025/12/28 15:48:28 INFO Checking candidate index=0 id=101 title="Error Coin" min_year=2000 max_year=2000
+2025/12/28 15:48:28 WARN Failed to get details for candidate, skipping id=101 error="api error"
+2025/12/28 15:48:28 INFO Checking candidate index=1 id=102 title="Success Coin" min_year=2000 max_year=2000
+2025/12/28 15:48:28 INFO Details fetched id=102 details_value=10 target_value=10 value_matches=true year_matches=true
+2025/12/28 15:48:28 INFO PERFECT MATCH FOUND id=102
+2025/12/28 15:48:28 INFO Mapped Numista details to coin fields diameter=0 weight=0 mint="" km="" ruler="" series="" orientation="" commemorated_topic=""
+2025/12/28 15:48:28 INFO Persisting Numista details coin_id=76cdc47b-8c28-4fee-83e6-4f06d235a758 numista_id=102
+2025/12/28 15:48:28 INFO Numista enrichment finished coin_id=76cdc47b-8c28-4fee-83e6-4f06d235a758
+=== RUN   TestEnrichCoinWithNumista_MoreCoverage/Too_Many_Results
+2025/12/28 15:48:28 INFO Starting Numista enrichment coin_id=76cdc47b-8c28-4fee-83e6-4f06d235a758
+2025/12/28 15:48:28 INFO Searching Numista query="" year=""
+2025/12/28 15:48:28 INFO Numista search completed count=50 results_len=0
+2025/12/28 15:48:28 INFO Set NumistaSearch field length=32
+2025/12/28 15:48:28 INFO No types found in Numista, saving empty search result coin_id=76cdc47b-8c28-4fee-83e6-4f06d235a758
+=== RUN   TestEnrichCoinWithNumista_MoreCoverage/Non-Numeric_Face_Value
+2025/12/28 15:48:28 INFO Starting Numista enrichment coin_id=76cdc47b-8c28-4fee-83e6-4f06d235a758
+2025/12/28 15:48:28 INFO Searching Numista query=Unknown year=2000
+2025/12/28 15:48:28 INFO Numista search completed count=1 results_len=1
+2025/12/28 15:48:28 INFO Set NumistaSearch field length=180
+2025/12/28 15:48:28 INFO Target numeric value raw=Unknown parsed=0
+2025/12/28 15:48:28 INFO Checking candidate index=0 id=101 title="" min_year=2000 max_year=2000
+2025/12/28 15:48:28 INFO Details fetched id=101 details_value=10 target_value=0 value_matches=false year_matches=true
+2025/12/28 15:48:28 INFO No match found for Value. No update performed for Details.
+2025/12/28 15:48:28 INFO Numista enrichment finished coin_id=76cdc47b-8c28-4fee-83e6-4f06d235a758
+--- PASS: TestEnrichCoinWithNumista_MoreCoverage (0.00s)
+    --- PASS: TestEnrichCoinWithNumista_MoreCoverage/Candidate_Detail_Fetch_Error (0.00s)
+    --- PASS: TestEnrichCoinWithNumista_MoreCoverage/Too_Many_Results (0.00s)
+    --- PASS: TestEnrichCoinWithNumista_MoreCoverage/Non-Numeric_Face_Value (0.00s)
+=== RUN   TestAddCoin_GroupCreateError
+=== RUN   TestAddCoin_GroupCreateError/Group_Create_Failure
+2025/12/28 15:48:28 INFO Starting AddCoin process coin_id=954b6e60-9c04-45d8-a414-d3469e995d47
+2025/12/28 15:48:28 INFO Starting Task C: Group Management coin_id=954b6e60-9c04-45d8-a414-d3469e995d47
+2025/12/28 15:48:28 ERROR Failed to create group coin_id=954b6e60-9c04-45d8-a414-d3469e995d47 group_name=FailGroup error="create error"
+2025/12/28 15:48:28 INFO Starting Task B: Image Processing coin_id=954b6e60-9c04-45d8-a414-d3469e995d47
+2025/12/28 15:48:28 INFO Completed Task B: Image Processing coin_id=954b6e60-9c04-45d8-a414-d3469e995d47
+2025/12/28 15:48:28 INFO Starting Task A: AI Analysis coin_id=954b6e60-9c04-45d8-a414-d3469e995d47 model=m
+2025/12/28 15:48:28 INFO Completed Task A: AI Analysis coin_id=954b6e60-9c04-45d8-a414-d3469e995d47
+--- PASS: TestAddCoin_GroupCreateError (0.00s)
+    --- PASS: TestAddCoin_GroupCreateError/Group_Create_Failure (0.00s)
+=== RUN   TestAddCoin_ImageProcErrors
+=== RUN   TestAddCoin_ImageProcErrors/Crop_Error_Front
+2025/12/28 15:48:28 INFO Starting AddCoin process coin_id=ad3d73b1-7cb7-4d0a-833f-f5d97c8d0128
+2025/12/28 15:48:28 INFO Starting Task C: Group Management coin_id=ad3d73b1-7cb7-4d0a-833f-f5d97c8d0128
+2025/12/28 15:48:28 INFO Starting Task A: AI Analysis coin_id=ad3d73b1-7cb7-4d0a-833f-f5d97c8d0128 model=m
+2025/12/28 15:48:28 INFO Starting Task B: Image Processing coin_id=ad3d73b1-7cb7-4d0a-833f-f5d97c8d0128
+2025/12/28 15:48:28 INFO No group name provided, skipping group creation coin_id=ad3d73b1-7cb7-4d0a-833f-f5d97c8d0128
+2025/12/28 15:48:28 INFO Completed Task A: AI Analysis coin_id=ad3d73b1-7cb7-4d0a-833f-f5d97c8d0128
+=== RUN   TestAddCoin_ImageProcErrors/Save_Processed_Front_Error
+2025/12/28 15:48:28 INFO Starting AddCoin process coin_id=d51f8925-f84b-43b3-b122-8b9a80dda210
+2025/12/28 15:48:28 INFO Starting Task C: Group Management coin_id=d51f8925-f84b-43b3-b122-8b9a80dda210
+2025/12/28 15:48:28 INFO Starting Task B: Image Processing coin_id=d51f8925-f84b-43b3-b122-8b9a80dda210
+2025/12/28 15:48:28 INFO No group name provided, skipping group creation coin_id=d51f8925-f84b-43b3-b122-8b9a80dda210
+2025/12/28 15:48:28 INFO Starting Task A: AI Analysis coin_id=d51f8925-f84b-43b3-b122-8b9a80dda210 model=m
+2025/12/28 15:48:28 INFO Completed Task A: AI Analysis coin_id=d51f8925-f84b-43b3-b122-8b9a80dda210
+=== RUN   TestAddCoin_ImageProcErrors/Generate_Thumbnail_Front_Error
+2025/12/28 15:48:28 INFO Starting AddCoin process coin_id=57586d6a-8c8b-4ab9-aa34-5b8dd86a90b0
+2025/12/28 15:48:28 INFO Starting Task C: Group Management coin_id=57586d6a-8c8b-4ab9-aa34-5b8dd86a90b0
+2025/12/28 15:48:28 INFO No group name provided, skipping group creation coin_id=57586d6a-8c8b-4ab9-aa34-5b8dd86a90b0
+2025/12/28 15:48:28 INFO Starting Task A: AI Analysis coin_id=57586d6a-8c8b-4ab9-aa34-5b8dd86a90b0 model=m
+2025/12/28 15:48:28 INFO Completed Task A: AI Analysis coin_id=57586d6a-8c8b-4ab9-aa34-5b8dd86a90b0
+2025/12/28 15:48:28 INFO Starting Task B: Image Processing coin_id=57586d6a-8c8b-4ab9-aa34-5b8dd86a90b0
+=== RUN   TestAddCoin_ImageProcErrors/Remove_Background_Back_Error
+2025/12/28 15:48:28 INFO Starting AddCoin process coin_id=9903c253-b424-4ef7-ab1d-77e7cf1c5666
+2025/12/28 15:48:28 INFO Starting Task C: Group Management coin_id=9903c253-b424-4ef7-ab1d-77e7cf1c5666
+2025/12/28 15:48:28 INFO No group name provided, skipping group creation coin_id=9903c253-b424-4ef7-ab1d-77e7cf1c5666
+2025/12/28 15:48:28 INFO Starting Task B: Image Processing coin_id=9903c253-b424-4ef7-ab1d-77e7cf1c5666
+2025/12/28 15:48:28 INFO Starting Task A: AI Analysis coin_id=9903c253-b424-4ef7-ab1d-77e7cf1c5666 model=m
+2025/12/28 15:48:28 INFO Completed Task A: AI Analysis coin_id=9903c253-b424-4ef7-ab1d-77e7cf1c5666
+2025/12/28 15:48:28 ERROR Failed to remove background from back coin_id=9903c253-b424-4ef7-ab1d-77e7cf1c5666 error="bg back fail"
+--- PASS: TestAddCoin_ImageProcErrors (0.00s)
+    --- PASS: TestAddCoin_ImageProcErrors/Crop_Error_Front (0.00s)
+    --- PASS: TestAddCoin_ImageProcErrors/Save_Processed_Front_Error (0.00s)
+    --- PASS: TestAddCoin_ImageProcErrors/Generate_Thumbnail_Front_Error (0.00s)
+    --- PASS: TestAddCoin_ImageProcErrors/Remove_Background_Back_Error (0.00s)
+=== RUN   TestAddCoin_AIAnalysisError
+=== RUN   TestAddCoin_AIAnalysisError/AI_Returns_Error
+2025/12/28 15:48:28 INFO Starting AddCoin process coin_id=2bf8bc0b-e514-4326-b4b1-b16486509630
+2025/12/28 15:48:28 INFO Starting Task C: Group Management coin_id=2bf8bc0b-e514-4326-b4b1-b16486509630
+2025/12/28 15:48:28 INFO Starting Task B: Image Processing coin_id=2bf8bc0b-e514-4326-b4b1-b16486509630
+2025/12/28 15:48:28 INFO Completed Task B: Image Processing coin_id=2bf8bc0b-e514-4326-b4b1-b16486509630
+2025/12/28 15:48:28 INFO Completed Task C: Group Management coin_id=2bf8bc0b-e514-4326-b4b1-b16486509630 group_id=1
+2025/12/28 15:48:28 INFO Starting Task A: AI Analysis coin_id=2bf8bc0b-e514-4326-b4b1-b16486509630 model=m
+2025/12/28 15:48:28 WARN Gemini analysis failed coin_id=2bf8bc0b-e514-4326-b4b1-b16486509630 error="ai error"
+2025/12/28 15:48:28 INFO Completed Task A: AI Analysis coin_id=2bf8bc0b-e514-4326-b4b1-b16486509630
+2025/12/28 15:48:28 INFO Successfully saved coin coin_id=2bf8bc0b-e514-4326-b4b1-b16486509630
+2025/12/28 15:48:28 INFO Starting Numista enrichment coin_id=2bf8bc0b-e514-4326-b4b1-b16486509630
+2025/12/28 15:48:28 INFO Searching Numista query="" year=""
+2025/12/28 15:48:28 INFO Numista returned nil result coin_id=2bf8bc0b-e514-4326-b4b1-b16486509630
+2025/12/28 15:48:28 INFO Successfully enriched coin with Numista coin_id=2bf8bc0b-e514-4326-b4b1-b16486509630
+--- PASS: TestAddCoin_AIAnalysisError (0.05s)
+    --- PASS: TestAddCoin_AIAnalysisError/AI_Returns_Error (0.05s)
+=== RUN   TestReanalyzeCoin_MoreCoverage
+=== RUN   TestReanalyzeCoin_MoreCoverage/Missing_Images
+=== RUN   TestReanalyzeCoin_MoreCoverage/Update_Repo_Error
+2025/12/28 15:48:28 INFO Re-analyzing coin with Gemini coin_id=aff68b06-6607-48e2-98b3-07fe3a2d4120
+--- PASS: TestReanalyzeCoin_MoreCoverage (0.00s)
+    --- PASS: TestReanalyzeCoin_MoreCoverage/Missing_Images (0.00s)
+    --- PASS: TestReanalyzeCoin_MoreCoverage/Update_Repo_Error (0.00s)
+=== RUN   TestListCoins
+=== RUN   TestListCoins/Basic_List
+=== RUN   TestListCoins/Filtered_List_(Year,_Query)
+=== RUN   TestListCoins/Filtered_List_(Country)
+--- PASS: TestListCoins (0.00s)
+    --- PASS: TestListCoins/Basic_List (0.00s)
+    --- PASS: TestListCoins/Filtered_List_(Year,_Query) (0.00s)
+    --- PASS: TestListCoins/Filtered_List_(Country) (0.00s)
+=== RUN   TestGetCoin
+=== RUN   TestGetCoin/Success
+=== RUN   TestGetCoin/Error
+--- PASS: TestGetCoin (0.00s)
+    --- PASS: TestGetCoin/Success (0.00s)
+    --- PASS: TestGetCoin/Error (0.00s)
+=== RUN   TestGetDashboardStats
+--- PASS: TestGetDashboardStats (0.00s)
+=== RUN   TestAddCoin_Flows
+=== RUN   TestAddCoin_Flows/Success
+2025/12/28 15:48:28 INFO Starting AddCoin process coin_id=6cc8cd2c-b5f2-4b6e-a0e1-ffb9c2f096f3
+2025/12/28 15:48:28 INFO Starting Task C: Group Management coin_id=6cc8cd2c-b5f2-4b6e-a0e1-ffb9c2f096f3
+2025/12/28 15:48:28 INFO Starting Task A: AI Analysis coin_id=6cc8cd2c-b5f2-4b6e-a0e1-ffb9c2f096f3 model=m
+2025/12/28 15:48:28 INFO Starting Task B: Image Processing coin_id=6cc8cd2c-b5f2-4b6e-a0e1-ffb9c2f096f3
+2025/12/28 15:48:28 INFO Completed Task C: Group Management coin_id=6cc8cd2c-b5f2-4b6e-a0e1-ffb9c2f096f3 group_id=1
+2025/12/28 15:48:28 INFO Completed Task A: AI Analysis coin_id=6cc8cd2c-b5f2-4b6e-a0e1-ffb9c2f096f3
+2025/12/28 15:48:28 INFO Completed Task B: Image Processing coin_id=6cc8cd2c-b5f2-4b6e-a0e1-ffb9c2f096f3
+2025/12/28 15:48:28 INFO Successfully saved coin coin_id=6cc8cd2c-b5f2-4b6e-a0e1-ffb9c2f096f3
+=== RUN   TestAddCoin_Flows/Storage_Err
+2025/12/28 15:48:28 INFO Starting Numista enrichment coin_id=6cc8cd2c-b5f2-4b6e-a0e1-ffb9c2f096f3
+2025/12/28 15:48:28 INFO Starting AddCoin process coin_id=89976626-5023-4700-b41c-f4558acbd3ec
+=== RUN   TestAddCoin_Flows/AI_Err
+2025/12/28 15:48:28 INFO Searching Numista query=1 year=2024
+2025/12/28 15:48:28 INFO Numista search completed count=0 results_len=0
+2025/12/28 15:48:28 INFO Set NumistaSearch field length=32
+2025/12/28 15:48:28 INFO No types found in Numista, saving empty search result coin_id=6cc8cd2c-b5f2-4b6e-a0e1-ffb9c2f096f3
+2025/12/28 15:48:28 INFO Successfully enriched coin with Numista coin_id=6cc8cd2c-b5f2-4b6e-a0e1-ffb9c2f096f3
+2025/12/28 15:48:28 INFO Starting AddCoin process coin_id=bd33491c-b3bf-4e11-9396-c4575e9021f7
+2025/12/28 15:48:28 INFO Starting Task C: Group Management coin_id=bd33491c-b3bf-4e11-9396-c4575e9021f7
+2025/12/28 15:48:28 INFO Starting Task A: AI Analysis coin_id=bd33491c-b3bf-4e11-9396-c4575e9021f7 model=m
+2025/12/28 15:48:28 INFO Completed Task C: Group Management coin_id=bd33491c-b3bf-4e11-9396-c4575e9021f7 group_id=1
+2025/12/28 15:48:28 INFO Starting Task B: Image Processing coin_id=bd33491c-b3bf-4e11-9396-c4575e9021f7
+2025/12/28 15:48:28 WARN Gemini analysis failed coin_id=bd33491c-b3bf-4e11-9396-c4575e9021f7 error="assert.AnError general error for testing"
+2025/12/28 15:48:28 INFO Completed Task A: AI Analysis coin_id=bd33491c-b3bf-4e11-9396-c4575e9021f7
+2025/12/28 15:48:28 INFO Completed Task B: Image Processing coin_id=bd33491c-b3bf-4e11-9396-c4575e9021f7
+2025/12/28 15:48:28 INFO Successfully saved coin coin_id=bd33491c-b3bf-4e11-9396-c4575e9021f7
+--- PASS: TestAddCoin_Flows (0.00s)
+    --- PASS: TestAddCoin_Flows/Success (0.00s)
+    --- PASS: TestAddCoin_Flows/Storage_Err (0.00s)
+    --- PASS: TestAddCoin_Flows/AI_Err (0.00s)
+=== RUN   TestEnrichCoinWithNumista
+=== RUN   TestEnrichCoinWithNumista/Match_Found
+2025/12/28 15:48:28 INFO Starting Numista enrichment coin_id=bd33491c-b3bf-4e11-9396-c4575e9021f7
+2025/12/28 15:48:28 INFO Searching Numista query="" year=""
+2025/12/28 15:48:28 INFO Numista search completed count=0 results_len=0
+2025/12/28 15:48:28 INFO Set NumistaSearch field length=31
+2025/12/28 15:48:28 INFO No types found in Numista, saving empty search result coin_id=bd33491c-b3bf-4e11-9396-c4575e9021f7
+2025/12/28 15:48:28 INFO Successfully enriched coin with Numista coin_id=bd33491c-b3bf-4e11-9396-c4575e9021f7
+2025/12/28 15:48:28 INFO Starting Numista enrichment coin_id=3941dfe7-bda6-4058-9537-6f7f66ad6e47
+2025/12/28 15:48:28 INFO Searching Numista query="20 Euro Cent" year=2008
+2025/12/28 15:48:28 INFO Numista search completed count=1 results_len=1
+2025/12/28 15:48:28 INFO Set NumistaSearch field length=193
+2025/12/28 15:48:28 INFO Target numeric value raw="20 Euro Cent" parsed=20
+2025/12/28 15:48:28 INFO Checking candidate index=0 id=123 title="20 Cents" min_year=2007 max_year=2009
+2025/12/28 15:48:28 INFO Details fetched id=123 details_value=0.2 target_value=20 value_matches=true year_matches=true
+2025/12/28 15:48:28 INFO PERFECT MATCH FOUND id=123
+2025/12/28 15:48:28 INFO Mapped Numista details to coin fields diameter=0 weight=0 mint="" km="" ruler="" series="" orientation="" commemorated_topic=""
+2025/12/28 15:48:28 INFO Persisting Numista details coin_id=3941dfe7-bda6-4058-9537-6f7f66ad6e47 numista_id=123
+2025/12/28 15:48:28 INFO Numista enrichment finished coin_id=3941dfe7-bda6-4058-9537-6f7f66ad6e47
+=== RUN   TestEnrichCoinWithNumista/No_Match_Found
+2025/12/28 15:48:28 INFO Starting Numista enrichment coin_id=3941dfe7-bda6-4058-9537-6f7f66ad6e47
+2025/12/28 15:48:28 INFO Searching Numista query="Rare Coin" year=1900
+2025/12/28 15:48:28 INFO Numista search completed count=0 results_len=0
+2025/12/28 15:48:28 INFO Set NumistaSearch field length=40
+2025/12/28 15:48:28 INFO No types found in Numista, saving empty search result coin_id=3941dfe7-bda6-4058-9537-6f7f66ad6e47
+=== RUN   TestEnrichCoinWithNumista/Repo_Error_Get
+2025/12/28 15:48:28 INFO Starting Numista enrichment coin_id=3941dfe7-bda6-4058-9537-6f7f66ad6e47
+=== RUN   TestEnrichCoinWithNumista/Search_Error
+2025/12/28 15:48:28 INFO Starting Numista enrichment coin_id=3941dfe7-bda6-4058-9537-6f7f66ad6e47
+2025/12/28 15:48:28 INFO Searching Numista query=V year=2000
+2025/12/28 15:48:28 ERROR Numista search request failed error="assert.AnError general error for testing"
+=== RUN   TestEnrichCoinWithNumista/Repo_Update_Error
+2025/12/28 15:48:28 INFO Starting Numista enrichment coin_id=3941dfe7-bda6-4058-9537-6f7f66ad6e47
+2025/12/28 15:48:28 INFO Searching Numista query=20 year=2000
+2025/12/28 15:48:28 INFO Numista search completed count=0 results_len=0
+2025/12/28 15:48:28 INFO Set NumistaSearch field length=33
+2025/12/28 15:48:28 INFO No types found in Numista, saving empty search result coin_id=3941dfe7-bda6-4058-9537-6f7f66ad6e47
+--- PASS: TestEnrichCoinWithNumista (0.00s)
+    --- PASS: TestEnrichCoinWithNumista/Match_Found (0.00s)
+    --- PASS: TestEnrichCoinWithNumista/No_Match_Found (0.00s)
+    --- PASS: TestEnrichCoinWithNumista/Repo_Error_Get (0.00s)
+    --- PASS: TestEnrichCoinWithNumista/Search_Error (0.00s)
+    --- PASS: TestEnrichCoinWithNumista/Repo_Update_Error (0.00s)
+=== RUN   TestApplyNumistaCandidate
+=== RUN   TestApplyNumistaCandidate/Success
+2025/12/28 15:48:28 INFO Applying Numista candidate manually coin_id=fd33331f-af83-4cd3-bc87-86d607725b3a numista_id=999
+2025/12/28 15:48:28 INFO Mapped Numista details to coin fields diameter=0 weight=0 mint="" km="" ruler="" series="" orientation="" commemorated_topic=""
+=== RUN   TestApplyNumistaCandidate/Error_GetType
+2025/12/28 15:48:28 INFO Applying Numista candidate manually coin_id=fd33331f-af83-4cd3-bc87-86d607725b3a numista_id=999
+=== RUN   TestApplyNumistaCandidate/Full_Mapping
+2025/12/28 15:48:28 INFO Applying Numista candidate manually coin_id=fd33331f-af83-4cd3-bc87-86d607725b3a numista_id=999
+2025/12/28 15:48:28 INFO Mapped Numista details to coin fields diameter=25 weight=8.5 mint="Royal Mint" km="KM# 123" ruler="King Charles" series=Commemorative orientation="Coin alignment" commemorated_topic=Anniversary
+=== RUN   TestApplyNumistaCandidate/Repo_Update_Error
+2025/12/28 15:48:28 INFO Applying Numista candidate manually coin_id=fd33331f-af83-4cd3-bc87-86d607725b3a numista_id=999
+2025/12/28 15:48:28 INFO Mapped Numista details to coin fields diameter=0 weight=0 mint="" km="" ruler="" series="" orientation="" commemorated_topic=""
+--- PASS: TestApplyNumistaCandidate (0.00s)
+    --- PASS: TestApplyNumistaCandidate/Success (0.00s)
+    --- PASS: TestApplyNumistaCandidate/Error_GetType (0.00s)
+    --- PASS: TestApplyNumistaCandidate/Full_Mapping (0.00s)
+    --- PASS: TestApplyNumistaCandidate/Repo_Update_Error (0.00s)
+=== RUN   TestListGroups
+=== RUN   TestListGroups/Success
+=== RUN   TestListGroups/List_Error
+=== RUN   TestListGroups/Stats_Error
+2025/12/28 15:48:28 WARN Failed to fetch group stats error="stats error"
+--- PASS: TestListGroups (0.00s)
+    --- PASS: TestListGroups/Success (0.00s)
+    --- PASS: TestListGroups/List_Error (0.00s)
+    --- PASS: TestListGroups/Stats_Error (0.00s)
+=== RUN   TestCreateGroup
+=== RUN   TestCreateGroup/Success
+=== RUN   TestCreateGroup/Repo_Error
+--- PASS: TestCreateGroup (0.00s)
+    --- PASS: TestCreateGroup/Success (0.00s)
+    --- PASS: TestCreateGroup/Repo_Error (0.00s)
+=== RUN   TestUpdateGroup
+=== RUN   TestUpdateGroup/Success
+--- PASS: TestUpdateGroup (0.00s)
+    --- PASS: TestUpdateGroup/Success (0.00s)
+=== RUN   TestDeleteGroup
+=== RUN   TestDeleteGroup/Success
+=== RUN   TestDeleteGroup/Repo_Error
+--- PASS: TestDeleteGroup (0.00s)
+    --- PASS: TestDeleteGroup/Success (0.00s)
+    --- PASS: TestDeleteGroup/Repo_Error (0.00s)
+=== RUN   TestUpdateCoin
+=== RUN   TestUpdateCoin/Success
+=== RUN   TestUpdateCoin/Get_Error
+--- PASS: TestUpdateCoin (0.00s)
+    --- PASS: TestUpdateCoin/Success (0.00s)
+    --- PASS: TestUpdateCoin/Get_Error (0.00s)
+=== RUN   TestDeleteCoin
+=== RUN   TestDeleteCoin/Success
+    coin_service.go:1136: Unexpected call to *mocks.MockStorageService.DeleteCoinDirectory([ab0efd6e-8498-4061-bf61-068f40f364c5]) at /home/toni/Develop/go/numismaticapp/internal/application/coin_service.go:1136 because: there are no expected calls of the method "DeleteCoinDirectory" for that receiver
+=== RUN   TestDeleteCoin/Error
+--- FAIL: TestDeleteCoin (0.00s)
+    --- FAIL: TestDeleteCoin/Success (0.00s)
+    --- PASS: TestDeleteCoin/Error (0.00s)
+=== RUN   TestRotateCoinImage
+=== RUN   TestRotateCoinImage/Success
+2025/12/28 15:48:28 INFO RotateCoinImage called coin_id=b2c06d36-4800-4ff1-92f2-e0ec5589bdc3 side=front angle=90
+2025/12/28 15:48:28 INFO Found image to rotate path=path/front.png
+2025/12/28 15:48:28 INFO Rotation successful
+2025/12/28 15:48:28 INFO Thumbnail regenerated path=path/thumb.png
+=== RUN   TestRotateCoinImage/Repo_Get_Error
+2025/12/28 15:48:28 INFO RotateCoinImage called coin_id=b2c06d36-4800-4ff1-92f2-e0ec5589bdc3 side=front angle=90
+--- PASS: TestRotateCoinImage (0.00s)
+    --- PASS: TestRotateCoinImage/Success (0.00s)
+    --- PASS: TestRotateCoinImage/Repo_Get_Error (0.00s)
+=== RUN   TestReanalyzeCoin
+=== RUN   TestReanalyzeCoin/Success
+2025/12/28 15:48:28 INFO Re-analyzing coin with Gemini coin_id=c9d261e1-168f-4cc8-9471-b1dadb5065c1
+=== RUN   TestReanalyzeCoin/AI_Error
+2025/12/28 15:48:28 INFO Re-analyzing coin with Gemini coin_id=c9d261e1-168f-4cc8-9471-b1dadb5065c1
+--- PASS: TestReanalyzeCoin (0.00s)
+    --- PASS: TestReanalyzeCoin/Success (0.00s)
+    --- PASS: TestReanalyzeCoin/AI_Error (0.00s)
+=== RUN   TestGetGeminiModels
+--- PASS: TestGetGeminiModels (0.00s)
+=== RUN   TestUpdateCoin_Grades
+=== RUN   TestUpdateCoin_Grades/Normalize_Grades
+--- PASS: TestUpdateCoin_Grades (0.00s)
+    --- PASS: TestUpdateCoin_Grades/Normalize_Grades (0.00s)
+=== RUN   TestGetDashboardStats_Century
+--- PASS: TestGetDashboardStats_Century (0.00s)
+=== RUN   TestRotateCoinImage_Errors
+=== RUN   TestRotateCoinImage_Errors/Thumbnail_Error
+2025/12/28 15:48:28 INFO RotateCoinImage called coin_id=92053629-a510-4bf2-9a04-cbf1af5af1f3 side=front angle=90
+2025/12/28 15:48:28 INFO Found image to rotate path=path/front.png
+2025/12/28 15:48:28 INFO Rotation successful
+2025/12/28 15:48:28 ERROR Thumbnail regeneration failed error="thumb error"
+=== RUN   TestRotateCoinImage_Errors/Image_Not_Found
+2025/12/28 15:48:28 INFO RotateCoinImage called coin_id=67edcb74-ca4a-4f87-a1a3-a6314d6b3c05 side=front angle=90
+--- PASS: TestRotateCoinImage_Errors (0.00s)
+    --- PASS: TestRotateCoinImage_Errors/Thumbnail_Error (0.00s)
+    --- PASS: TestRotateCoinImage_Errors/Image_Not_Found (0.00s)
+=== RUN   TestCreateGroup_Errors
+=== RUN   TestCreateGroup_Errors/Repo_Error
+=== RUN   TestCreateGroup_Errors/Validation_Error
+--- PASS: TestCreateGroup_Errors (0.00s)
+    --- PASS: TestCreateGroup_Errors/Repo_Error (0.00s)
+    --- PASS: TestCreateGroup_Errors/Validation_Error (0.00s)
+=== RUN   TestAddCoin_ErrorPaths
+=== RUN   TestAddCoin_ErrorPaths/Group_Create_Error
+2025/12/28 15:48:28 INFO Starting AddCoin process coin_id=29a981ba-828b-4153-bea7-aaf25ef060b9
+2025/12/28 15:48:28 INFO Starting Task C: Group Management coin_id=29a981ba-828b-4153-bea7-aaf25ef060b9
+2025/12/28 15:48:28 INFO Starting Task A: AI Analysis coin_id=29a981ba-828b-4153-bea7-aaf25ef060b9 model=m
+2025/12/28 15:48:28 ERROR Failed to create group coin_id=29a981ba-828b-4153-bea7-aaf25ef060b9 group_name=G_Fail error="create error"
+2025/12/28 15:48:28 INFO Completed Task A: AI Analysis coin_id=29a981ba-828b-4153-bea7-aaf25ef060b9
+2025/12/28 15:48:28 INFO Starting Task B: Image Processing coin_id=29a981ba-828b-4153-bea7-aaf25ef060b9
+2025/12/28 15:48:28 INFO Completed Task B: Image Processing coin_id=29a981ba-828b-4153-bea7-aaf25ef060b9
+=== RUN   TestAddCoin_ErrorPaths/Image_Process_Error
+2025/12/28 15:48:28 INFO Starting AddCoin process coin_id=c3a3e118-611d-48e8-bbc6-eb5e3ec5c264
+2025/12/28 15:48:28 INFO Starting Task C: Group Management coin_id=c3a3e118-611d-48e8-bbc6-eb5e3ec5c264
+2025/12/28 15:48:28 INFO Starting Task A: AI Analysis coin_id=c3a3e118-611d-48e8-bbc6-eb5e3ec5c264 model=m
+2025/12/28 15:48:28 INFO No group name provided, skipping group creation coin_id=c3a3e118-611d-48e8-bbc6-eb5e3ec5c264
+2025/12/28 15:48:28 INFO Completed Task A: AI Analysis coin_id=c3a3e118-611d-48e8-bbc6-eb5e3ec5c264
+2025/12/28 15:48:28 INFO Starting Task B: Image Processing coin_id=c3a3e118-611d-48e8-bbc6-eb5e3ec5c264
+2025/12/28 15:48:28 ERROR Failed to remove background from front coin_id=c3a3e118-611d-48e8-bbc6-eb5e3ec5c264 error="bg error"
+--- PASS: TestAddCoin_ErrorPaths (0.00s)
+    --- PASS: TestAddCoin_ErrorPaths/Group_Create_Error (0.00s)
+    --- PASS: TestAddCoin_ErrorPaths/Image_Process_Error (0.00s)
+=== RUN   TestUpdateGroup_Validation
+--- PASS: TestUpdateGroup_Validation (0.00s)
+=== RUN   TestEnrichCoinWithNumista_Complex
+=== RUN   TestEnrichCoinWithNumista_Complex/Fallback_to_Value_Match_when_Year_Mismatches
+2025/12/28 15:48:28 INFO Starting Numista enrichment coin_id=748e7080-4059-4e9b-a20d-06973a148f91
+2025/12/28 15:48:28 INFO Searching Numista query="1 Euro Euro Spain" year=2005
+2025/12/28 15:48:28 INFO Numista search completed count=2 results_len=2
+2025/12/28 15:48:28 INFO Set NumistaSearch field length=353
+2025/12/28 15:48:28 INFO Target numeric value raw="1 Euro" parsed=1
+2025/12/28 15:48:28 INFO Checking candidate index=0 id=101 title="1 Euro (Old)" min_year=2000 max_year=2002
+2025/12/28 15:48:28 INFO Details fetched id=101 details_value=1 target_value=1 value_matches=true year_matches=false
+2025/12/28 15:48:28 INFO Fallback match found (Value matches, year mismatch) id=101
+2025/12/28 15:48:28 INFO Checking candidate index=1 id=102 title="2 Euro" min_year=2004 max_year=2006
+2025/12/28 15:48:28 INFO Details fetched id=102 details_value=2 target_value=1 value_matches=false year_matches=true
+2025/12/28 15:48:28 INFO No perfect match found. Using fallback (Value match).
+2025/12/28 15:48:28 INFO Mapped Numista details to coin fields diameter=0 weight=0 mint="" km="" ruler="" series="" orientation="" commemorated_topic=""
+2025/12/28 15:48:28 INFO Persisting Numista details coin_id=748e7080-4059-4e9b-a20d-06973a148f91 numista_id=101
+2025/12/28 15:48:28 INFO Numista enrichment finished coin_id=748e7080-4059-4e9b-a20d-06973a148f91
+=== RUN   TestEnrichCoinWithNumista_Complex/Value_Unit_Conversion_Match
+2025/12/28 15:48:28 INFO Starting Numista enrichment coin_id=748e7080-4059-4e9b-a20d-06973a148f91
+2025/12/28 15:48:28 INFO Searching Numista query=20 year=2000
+2025/12/28 15:48:28 INFO Numista search completed count=1 results_len=1
+2025/12/28 15:48:28 INFO Set NumistaSearch field length=175
+2025/12/28 15:48:28 INFO Target numeric value raw=20 parsed=20
+2025/12/28 15:48:28 INFO Checking candidate index=0 id=201 title="" min_year=2000 max_year=2000
+2025/12/28 15:48:28 INFO Details fetched id=201 details_value=0.2 target_value=20 value_matches=true year_matches=true
+2025/12/28 15:48:28 INFO PERFECT MATCH FOUND id=201
+2025/12/28 15:48:28 INFO Mapped Numista details to coin fields diameter=0 weight=0 mint="" km="" ruler="" series="" orientation="" commemorated_topic=""
+2025/12/28 15:48:28 INFO Persisting Numista details coin_id=748e7080-4059-4e9b-a20d-06973a148f91 numista_id=201
+2025/12/28 15:48:28 INFO Numista enrichment finished coin_id=748e7080-4059-4e9b-a20d-06973a148f91
+--- PASS: TestEnrichCoinWithNumista_Complex (0.00s)
+    --- PASS: TestEnrichCoinWithNumista_Complex/Fallback_to_Value_Match_when_Year_Mismatches (0.00s)
+    --- PASS: TestEnrichCoinWithNumista_Complex/Value_Unit_Conversion_Match (0.00s)
+=== RUN   TestAddCoin_EdgeCases
+=== RUN   TestAddCoin_EdgeCases/Reader_Error_Front
+2025/12/28 15:48:28 INFO Starting AddCoin process coin_id=c5fa9853-cc87-4ea7-b503-7e9bac9f2734
+=== RUN   TestAddCoin_EdgeCases/Reader_Error_Back
+2025/12/28 15:48:28 INFO Starting AddCoin process coin_id=d03760f8-5fa3-4470-9c26-a330eccbb80f
+=== RUN   TestAddCoin_EdgeCases/Original_Image_Metadata_Error
+2025/12/28 15:48:28 INFO Starting AddCoin process coin_id=c7bee878-531a-4453-8623-865ab14332e4
+2025/12/28 15:48:28 INFO Starting Task C: Group Management coin_id=c7bee878-531a-4453-8623-865ab14332e4
+2025/12/28 15:48:28 INFO Starting Task A: AI Analysis coin_id=c7bee878-531a-4453-8623-865ab14332e4 model=m
+2025/12/28 15:48:28 INFO Completed Task C: Group Management coin_id=c7bee878-531a-4453-8623-865ab14332e4 group_id=1
+2025/12/28 15:48:28 INFO Completed Task A: AI Analysis coin_id=c7bee878-531a-4453-8623-865ab14332e4
+2025/12/28 15:48:28 INFO Starting Task B: Image Processing coin_id=c7bee878-531a-4453-8623-865ab14332e4
+2025/12/28 15:48:28 INFO Completed Task B: Image Processing coin_id=c7bee878-531a-4453-8623-865ab14332e4
+=== RUN   TestAddCoin_EdgeCases/Processed_Image_Metadata_Error
+2025/12/28 15:48:28 INFO Starting AddCoin process coin_id=8fbec3b4-1ef7-4de1-9e52-62784bc7bd90
+2025/12/28 15:48:28 INFO Starting Task C: Group Management coin_id=8fbec3b4-1ef7-4de1-9e52-62784bc7bd90
+2025/12/28 15:48:28 INFO Completed Task C: Group Management coin_id=8fbec3b4-1ef7-4de1-9e52-62784bc7bd90 group_id=1
+2025/12/28 15:48:28 INFO Starting Task A: AI Analysis coin_id=8fbec3b4-1ef7-4de1-9e52-62784bc7bd90 model=m
+2025/12/28 15:48:28 INFO Starting Task B: Image Processing coin_id=8fbec3b4-1ef7-4de1-9e52-62784bc7bd90
+2025/12/28 15:48:28 INFO Completed Task A: AI Analysis coin_id=8fbec3b4-1ef7-4de1-9e52-62784bc7bd90
+2025/12/28 15:48:28 INFO Completed Task B: Image Processing coin_id=8fbec3b4-1ef7-4de1-9e52-62784bc7bd90
+--- PASS: TestAddCoin_EdgeCases (0.00s)
+    --- PASS: TestAddCoin_EdgeCases/Reader_Error_Front (0.00s)
+    --- PASS: TestAddCoin_EdgeCases/Reader_Error_Back (0.00s)
+    --- PASS: TestAddCoin_EdgeCases/Original_Image_Metadata_Error (0.00s)
+    --- PASS: TestAddCoin_EdgeCases/Processed_Image_Metadata_Error (0.00s)
+=== RUN   TestGetDashboardStats_Errors
+=== RUN   TestGetDashboardStats_Errors/Count_Error
+=== RUN   TestGetDashboardStats_Errors/TotalValue_Error
+=== RUN   TestGetDashboardStats_Errors/AverageValue_Error
+=== RUN   TestGetDashboardStats_Errors/ListTopValuable_Error
+=== RUN   TestGetDashboardStats_Errors/ListRecent_Error
+=== RUN   TestGetDashboardStats_Errors/MaterialDist_Error
+=== RUN   TestGetDashboardStats_Errors/GradeDist_Error
+=== RUN   TestGetDashboardStats_Errors/AllValues_Error
+=== RUN   TestGetDashboardStats_Errors/GetAllCoins_Error_(Soft)
+--- PASS: TestGetDashboardStats_Errors (0.00s)
+    --- PASS: TestGetDashboardStats_Errors/Count_Error (0.00s)
+    --- PASS: TestGetDashboardStats_Errors/TotalValue_Error (0.00s)
+    --- PASS: TestGetDashboardStats_Errors/AverageValue_Error (0.00s)
+    --- PASS: TestGetDashboardStats_Errors/ListTopValuable_Error (0.00s)
+    --- PASS: TestGetDashboardStats_Errors/ListRecent_Error (0.00s)
+    --- PASS: TestGetDashboardStats_Errors/MaterialDist_Error (0.00s)
+    --- PASS: TestGetDashboardStats_Errors/GradeDist_Error (0.00s)
+    --- PASS: TestGetDashboardStats_Errors/AllValues_Error (0.00s)
+    --- PASS: TestGetDashboardStats_Errors/GetAllCoins_Error_(Soft) (0.00s)
+=== RUN   TestAddCoin_SaveError
+2025/12/28 15:48:28 INFO Starting AddCoin process coin_id=60792c78-e6b8-456f-afeb-80d7449cc33b
+2025/12/28 15:48:28 INFO Starting Task C: Group Management coin_id=60792c78-e6b8-456f-afeb-80d7449cc33b
+2025/12/28 15:48:28 INFO Starting Task A: AI Analysis coin_id=60792c78-e6b8-456f-afeb-80d7449cc33b model=m
+2025/12/28 15:48:28 INFO Starting Task B: Image Processing coin_id=60792c78-e6b8-456f-afeb-80d7449cc33b
+2025/12/28 15:48:28 INFO Completed Task C: Group Management coin_id=60792c78-e6b8-456f-afeb-80d7449cc33b group_id=1
+2025/12/28 15:48:28 INFO Completed Task A: AI Analysis coin_id=60792c78-e6b8-456f-afeb-80d7449cc33b
+2025/12/28 15:48:28 INFO Completed Task B: Image Processing coin_id=60792c78-e6b8-456f-afeb-80d7449cc33b
+2025/12/28 15:48:28 ERROR Failed to save coin to DB coin_id=60792c78-e6b8-456f-afeb-80d7449cc33b error="db error"
+--- PASS: TestAddCoin_SaveError (0.00s)
+=== RUN   TestAddCoin_GroupCreateSuccess
+2025/12/28 15:48:28 INFO Starting AddCoin process coin_id=54e8978c-3920-4905-9627-1e739a833ddd
+2025/12/28 15:48:28 INFO Starting Task C: Group Management coin_id=54e8978c-3920-4905-9627-1e739a833ddd
+2025/12/28 15:48:28 INFO Starting Task A: AI Analysis coin_id=54e8978c-3920-4905-9627-1e739a833ddd model=m
+2025/12/28 15:48:28 INFO Starting Task B: Image Processing coin_id=54e8978c-3920-4905-9627-1e739a833ddd
+2025/12/28 15:48:28 INFO Completed Task C: Group Management coin_id=54e8978c-3920-4905-9627-1e739a833ddd group_id=2
+2025/12/28 15:48:28 INFO Completed Task A: AI Analysis coin_id=54e8978c-3920-4905-9627-1e739a833ddd
+2025/12/28 15:48:28 INFO Completed Task B: Image Processing coin_id=54e8978c-3920-4905-9627-1e739a833ddd
+2025/12/28 15:48:28 INFO Successfully saved coin coin_id=54e8978c-3920-4905-9627-1e739a833ddd
+2025/12/28 15:48:28 INFO Starting Numista enrichment coin_id=54e8978c-3920-4905-9627-1e739a833ddd
+2025/12/28 15:48:28 INFO Searching Numista query="" year=""
+2025/12/28 15:48:28 ERROR Numista search request failed error=ignore
+2025/12/28 15:48:28 ERROR Failed to enrich coin with Numista coin_id=54e8978c-3920-4905-9627-1e739a833ddd error="numista search failed: ignore"
+--- PASS: TestAddCoin_GroupCreateSuccess (0.05s)
+=== RUN   TestEnrichCoinWithNumista_Coverage
+=== RUN   TestEnrichCoinWithNumista_Coverage/Nil_Result
+2025/12/28 15:48:29 INFO Starting Numista enrichment coin_id=1e1deafc-88c0-4b59-827d-8343602621e6
+2025/12/28 15:48:29 INFO Searching Numista query="" year=""
+2025/12/28 15:48:29 INFO Numista returned nil result coin_id=1e1deafc-88c0-4b59-827d-8343602621e6
+=== RUN   TestEnrichCoinWithNumista_Coverage/Count_0_Update_Error
+2025/12/28 15:48:29 INFO Starting Numista enrichment coin_id=1e1deafc-88c0-4b59-827d-8343602621e6
+2025/12/28 15:48:29 INFO Searching Numista query="" year=""
+2025/12/28 15:48:29 INFO Numista search completed count=0 results_len=0
+2025/12/28 15:48:29 INFO Set NumistaSearch field length=31
+2025/12/28 15:48:29 INFO No types found in Numista, saving empty search result coin_id=1e1deafc-88c0-4b59-827d-8343602621e6
+--- PASS: TestEnrichCoinWithNumista_Coverage (0.00s)
+    --- PASS: TestEnrichCoinWithNumista_Coverage/Nil_Result (0.00s)
+    --- PASS: TestEnrichCoinWithNumista_Coverage/Count_0_Update_Error (0.00s)
+=== RUN   TestUpdateCoin_RepoError
+--- PASS: TestUpdateCoin_RepoError (0.00s)
+=== RUN   TestUpdateGroup_RepoError
+--- PASS: TestUpdateGroup_RepoError (0.00s)
+=== RUN   TestRotateCoinImage_Error
+2025/12/28 15:48:29 INFO RotateCoinImage called coin_id=0f51dac1-f2f1-418d-aecc-ef0d8e335304 side=front angle=90
+2025/12/28 15:48:29 INFO Found image to rotate path=p.png
+2025/12/28 15:48:29 ERROR Rotation failed error="rotate error"
+--- PASS: TestRotateCoinImage_Error (0.00s)
+=== RUN   TestApplyNumistaCandidate_Flows
+=== RUN   TestApplyNumistaCandidate_Flows/Success
+2025/12/28 15:48:29 INFO Applying Numista candidate manually coin_id=229bcfe9-f6fa-4a53-88f3-15de8183804f numista_id=123
+2025/12/28 15:48:29 INFO Mapped Numista details to coin fields diameter=0 weight=0 mint="" km="" ruler="" series="" orientation="" commemorated_topic=""
+=== RUN   TestApplyNumistaCandidate_Flows/GetByID_Error
+2025/12/28 15:48:29 INFO Applying Numista candidate manually coin_id=229bcfe9-f6fa-4a53-88f3-15de8183804f numista_id=123
+=== RUN   TestApplyNumistaCandidate_Flows/Numista_Error
+2025/12/28 15:48:29 INFO Applying Numista candidate manually coin_id=229bcfe9-f6fa-4a53-88f3-15de8183804f numista_id=123
+=== RUN   TestApplyNumistaCandidate_Flows/Update_Error
+2025/12/28 15:48:29 INFO Applying Numista candidate manually coin_id=229bcfe9-f6fa-4a53-88f3-15de8183804f numista_id=123
+2025/12/28 15:48:29 INFO Mapped Numista details to coin fields diameter=0 weight=0 mint="" km="" ruler="" series="" orientation="" commemorated_topic=""
+--- PASS: TestApplyNumistaCandidate_Flows (0.00s)
+    --- PASS: TestApplyNumistaCandidate_Flows/Success (0.00s)
+    --- PASS: TestApplyNumistaCandidate_Flows/GetByID_Error (0.00s)
+    --- PASS: TestApplyNumistaCandidate_Flows/Numista_Error (0.00s)
+    --- PASS: TestApplyNumistaCandidate_Flows/Update_Error (0.00s)
+=== RUN   TestAddCoin_ImageDetailedErrors
+=== RUN   TestAddCoin_ImageDetailedErrors/Crop_Front_Error
+2025/12/28 15:48:29 INFO Starting AddCoin process coin_id=7c659e2a-5b52-4074-b497-6034080f45a4
+2025/12/28 15:48:29 INFO Starting Task C: Group Management coin_id=7c659e2a-5b52-4074-b497-6034080f45a4
+2025/12/28 15:48:29 INFO No group name provided, skipping group creation coin_id=7c659e2a-5b52-4074-b497-6034080f45a4
+2025/12/28 15:48:29 INFO Starting Task A: AI Analysis coin_id=7c659e2a-5b52-4074-b497-6034080f45a4 model=m
+2025/12/28 15:48:29 INFO Starting Task B: Image Processing coin_id=7c659e2a-5b52-4074-b497-6034080f45a4
+2025/12/28 15:48:29 INFO Completed Task A: AI Analysis coin_id=7c659e2a-5b52-4074-b497-6034080f45a4
+=== RUN   TestAddCoin_ImageDetailedErrors/Save_Processed_Front_Error
+2025/12/28 15:48:29 INFO Starting AddCoin process coin_id=d6ad2f04-9638-48fb-80e5-0cd63d108121
+2025/12/28 15:48:29 INFO Starting Task C: Group Management coin_id=d6ad2f04-9638-48fb-80e5-0cd63d108121
+2025/12/28 15:48:29 INFO Starting Task A: AI Analysis coin_id=d6ad2f04-9638-48fb-80e5-0cd63d108121 model=m
+2025/12/28 15:48:29 INFO No group name provided, skipping group creation coin_id=d6ad2f04-9638-48fb-80e5-0cd63d108121
+2025/12/28 15:48:29 INFO Starting Task B: Image Processing coin_id=d6ad2f04-9638-48fb-80e5-0cd63d108121
+2025/12/28 15:48:29 INFO Completed Task A: AI Analysis coin_id=d6ad2f04-9638-48fb-80e5-0cd63d108121
+=== RUN   TestAddCoin_ImageDetailedErrors/Thumbnail_Front_Error
+2025/12/28 15:48:29 INFO Starting AddCoin process coin_id=56702ab2-d41a-4ecd-850e-f5403b03a7ff
+2025/12/28 15:48:29 INFO Starting Task C: Group Management coin_id=56702ab2-d41a-4ecd-850e-f5403b03a7ff
+2025/12/28 15:48:29 INFO Starting Task B: Image Processing coin_id=56702ab2-d41a-4ecd-850e-f5403b03a7ff
+2025/12/28 15:48:29 INFO No group name provided, skipping group creation coin_id=56702ab2-d41a-4ecd-850e-f5403b03a7ff
+2025/12/28 15:48:29 INFO Starting Task A: AI Analysis coin_id=56702ab2-d41a-4ecd-850e-f5403b03a7ff model=m
+2025/12/28 15:48:29 INFO Completed Task A: AI Analysis coin_id=56702ab2-d41a-4ecd-850e-f5403b03a7ff
+=== RUN   TestAddCoin_ImageDetailedErrors/Bg_Remove_Back_Error
+2025/12/28 15:48:29 INFO Starting AddCoin process coin_id=2dd7e389-d15f-43b0-bd7c-72bf5cd1d3c4
+2025/12/28 15:48:29 INFO Starting Task C: Group Management coin_id=2dd7e389-d15f-43b0-bd7c-72bf5cd1d3c4
+2025/12/28 15:48:29 INFO No group name provided, skipping group creation coin_id=2dd7e389-d15f-43b0-bd7c-72bf5cd1d3c4
+2025/12/28 15:48:29 INFO Starting Task A: AI Analysis coin_id=2dd7e389-d15f-43b0-bd7c-72bf5cd1d3c4 model=m
+2025/12/28 15:48:29 INFO Starting Task B: Image Processing coin_id=2dd7e389-d15f-43b0-bd7c-72bf5cd1d3c4
+2025/12/28 15:48:29 INFO Completed Task A: AI Analysis coin_id=2dd7e389-d15f-43b0-bd7c-72bf5cd1d3c4
+2025/12/28 15:48:29 ERROR Failed to remove background from back coin_id=2dd7e389-d15f-43b0-bd7c-72bf5cd1d3c4 error="bg back error"
+--- PASS: TestAddCoin_ImageDetailedErrors (0.00s)
+    --- PASS: TestAddCoin_ImageDetailedErrors/Crop_Front_Error (0.00s)
+    --- PASS: TestAddCoin_ImageDetailedErrors/Save_Processed_Front_Error (0.00s)
+    --- PASS: TestAddCoin_ImageDetailedErrors/Thumbnail_Front_Error (0.00s)
+    --- PASS: TestAddCoin_ImageDetailedErrors/Bg_Remove_Back_Error (0.00s)
+=== RUN   TestAddCoin_GroupError
+=== RUN   TestAddCoin_GroupError/Group_Creation_Error
+2025/12/28 15:48:29 INFO Starting AddCoin process coin_id=8cf358cd-d53a-4a54-9ec9-61fc57ab45c6
+2025/12/28 15:48:29 INFO Starting Task C: Group Management coin_id=8cf358cd-d53a-4a54-9ec9-61fc57ab45c6
+2025/12/28 15:48:29 INFO Starting Task A: AI Analysis coin_id=8cf358cd-d53a-4a54-9ec9-61fc57ab45c6 model=m
+2025/12/28 15:48:29 INFO Completed Task A: AI Analysis coin_id=8cf358cd-d53a-4a54-9ec9-61fc57ab45c6
+2025/12/28 15:48:29 INFO Starting Task B: Image Processing coin_id=8cf358cd-d53a-4a54-9ec9-61fc57ab45c6
+2025/12/28 15:48:29 ERROR Failed to create group coin_id=8cf358cd-d53a-4a54-9ec9-61fc57ab45c6 group_name=NewGroup error="creation failed"
+2025/12/28 15:48:29 INFO Completed Task B: Image Processing coin_id=8cf358cd-d53a-4a54-9ec9-61fc57ab45c6
+--- PASS: TestAddCoin_GroupError (0.00s)
+    --- PASS: TestAddCoin_GroupError/Group_Creation_Error (0.00s)
+FAIL
+FAIL	github.com/antonioparicio/numismaticapp/internal/application	0.172s
+FAIL

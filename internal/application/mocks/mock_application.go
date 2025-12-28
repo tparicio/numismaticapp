@@ -126,3 +126,17 @@ func (mr *MockStorageServiceMockRecorder) SaveFile(coinID, filename, content any
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveFile", reflect.TypeOf((*MockStorageService)(nil).SaveFile), coinID, filename, content)
 }
+
+// DeleteCoinDirectory mocks base method.
+func (m *MockStorageService) DeleteCoinDirectory(coinID uuid.UUID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteCoinDirectory", coinID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteCoinDirectory indicates an expected call of DeleteCoinDirectory.
+func (mr *MockStorageServiceMockRecorder) DeleteCoinDirectory(coinID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteCoinDirectory", reflect.TypeOf((*MockStorageService)(nil).DeleteCoinDirectory), coinID)
+}

@@ -58,14 +58,30 @@ Olvídate de introducir datos manualmente. Simplemente sube una foto de tu moned
 
 La forma más rápida de empezar es utilizando la imagen pre-construida desde DockerHub.
 
-1.  **Crea un archivo `docker-compose.yml`:**
+1.  **Crea el directorio de storage (importante para persistencia):**
+
+    ```bash
+    mkdir -p ./storage
+    ```
+
+    **Para despliegues en NAS (Synology, QNAP, etc.):** Si necesitas usar un UID/GID específico, asegúrate de que el directorio tenga los permisos correctos:
+
+    ```bash
+    # Ejemplo para UID 1000 y GID 100
+    mkdir -p ./storage
+    chown 1000:100 ./storage
+    chmod 755 ./storage
+    ```
+
+2.  **Crea un archivo `docker-compose.yml`:**
 
     ```yaml
     services:
       app:
         image: tparicio/numismaticapp:latest
+        user: ${UID:-1000}:${GID:-1000}
         ports:
-          - "8080:8080"
+          - "8080:8080" # change port if needed
         environment:
           - GEMINI_API_KEY=tu_api_key_aqui
           - NUMISTA_API_KEY=tu_api_key_numista_opcional
@@ -76,8 +92,6 @@ La forma más rápida de empezar es utilizando la imagen pre-construida desde Do
           - POSTGRES_DB=numismatic
         depends_on:
           db:
-            condition: service_healthy
-          rembg:
             condition: service_healthy
         volumes:
           - ./storage:/app/storage
@@ -100,12 +114,6 @@ La forma más rápida de empezar es utilizando la imagen pre-construida desde Do
       rembg:
         image: danielgatis/rembg:latest
         command: s --host 0.0.0.0 --port 5000
-        healthcheck:
-          test: ["CMD", "curl", "-f", "http://localhost:5000"]
-          interval: 10s
-          timeout: 5s
-          retries: 5
-          start_period: 10s
         ports:
           - "5000:5000"
 
@@ -113,13 +121,13 @@ La forma más rápida de empezar es utilizando la imagen pre-construida desde Do
       postgres_data:
     ```
 
-2.  **Inicia la aplicación:**
+3.  **Inicia la aplicación:**
 
     ```bash
     docker compose up -d
     ```
 
-3.  **Accede al navegador:**
+4.  **Accede al navegador:**
     *   Abre `http://localhost:8080` para ver tu colección.
 
 ### Opción 2: Compilación Local
@@ -166,32 +174,87 @@ Si prefieres compilar desde el código fuente:
 
 ## ❓ Solución de Problemas
 
-### Problemas de Permisos en Linux / NAS
-Si experimentas errores como `permission denied` al intentar guardar imágenes en `storage/`, es probable que el usuario dentro del contenedor (`appuser`, UID normalment 1000) no tenga permisos de escritura en la carpeta montada desde el host.
+### Problemas de Persistencia y Permisos en NAS (Synology, QNAP, etc.)
+
+#### Problema: Se borran los datos al re-desplegar
+**Causa:** El directorio `storage` no está correctamente montado como volumen persistente.
+
+**Solución:**
+1. Asegúrate de crear el directorio `storage` en el host **antes** del primer despliegue:
+   ```bash
+   mkdir -p ./storage
+   ```
+
+2. Verifica que el `docker-compose.yml` incluya el volumen:
+   ```yaml
+   volumes:
+     - ./storage:/app/storage
+   ```
+
+3. **IMPORTANTE:** No borres el directorio `./storage` del host al re-desplegar. Solo ejecuta `docker compose down` y `docker compose up -d`.
+
+#### Problema: Permisos incorrectos después de re-desplegar
+**Causa:** El contenedor se ejecuta con un UID/GID específico (ej: `1000:100`) pero el directorio `storage` tiene permisos diferentes.
+
+**Solución para NAS:**
+1. Identifica tu UID y GID en el NAS:
+   ```bash
+   id
+   # Ejemplo de salida: uid=1000(usuario) gid=100(users)
+   ```
+
+2. Configura el directorio `storage` con los permisos correctos:
+   ```bash
+   chown 1000:100 ./storage
+   chmod 755 ./storage
+   ```
+
+3. Añade la directiva `user` en tu `docker-compose.yml`:
+   ```yaml
+   services:
+     app:
+       image: tparicio/numismaticapp:latest
+       user: "1000:100"  # Usa tu UID:GID específico
+       volumes:
+         - ./storage:/app/storage
+   ```
+
+4. Re-despliega:
+   ```bash
+   docker compose down
+   docker compose up -d
+   ```
+
+#### Verificación de Permisos
+Después del despliegue, verifica que el contenedor puede escribir en storage:
+```bash
+# Verifica permisos del directorio
+ls -la ./storage
+
+# Prueba de escritura desde el contenedor
+docker compose exec app touch /app/storage/test.txt
+ls -la ./storage/test.txt
+```
+
+### Problemas de Permisos en Linux (Desarrollo Local)
+Si experimentas errores como `permission denied` en desarrollo local:
 
 **Solución Recomendada:**
-Asegúrate de que el contenedor se ejecute con el mismo UID/GID que tu usuario actual en el host. Modifica tu `docker-compose.yml` añadiendo la directiva `user`:
+Usa las variables de entorno para que el contenedor use tu UID/GID actual:
 
 ```yaml
 services:
   app:
     image: tparicio/numismaticapp:latest
-    user: "${UID}:${GID}" # Usa el UID y GID de tu usuario actual
+    user: "${UID}:${GID}"
     # ... resto de la configuración
 ```
 
-Luego, crea un archivo `.env` o exporta las variables antes de levantar el contenedor:
+Luego exporta las variables antes de levantar el contenedor:
 ```bash
 export UID=$(id -u)
 export GID=$(id -g)
 docker compose up -d
-```
-
-**Solución Alternativa:**
-Cambia el propietario de la carpeta `storage` en tu host para que coincida con el usuario del contenedor (o dale permisos de escritura a todos `chmod 777 storage` - no recomendado para producción).
-
-```bash
-chown -R 1000:1000 ./storage
 ```
 
 ## 🤝 Contribución

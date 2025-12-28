@@ -1,10 +1,6 @@
--- Drop everything to ensure clean slate (User requested reset)
-DROP TABLE IF EXISTS schema_migrations CASCADE;
-DROP TABLE IF EXISTS coin_images CASCADE;
-DROP TABLE IF EXISTS coins CASCADE;
-DROP TABLE IF EXISTS groups CASCADE;
-DROP TYPE IF EXISTS image_type CASCADE;
-DROP TYPE IF EXISTS coin_side CASCADE;
+-- Initial Schema
+-- Removed destructive DROP statements to prevent accidental data loss
+
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
@@ -54,6 +50,7 @@ CREATE TABLE coins (
     sold_at DATE,
     price_paid NUMERIC(10, 2),
     sold_price NUMERIC(10, 2),
+    sale_channel VARCHAR(100),
     gemini_model VARCHAR(100),
     gemini_temperature NUMERIC(3, 2),
     

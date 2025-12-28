@@ -47,6 +47,7 @@ type Coin struct {
 	SoldAt            *time.Time     `json:"sold_at"`
 	PricePaid         float64        `json:"price_paid"`
 	SoldPrice         float64        `json:"sold_price"`
+	SaleChannel       string         `json:"sale_channel"`
 	CreatedAt         time.Time      `json:"created_at"`
 	UpdatedAt         time.Time      `json:"updated_at"`
 }
@@ -119,6 +120,30 @@ type CoinRepository interface {
 	GetRandomCoin(ctx context.Context) (*Coin, error)
 	GetAllCoins(ctx context.Context) ([]*Coin, error)
 	AddImage(ctx context.Context, image CoinImage) error
+	// Sell operations
+	MarkAsSold(ctx context.Context, id uuid.UUID, soldAt time.Time, soldPrice float64, saleChannel string) (*Coin, error)
+	GetSaleChannels(ctx context.Context) ([]string, error)
+	// Link operations
+	AddLink(ctx context.Context, link *CoinLink) error
+	RemoveLink(ctx context.Context, linkID uuid.UUID) error
+	GetLink(ctx context.Context, linkID uuid.UUID) (*CoinLink, error)
+	UpdateLink(ctx context.Context, link *CoinLink) error
+	ListLinks(ctx context.Context, coinID uuid.UUID) ([]*CoinLink, error)
+	// Bulk operations for export
+	GetAllImages(ctx context.Context) ([]CoinImage, error)
+	GetAllLinks(ctx context.Context) ([]*CoinLink, error)
+}
+
+// CoinLink represents an external link associated with a coin.
+type CoinLink struct {
+	ID            uuid.UUID `json:"id"`
+	CoinID        uuid.UUID `json:"coin_id"`
+	URL           string    `json:"url"`
+	Name          string    `json:"name"`
+	OGTitle       string    `json:"og_title"`
+	OGDescription string    `json:"og_description"`
+	OGImage       string    `json:"og_image"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 // GroupRepository defines the interface for persisting groups.

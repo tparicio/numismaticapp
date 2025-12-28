@@ -392,9 +392,138 @@ func (h *CoinHandler) ApplyNumistaResult(c *fiber.Ctx) error {
 	return c.JSON(coin)
 }
 
+type SellCoinRequest struct {
+	SoldPrice   float64 `json:"sold_price" validate:"required,gt=0"`
+	SaleChannel string  `json:"sale_channel" validate:"required,min=1"`
+}
+
+func (h *CoinHandler) SellCoin(c *fiber.Ctx) error {
+	idStr := c.Params("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid uuid"})
+	}
+
+	var req SellCoinRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid body"})
+	}
+
+	if err := h.validate.Struct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	coin, err := h.service.MarkCoinAsSold(c.Context(), id, req.SoldPrice, req.SaleChannel)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(coin)
+}
+
+func (h *CoinHandler) GetSaleChannels(c *fiber.Ctx) error {
+	channels, err := h.service.GetSaleChannels(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(channels)
+}
+
 func strPtr(s string) *string {
 	if s == "" {
 		return nil
 	}
 	return &s
+}
+
+func (h *CoinHandler) ExportCSV(c *fiber.Ctx) error {
+	data, err := h.service.ExportCoinsCSV(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	c.Set("Content-Type", "text/csv")
+	c.Set("Content-Disposition", `attachment; filename="coins.csv"`)
+	return c.Send(data)
+}
+
+func (h *CoinHandler) ExportSQL(c *fiber.Ctx) error {
+	data, err := h.service.ExportCoinsSQL(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	c.Set("Content-Type", "application/sql")
+	c.Set("Content-Disposition", `attachment; filename="backup.sql"`)
+	return c.Send(data)
+}
+
+type AddLinkRequest struct {
+	URL string `json:"url" validate:"required,url"`
+}
+
+func (h *CoinHandler) ListCoinLinks(c *fiber.Ctx) error {
+	idStr := c.Params("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid uuid"})
+	}
+
+	links, err := h.service.GetLinks(c.Context(), id)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(links)
+}
+
+func (h *CoinHandler) AddCoinLink(c *fiber.Ctx) error {
+	idStr := c.Params("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid uuid"})
+	}
+
+	var req AddLinkRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid body"})
+	}
+
+	if err := h.validate.Struct(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	link, err := h.service.AddLink(c.Context(), id, req.URL)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.Status(fiber.StatusCreated).JSON(link)
+}
+
+func (h *CoinHandler) DeleteCoinLink(c *fiber.Ctx) error {
+	linkIDStr := c.Params("link_id")
+	linkID, err := uuid.Parse(linkIDStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid link uuid"})
+	}
+
+	if err := h.service.RemoveLink(c.Context(), linkID); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.SendStatus(fiber.StatusNoContent)
+}
+
+func (h *CoinHandler) RefreshCoinLink(c *fiber.Ctx) error {
+	linkIDStr := c.Params("link_id")
+	linkID, err := uuid.Parse(linkIDStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid link uuid"})
+	}
+
+	link, err := h.service.RefreshLink(c.Context(), linkID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(link)
 }

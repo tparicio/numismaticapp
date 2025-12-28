@@ -506,8 +506,9 @@ func TestUpdateCoin(t *testing.T) {
 func TestDeleteCoin(t *testing.T) {
 	id := uuid.New()
 	t.Run("Success", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, _ := setupTest(t)
+		service, mockRepo, _, _, _, mockStorage, _, _ := setupTest(t)
 		ctx := context.Background()
+		mockStorage.EXPECT().DeleteCoinDirectory(id).Return(nil)
 		mockRepo.EXPECT().Delete(ctx, id).Return(nil)
 		err := service.DeleteCoin(ctx, id)
 		assert.NoError(t, err)

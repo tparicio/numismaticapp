@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/antonioparicio/numismaticapp/internal/domain"
+	"github.com/google/uuid"
 )
 
 type LocalStorage struct {
@@ -47,6 +48,24 @@ func (s *LocalStorage) Exists(coinID, filename string) bool {
 
 func (s *LocalStorage) GetPath(coinID, filename string) string {
 	return filepath.Join(s.BaseDir, "coins", coinID, filename)
+}
+
+// DeleteCoinDirectory removes the entire directory for a coin
+func (s *LocalStorage) DeleteCoinDirectory(coinID uuid.UUID) error {
+	dir := filepath.Join(s.BaseDir, "coins", coinID.String())
+
+	// Check if directory exists
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		// Directory doesn't exist, nothing to delete
+		return nil
+	}
+
+	// Remove the entire coin directory
+	if err := os.RemoveAll(dir); err != nil {
+		return fmt.Errorf("failed to delete coin directory: %w", err)
+	}
+
+	return nil
 }
 
 var _ domain.ImageStorage = (*LocalStorage)(nil)
