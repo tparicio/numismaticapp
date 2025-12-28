@@ -739,6 +739,61 @@ func (r *PostgresCoinRepository) AddLink(ctx context.Context, link *domain.CoinL
 	return nil
 }
 
+// GetLink retrieves a single link by ID
+func (r *PostgresCoinRepository) GetLink(ctx context.Context, linkID uuid.UUID) (*domain.CoinLink, error) {
+	var l domain.CoinLink
+	var idBytes, coinIDBytes [16]byte
+	var pName, pOgTitle, pOgDesc, pOgImage pgtype.Text
+
+	err := r.db.QueryRow(ctx, `
+		SELECT id, coin_id, url, name, og_title, og_description, og_image, created_at
+		FROM coin_links
+		WHERE id = $1
+	`, pgtype.UUID{Bytes: linkID, Valid: true}).Scan(
+		&idBytes,
+		&coinIDBytes,
+		&l.URL,
+		&pName,
+		&pOgTitle,
+		&pOgDesc,
+		&pOgImage,
+		&l.CreatedAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get link: %w", err)
+	}
+
+	l.ID = uuid.UUID(idBytes)
+	l.CoinID = uuid.UUID(coinIDBytes)
+	l.Name = pName.String
+	l.OGTitle = pOgTitle.String
+	l.OGDescription = pOgDesc.String
+	l.OGImage = pOgImage.String
+
+	return &l, nil
+}
+
+// UpdateLink updates a coin link (e.g. refreshed OG data)
+func (r *PostgresCoinRepository) UpdateLink(ctx context.Context, link *domain.CoinLink) error {
+	// Manual SQL because sqlc is not available to regenerate
+	_, err := r.db.Exec(ctx, `
+		UPDATE coin_links 
+		SET url = $1, name = $2, og_title = $3, og_description = $4, og_image = $5
+		WHERE id = $6
+	`,
+		link.URL,
+		toNullString(link.Name),
+		toNullString(link.OGTitle),
+		toNullString(link.OGDescription),
+		toNullString(link.OGImage),
+		pgtype.UUID{Bytes: link.ID, Valid: true},
+	)
+	if err != nil {
+		return fmt.Errorf("failed to update link: %w", err)
+	}
+	return nil
+}
+
 // RemoveLink removes a coin link
 func (r *PostgresCoinRepository) RemoveLink(ctx context.Context, linkID uuid.UUID) error {
 	return r.q.DeleteCoinLink(ctx, pgtype.UUID{Bytes: linkID, Valid: true})

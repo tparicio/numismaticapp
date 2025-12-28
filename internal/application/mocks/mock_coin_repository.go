@@ -472,6 +472,35 @@ func (mr *MockCoinRepositoryMockRecorder) ListLinks(ctx, coinID any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListLinks", reflect.TypeOf((*MockCoinRepository)(nil).ListLinks), ctx, coinID)
 }
 
+// GetLink mocks base method.
+func (m *MockCoinRepository) GetLink(ctx context.Context, linkID uuid.UUID) (*domain.CoinLink, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLink", ctx, linkID)
+	ret0, _ := ret[0].(*domain.CoinLink)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLink indicates an expected call of GetLink.
+func (mr *MockCoinRepositoryMockRecorder) GetLink(ctx, linkID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLink", reflect.TypeOf((*MockCoinRepository)(nil).GetLink), ctx, linkID)
+}
+
+// UpdateLink mocks base method.
+func (m *MockCoinRepository) UpdateLink(ctx context.Context, link *domain.CoinLink) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateLink", ctx, link)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateLink indicates an expected call of UpdateLink.
+func (mr *MockCoinRepositoryMockRecorder) UpdateLink(ctx, link any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateLink", reflect.TypeOf((*MockCoinRepository)(nil).UpdateLink), ctx, link)
+}
+
 // GetAllImages mocks base method.
 func (m *MockCoinRepository) GetAllImages(ctx context.Context) ([]domain.CoinImage, error) {
 	m.ctrl.T.Helper()

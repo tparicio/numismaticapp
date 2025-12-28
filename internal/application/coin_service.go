@@ -1496,3 +1496,43 @@ func (s *CoinService) RemoveLink(ctx context.Context, linkID uuid.UUID) error {
 func (s *CoinService) GetLinks(ctx context.Context, coinID uuid.UUID) ([]*domain.CoinLink, error) {
 	return s.repo.ListLinks(ctx, coinID)
 }
+
+func (s *CoinService) RefreshLink(ctx context.Context, linkID uuid.UUID) (*domain.CoinLink, error) {
+	// 1. Get the link to access URL
+	link, err := s.repo.GetLink(ctx, linkID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get link: %w", err)
+	}
+
+	// 2. Fetch new metadata
+	meta, err := og.FetchMetadata(ctx, link.URL)
+	if err != nil {
+		slog.Warn("Failed to refresh OG metadata, keeping old one", "url", link.URL, "error", err)
+		// Or should we error? The user requested refresh. If fetch fails, we probably shouldn't update.
+		// But maybe they want to retry on transient errors.
+		// Let's return error so frontend knows it failed.
+		return nil, fmt.Errorf("failed to fetch metadata: %w", err)
+	}
+
+	// 3. Update link fields
+	link.OGTitle = meta.Title
+	link.OGDescription = meta.Description
+	link.OGImage = meta.Image
+
+	// If name was default (url or old title), maybe update it?
+	// User might have renamed it manually. Let's keep Name unless it's identical to old OGTitle or URL.
+	// Logic: If Name == URL, update to Title. If Name == OldTitle, update to NewTitle.
+	// Actually, simplicity: Just update OG fields. Name is user preference.
+	// BUT, if user just added it and Title fetched wrong, they refresh. Name might be stuck as URL.
+	// Let's update Name if it equals URL.
+	if link.Name == link.URL && meta.Title != "" {
+		link.Name = meta.Title
+	}
+
+	// 4. Save
+	if err := s.repo.UpdateLink(ctx, link); err != nil {
+		return nil, fmt.Errorf("failed to update link: %w", err)
+	}
+
+	return link, nil
+}

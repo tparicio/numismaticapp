@@ -126,6 +126,8 @@ type CoinRepository interface {
 	// Link operations
 	AddLink(ctx context.Context, link *CoinLink) error
 	RemoveLink(ctx context.Context, linkID uuid.UUID) error
+	GetLink(ctx context.Context, linkID uuid.UUID) (*CoinLink, error)
+	UpdateLink(ctx context.Context, link *CoinLink) error
 	ListLinks(ctx context.Context, coinID uuid.UUID) ([]*CoinLink, error)
 	// Bulk operations for export
 	GetAllImages(ctx context.Context) ([]CoinImage, error)

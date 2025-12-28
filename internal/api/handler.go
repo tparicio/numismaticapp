@@ -512,3 +512,18 @@ func (h *CoinHandler) DeleteCoinLink(c *fiber.Ctx) error {
 
 	return c.SendStatus(fiber.StatusNoContent)
 }
+
+func (h *CoinHandler) RefreshCoinLink(c *fiber.Ctx) error {
+	linkIDStr := c.Params("link_id")
+	linkID, err := uuid.Parse(linkIDStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid link uuid"})
+	}
+
+	link, err := h.service.RefreshLink(c.Context(), linkID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(link)
+}
