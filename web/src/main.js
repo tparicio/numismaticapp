@@ -5,4 +5,8 @@ import router from './router'
 
 import i18n from './i18n'
 
-createApp(App).use(router).use(i18n).mount('#app')
+import { createPinia } from 'pinia'
+
+const pinia = createPinia()
+
+createApp(App).use(router).use(i18n).use(pinia).mount('#app')

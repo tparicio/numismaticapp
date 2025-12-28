@@ -315,5 +315,12 @@
             "success": "Grupo eliminado correctamente.",
             "error": "Error al eliminar grupo."
         }
+    },
+    "settings": {
+        "title": "Ajustes",
+        "dark_mode": "Modo Oscuro",
+        "language": "Idioma",
+        "hide_values": "Ocultar Valores",
+        "export": "Exportar Datos"
     }
 }

@@ -3,6 +3,7 @@ package application
 import (
 	"bytes"
 	"context"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -1222,4 +1223,118 @@ func (s *CoinService) MarkCoinAsSold(ctx context.Context, id uuid.UUID, soldPric
 // GetSaleChannels returns list of distinct sale channels
 func (s *CoinService) GetSaleChannels(ctx context.Context) ([]string, error) {
 	return s.repo.GetSaleChannels(ctx)
+}
+
+func (s *CoinService) ExportCoinsCSV(ctx context.Context) ([]byte, error) {
+	coins, err := s.repo.List(ctx, domain.CoinFilter{Limit: 1000000}) // Get all
+	if err != nil {
+		return nil, fmt.Errorf("failed to list coins: %w", err)
+	}
+
+	var buf bytes.Buffer
+	writer := csv.NewWriter(&buf)
+
+	// Headers
+	header := []string{
+		"ID", "Name", "Country", "Year", "Face Value", "Currency", "Composition",
+		"Grade", "Mintage", "Mint", "Weight (g)", "Diameter (mm)", "Acquired Date",
+		"Price Paid", "Sold Date", "Sold Price", "Notes",
+	}
+	if err := writer.Write(header); err != nil {
+		return nil, err
+	}
+
+	for _, c := range coins {
+		acquired := ""
+		if c.AcquiredAt != nil {
+			acquired = c.AcquiredAt.Format("2006-01-02")
+		}
+		sold := ""
+		if c.SoldAt != nil {
+			sold = c.SoldAt.Format("2006-01-02")
+		}
+		record := []string{
+			c.ID.String(),
+			c.Name,
+			c.Country,
+			fmt.Sprintf("%d", c.Year.Int()),
+			c.FaceValue,
+			c.Currency,
+			c.Material,
+			c.Grade.String(),
+			fmt.Sprintf("%d", c.Mintage.Int64()),
+			c.Mint,
+			fmt.Sprintf("%.2f", c.WeightG),
+			fmt.Sprintf("%.2f", c.DiameterMM),
+			acquired,
+			fmt.Sprintf("%.2f", c.PricePaid),
+			sold,
+			fmt.Sprintf("%.2f", c.SoldPrice),
+			c.PersonalNotes + " " + c.TechnicalNotes,
+		}
+		if err := writer.Write(record); err != nil {
+			return nil, err
+		}
+	}
+	writer.Flush()
+	return buf.Bytes(), nil
+}
+
+func (s *CoinService) ExportCoinsSQL(ctx context.Context) ([]byte, error) {
+	coins, err := s.repo.List(ctx, domain.CoinFilter{Limit: 1000000})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list coins: %w", err)
+	}
+
+	var sb strings.Builder
+	sb.WriteString("-- NumismaticApp Database Dump\n")
+	sb.WriteString(fmt.Sprintf("-- Generated: %s\n\n", time.Now().Format(time.RFC3339)))
+	sb.WriteString("BEGIN;\n\n")
+
+	// Helper to escape SQL strings
+	escape := func(s string) string {
+		return "'" + strings.ReplaceAll(s, "'", "''") + "'"
+	}
+	// Helper for NULLs
+	sOrNull := func(s string) string {
+		if s == "" {
+			return "NULL"
+		}
+		return escape(s)
+	}
+	fOrNull := func(f float64) string {
+		if f == 0 {
+			return "NULL"
+		}
+		return fmt.Sprintf("%f", f)
+	}
+	iOrNull := func(i int64) string {
+		return fmt.Sprintf("%d", i)
+	}
+
+	for _, c := range coins {
+		vals := []string{
+			escape(c.ID.String()),
+			sOrNull(c.Name),
+			sOrNull(c.Country),
+			iOrNull(int64(c.Year.Int())), // Cast int to int64 for helper
+			sOrNull(c.FaceValue),
+			sOrNull(c.Currency),
+			sOrNull(c.Material),
+			sOrNull(c.Grade.String()),
+			iOrNull(c.Mintage.Int64()),
+			sOrNull(c.Mint),
+			fOrNull(c.WeightG),
+			fOrNull(c.DiameterMM),
+			fOrNull(c.PricePaid),
+			fOrNull(c.SoldPrice),
+		}
+
+		line := fmt.Sprintf("INSERT INTO coins (id, name, country, year, face_value, currency, material, grade, mintage, mint, weight_g, diameter_mm, price_paid, sold_price) VALUES (%s);\n",
+			strings.Join(vals, ", "))
+		sb.WriteString(line)
+	}
+
+	sb.WriteString("\nCOMMIT;\n")
+	return []byte(sb.String()), nil
 }

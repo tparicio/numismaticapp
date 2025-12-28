@@ -46,6 +46,8 @@ func SetupRouter(app *fiber.App, coinHandler *CoinHandler, healthHandler *Health
 	v1.Delete("/coins/:id", coinHandler.DeleteCoin)
 	v1.Get("/dashboard", coinHandler.GetDashboardStats)
 	v1.Get("/sale-channels", coinHandler.GetSaleChannels)
+	v1.Get("/export/csv", coinHandler.ExportCSV)
+	v1.Get("/export/sql", coinHandler.ExportSQL)
 
 	// SPA Fallback: Serve index.html for any other route not handled above
 	// This ensures that refreshing pages like /coins/add works

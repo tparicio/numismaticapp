@@ -12,6 +12,7 @@ package mocks
 import (
 	context "context"
 	reflect "reflect"
+	"time"
 
 	domain "github.com/antonioparicio/numismaticapp/internal/domain"
 	uuid "github.com/google/uuid"
@@ -396,4 +397,34 @@ func (m *MockCoinRepository) Update(ctx context.Context, coin *domain.Coin) erro
 func (mr *MockCoinRepositoryMockRecorder) Update(ctx, coin any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockCoinRepository)(nil).Update), ctx, coin)
+}
+
+// GetSaleChannels mocks base method.
+func (m *MockCoinRepository) GetSaleChannels(ctx context.Context) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSaleChannels", ctx)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSaleChannels indicates an expected call of GetSaleChannels.
+func (mr *MockCoinRepositoryMockRecorder) GetSaleChannels(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSaleChannels", reflect.TypeOf((*MockCoinRepository)(nil).GetSaleChannels), ctx)
+}
+
+// MarkAsSold mocks base method.
+func (m *MockCoinRepository) MarkAsSold(ctx context.Context, id uuid.UUID, soldAt time.Time, soldPrice float64, saleChannel string) (*domain.Coin, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MarkAsSold", ctx, id, soldAt, soldPrice, saleChannel)
+	ret0, _ := ret[0].(*domain.Coin)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MarkAsSold indicates an expected call of MarkAsSold.
+func (mr *MockCoinRepositoryMockRecorder) MarkAsSold(ctx, id, soldAt, soldPrice, saleChannel any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarkAsSold", reflect.TypeOf((*MockCoinRepository)(nil).MarkAsSold), ctx, id, soldAt, soldPrice, saleChannel)
 }

@@ -307,5 +307,12 @@
             "success": "Group deleted successfully.",
             "error": "Failed to delete group."
         }
+    },
+    "settings": {
+        "title": "Settings",
+        "dark_mode": "Dark Mode",
+        "language": "Language",
+        "hide_values": "Hide Values",
+        "export": "Data Export"
     }
 }

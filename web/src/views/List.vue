@@ -164,7 +164,7 @@
           </h2>
           <p class="text-sm text-gray-500">{{ coin.currency }}</p>
           <div v-if="coin.min_value > 0 || coin.max_value > 0" class="mt-1 font-bold text-success">
-            {{ coin.min_value }} - {{ coin.max_value }} €
+            {{ formatPriceRange(coin) }}
           </div>
           <div class="card-actions justify-between items-center mt-2">
             <div class="flex gap-2 flex-wrap">
@@ -269,18 +269,14 @@
                 <!-- Mobile-only info: show country and value below name on small screens -->
                 <div class="text-xs opacity-70 md:hidden mt-1">
                     <div>{{ coin.country }}</div>
-                    <div class="text-success font-semibold">{{ coin.min_value }}€ - {{ coin.max_value }}€</div>
+                    <div class="text-success font-semibold">{{ formatPriceRange(coin) }}</div>
                 </div>
             </td>
             <td class="hidden lg:table-cell">{{ coin.mint || '-' }}</td>
             <td class="hidden lg:table-cell">{{ formatMintage(coin.mintage) }}</td>
             <td class="font-semibold hidden md:table-cell">{{ coin.country }}</td>
             <td class="hidden md:table-cell whitespace-nowrap font-bold text-success">
-              <span v-if="coin.min_value > 0 || coin.max_value > 0">
-                <span v-if="coin.min_value === 0 && coin.max_value > 0">&lt; {{ coin.max_value }}€</span>
-                <span v-else-if="coin.min_value > 0 && coin.max_value > 0">{{ coin.min_value }} - {{ coin.max_value }}€</span>
-                <span v-else-if="coin.max_value > 0">{{ coin.max_value }}€</span>
-              </span>
+              {{ formatPriceRange(coin) }}
             </td>
             <td class="hidden lg:table-cell">{{ (coin.year && coin.year !== 0) ? coin.year : '-' }}</td>
             <td class="hidden lg:table-cell">{{ coin.currency }}</td>
@@ -371,6 +367,21 @@ const viewerImage = ref('')
 const cleanFilterValue = (value) => {
   if (!value) return ''
   return String(value).replace(/[€+\s]/g, '').trim()
+}
+
+import { useSettingsStore } from '../stores/settings'
+import { storeToRefs } from 'pinia'
+
+const formatPriceRange = (coin) => {
+    const settingsStore = useSettingsStore()
+    if (settingsStore.privacyMode) return '***'
+    
+    if (!coin.min_value && !coin.max_value) return ''
+    if (coin.min_value === 0 && coin.max_value > 0) return `< ${coin.max_value}€`
+    if (coin.min_value > 0 && coin.max_value > 0) return `${coin.min_value} - ${coin.max_value}€`
+    if (coin.max_value > 0) return `${coin.max_value}€`
+    if (coin.min_value > 0) return `> ${coin.min_value}€`
+    return ''
 }
 
 // Filters

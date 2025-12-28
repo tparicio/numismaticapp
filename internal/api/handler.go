@@ -435,3 +435,25 @@ func strPtr(s string) *string {
 	}
 	return &s
 }
+
+func (h *CoinHandler) ExportCSV(c *fiber.Ctx) error {
+	data, err := h.service.ExportCoinsCSV(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	c.Set("Content-Type", "text/csv")
+	c.Set("Content-Disposition", `attachment; filename="coins.csv"`)
+	return c.Send(data)
+}
+
+func (h *CoinHandler) ExportSQL(c *fiber.Ctx) error {
+	data, err := h.service.ExportCoinsSQL(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	c.Set("Content-Type", "application/sql")
+	c.Set("Content-Disposition", `attachment; filename="backup.sql"`)
+	return c.Send(data)
+}

@@ -679,7 +679,12 @@ onMounted(async () => {
     }
 })
 
+import { useSettingsStore } from '../stores/settings'
+import { storeToRefs } from 'pinia'
+
 const formatCurrency = (val) => {
+  const settingsStore = useSettingsStore()
+  if (settingsStore.privacyMode) return '***'
   return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(val || 0)
 }
 
