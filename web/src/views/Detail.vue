@@ -42,8 +42,8 @@
                             :style="{ transform: `rotate(${rotations.front}deg)` }"
                             alt="Anverso"
                         />
-                        <button @click.stop="openRotationEditor('front')" class="absolute -bottom-2 -right-2 btn btn-circle btn-xs btn-neutral opacity-0 group-hover/img:opacity-100 transition-opacity" title="Rotar">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                        <button @click.stop="openRotationEditor('front')" class="absolute bottom-1 right-1 btn btn-circle btn-sm btn-neutral opacity-0 group-hover/img:opacity-100 transition-opacity z-10 shadow-lg border border-gray-600" title="Rotar">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                         </button>
                     </figure>
 
@@ -56,10 +56,23 @@
                             :style="{ transform: `rotate(${rotations.back}deg)` }"
                             alt="Reverso"
                         />
-                         <button @click.stop="openRotationEditor('back')" class="absolute -bottom-2 -right-2 btn btn-circle btn-xs btn-neutral opacity-0 group-hover/img:opacity-100 transition-opacity" title="Rotar">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                         <button @click.stop="openRotationEditor('back')" class="absolute bottom-1 right-1 btn btn-circle btn-sm btn-neutral opacity-0 group-hover/img:opacity-100 transition-opacity z-10 shadow-lg border border-gray-600" title="Rotar">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                         </button>
                     </figure>
+                </div>
+
+                <!-- Sample Images Links (Numista Sources) -->
+                <div v-if="coin.numista_details && (coin.numista_details.obverse?.picture || coin.numista_details.reverse?.picture)" class="flex justify-center gap-4 py-2 border-t border-gray-800 bg-base-200/50">
+                    <a v-if="coin.numista_details.obverse?.picture" :href="coin.numista_details.obverse.picture" target="_blank" class="link link-xs link-accent no-underline hover:underline flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
+                        Muestra Anverso
+                    </a>
+                    <div class="divider divider-horizontal mx-0 h-4 my-auto self-center"></div>
+                    <a v-if="coin.numista_details.reverse?.picture" :href="coin.numista_details.reverse.picture" target="_blank" class="link link-xs link-accent no-underline hover:underline flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
+                        Muestra Reverso
+                    </a>
                 </div>
             </div>
 
@@ -198,7 +211,14 @@
                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" /></svg>
                          <span class="text-xs font-bold uppercase">{{ $t('details.labels.material') }}</span>
                     </div>
-                    <div class="font-semibold text-sm truncate" :title="coin.material">{{ coin.material || coin.numista_details?.composition?.text || 'N/A' }}</div>
+                    <div class="flex flex-col">
+                         <div class="font-semibold text-sm leading-tight" :title="coin.material">
+                             {{ getMaterialName(coin.material || coin.numista_details?.composition?.text) }}
+                         </div>
+                         <div v-if="getMaterialComposition(coin.material || coin.numista_details?.composition?.text)" class="text-xs opacity-70 leading-tight mt-0.5">
+                             {{ getMaterialComposition(coin.material || coin.numista_details?.composition?.text) }}
+                         </div>
+                    </div>
                  </div>
 
                  <!-- Weight -->
@@ -225,7 +245,7 @@
                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 16.875h3.375m0 0h3.375m-3.375 0V13.5m0 3.375v3.375M6 10.5h2.25a2.25 2.25 0 002.25-2.25V6a2.25 2.25 0 00-2.25-2.25H6A2.25 2.25 0 003.75 6v2.25A2.25 2.25 0 006 10.5zm0 9.75h2.25A2.25 2.25 0 0010.5 18v-2.25a2.25 2.25 0 00-2.25-2.25H6a2.25 2.25 0 00-2.25 2.25V18A2.25 2.25 0 006 20.25zm9.75-9.75H18a2.25 2.25 0 002.25-2.25V6A2.25 2.25 0 0018 3.75h-2.25A2.25 2.25 0 0013.5 6v2.25a2.25 2.25 0 002.25 2.25z" /></svg>
                          <span class="text-xs font-bold uppercase">{{ $t('details.labels.mint') }}</span>
                     </div>
-                    <div class="font-semibold text-sm truncate" :title="coin.mint">{{ coin.mint || 'N/A' }}</div>
+                    <div class="font-semibold text-sm break-words leading-tight" :title="coin.mint">{{ coin.mint || 'N/A' }}</div>
                  </div>
 
                   <!-- Mintage -->
@@ -260,10 +280,31 @@
                     </div>
 
                     <!-- Numista Links -->
-                    <div class="flex items-center gap-4 mt-6 pt-6 border-t border-base-200">
+                    <!-- AI Info & Actions (Moved from Notes) -->
+                    <div v-if="coin.gemini_model" class="mt-6 pt-6 border-t border-base-200 text-xs text-gray-400">
+                         <div class="flex flex-col sm:flex-row items-center justify-between gap-2">
+                           <div class="flex gap-2 items-center">
+                               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+                               </svg>
+                               <span>AI Generated by {{ coin.gemini_model }} (Temp: {{ coin.gemini_temperature }})</span>
+                           </div>
+                           <button @click="openReprocessModal" class="btn btn-xs btn-outline btn-primary gap-1">
+                               {{ $t('common.reprocess') || 'Reprocesar' }}
+                           </button>
+                       </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: TECHNICAL & NUMISTA -->
+
+                <div v-if="activeTab === 'technical'" class="space-y-8 animate-in fade-in duration-300">
+                    
+                    <!-- Numista Actions (Moved from Overview/Notes) -->
+                    <div class="flex flex-wrap items-center gap-4 mb-6 pb-6 border-b border-base-200">
                         <div v-if="coin.numista_number" class="flex gap-2">
                              <a :href="getNumistaUrl()" target="_blank" class="btn btn-sm btn-outline btn-info gap-2">
-                                N
+                                <!-- N removed -->
                                 Ver en Numista
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
                              </a>
@@ -271,12 +312,12 @@
                                 {{ numistaCount }} resultados alternativos
                              </button>
                         </div>
+                         <!-- Sync Button moved here -->
+                         <button @click="syncNumista" class="btn btn-sm btn-outline btn-secondary gap-1" :disabled="syncing" v-if="coin.numista_number">
+                            <span v-if="syncing" class="loading loading-spinner loading-xs"></span>
+                            Sync Numista
+                         </button>
                     </div>
-                </div>
-
-                <!-- TAB 2: TECHNICAL & NUMISTA -->
-
-                <div v-if="activeTab === 'technical'" class="space-y-8 animate-in fade-in duration-300">
                     
                     <!-- Numismatic Info (Ruler, Series, etc) -->
                     <div v-if="coin.ruler || coin.series || coin.commemorated_topic || coin.orientation || coin.edge" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -404,220 +445,13 @@
                         </div>
                     </div>
 
-                    <!-- AI Confidence / Metadata -->
-                    <div v-if="coin.gemini_model" class="mt-4 pt-4 border-t border-base-200 text-xs text-gray-400">
-                         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                           <div class="flex gap-2 items-center">
-                               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
-                               </svg>
-                               <span>AI Generated by {{ coin.gemini_model }} (Temp: {{ coin.gemini_temperature }})</span>
-                           </div>
-                           <div class="flex gap-2">
-                               <button @click="openReprocessModal" class="btn btn-xs btn-outline btn-primary gap-1">
-                                   {{ $t('common.reprocess') || 'Reprocesar' }}
-                               </button>
-                               <button @click="syncNumista" class="btn btn-xs btn-outline btn-info gap-1" :disabled="syncing">
-                                    <span v-if="syncing" class="loading loading-spinner loading-xs"></span>
-                                    Sync Numista
-                               </button>
-                           </div>
-                       </div>
-                    </div>
+
 
                 </div>
 
-        <div class="divider">
-            {{ $t('details.sections.description') }}
-            <div class="badge badge-neutral gap-1 text-xs">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3">
-                    <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.633-.73l-3.111-9.64a1.184 1.184 0 01-.722-1.463A1.184 1.184 0 0110 2zM4.08 6.647a1 1 0 011.666-.086l1.248 1.94 1.258-.636a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 018 17a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.633-.73L1.589 5.611a1 1 0 012.491-1.036z" clip-rule="evenodd" />
-                </svg>
-                Gemini
             </div>
         </div>
-        <p class="whitespace-pre-line">{{ coin.description }}</p>
-
-        <!-- Numista Extended Details -->
-        <template v-if="coin.numista_details">
-             <div class="divider mt-6">
-                {{ $t('details.sections.numista_details') || 'Detalles Numista' }}
-                <div class="badge badge-neutral gap-1 text-xs">
-                    Numista
-                </div>
-            </div>
-            <!-- Obverse -->
-            <div v-if="coin.numista_details.obverse">
-                <h3 class="font-bold border-b border-gray-200 dark:border-gray-700 pb-1 mb-2 text-primary">Anverso</h3>
-                <p v-if="coin.numista_details.obverse.lettering" class="mb-1">
-                    <span class="font-semibold italic opacity-80">Leyenda:</span> 
-                    <span class="ml-1">{{ coin.numista_details.obverse.lettering }}</span>
-                </p>
-                <p v-if="coin.numista_details.obverse.description">
-                    <span class="font-semibold italic opacity-80">Descripción:</span>
-                    <span class="ml-1">{{ coin.numista_details.obverse.description }}</span>
-                </p>
-            </div>
-
-            <!-- Reverse -->
-            <div v-if="coin.numista_details.reverse">
-                <h3 class="font-bold border-b border-gray-200 dark:border-gray-700 pb-1 mb-2 text-primary">Reverso</h3>
-                <p v-if="coin.numista_details.reverse.lettering" class="mb-1">
-                    <span class="font-semibold italic opacity-80">Leyenda:</span>
-                    <span class="ml-1">{{ coin.numista_details.reverse.lettering }}</span>
-                </p>
-                <p v-if="coin.numista_details.reverse.description">
-                    <span class="font-semibold italic opacity-80">Descripción:</span>
-                    <span class="ml-1">{{ coin.numista_details.reverse.description }}</span>
-                </p>
-            </div>
-
-            <!-- Edge -->
-            <div v-if="coin.numista_details.edge && (coin.numista_details.edge.description || coin.numista_details.edge.lettering)">
-                <h3 class="font-bold border-b border-gray-200 dark:border-gray-700 pb-1 mb-2 text-primary">Edge</h3>
-                <p v-if="coin.numista_details.edge.description" class="mb-1">{{ coin.numista_details.edge.description }}</p>
-                <p v-if="coin.numista_details.edge.lettering">
-                    <span class="font-semibold italic opacity-80">Leyenda:</span>
-                    <span class="ml-1">{{ coin.numista_details.edge.lettering }}</span>
-                </p>
-            </div>
-
-            <!-- Technique -->
-            <div v-if="coin.numista_details.technique && coin.numista_details.technique.text">
-                 <h3 class="font-bold border-b border-gray-200 dark:border-gray-700 pb-1 mb-2 text-primary">Técnica</h3>
-                 <p>{{ coin.numista_details.technique.text }}</p>
-            </div>
-        </template>
-
-        <!-- Numismatic Information Section -->
-        <template v-if="coin.ruler || coin.series || coin.commemorated_topic || coin.orientation">
-            <div class="divider mt-6">{{ $t('details.sections.numismatic_info') }}</div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div v-if="coin.ruler">
-                    <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.ruler') }}</span>
-                    <span>{{ coin.ruler }}</span>
-                </div>
-                <div v-if="coin.series">
-                    <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.series') }}</span>
-                    <span>{{ coin.series }}</span>
-                </div>
-                <div v-if="coin.commemorated_topic">
-                    <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.commemorated') }}</span>
-                    <span>{{ coin.commemorated_topic }}</span>
-                </div>
-                <div v-if="coin.orientation">
-                    <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.orientation') }}</span>
-                    <span>{{ coin.orientation }}</span>
-                </div>
-                <div v-if="coin.edge">
-                    <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.edge') }}</span>
-                    <span>{{ coin.edge }}</span>
-                </div>
-            </div>
-        </template>
-
-        <!-- Transaction History Section -->
-        <template v-if="coin.acquired_at || coin.sold_at">
-            <div class="divider mt-6">{{ $t('details.sections.transaction_history') }}</div>
-            <div class="space-y-3">
-                <div v-if="coin.acquired_at" class="flex items-center gap-3 p-3 bg-success/10 rounded-lg">
-                    <div class="badge badge-success gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                        </svg>
-                        {{ $t('details.labels.acquired') }}
-                    </div>
-                    <div class="flex-1">
-                        <div class="font-bold">{{ new Date(coin.acquired_at).toLocaleDateString() }}</div>
-                        <div v-if="coin.price_paid > 0" class="text-sm opacity-70">{{ $t('details.labels.price_paid') }}: {{ formatCurrency(coin.price_paid) }}</div>
-                    </div>
-                </div>
-                
-                <div v-if="coin.sold_at" class="flex items-center gap-3 p-3 bg-warning/10 rounded-lg">
-                    <div class="badge badge-warning gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
-                        </svg>
-                        {{ $t('details.labels.sold') }}
-                    </div>
-                    <div class="flex-1">
-                        <div class="font-bold">{{ new Date(coin.sold_at).toLocaleDateString() }}</div>
-                        <div v-if="coin.sold_price > 0" class="text-sm opacity-70">{{ $t('details.labels.sold_price') }}: {{ formatCurrency(coin.sold_price) }}</div>
-                        <div v-if="coin.sale_channel" class="text-sm opacity-70">{{ $t('details.labels.sale_channel') }}: {{ coin.sale_channel }}</div>
-                    </div>
-                </div>
-                
-                <div v-if="!coin.sold_at" class="alert alert-info">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <span>{{ $t('details.labels.in_collection') }}</span>
-                </div>
-            </div>
-        </template>
-
-
-        <div v-if="coin.gemini_model" class="mt-4 flex flex-col text-xs text-gray-400">
-           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-               <div class="flex gap-2 items-center">
-                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
-                   </svg>
-                   <span>AI Generated by {{ coin.gemini_model }} (Temp: {{ coin.gemini_temperature }})</span>
-               </div>
-               <div class="flex gap-2 self-start sm:self-auto">
-                   <div class="tooltip" :data-tip="$t('details.reprocess_tooltip') || 'Reprocesar'">
-                       <button @click="openReprocessModal" class="btn btn-xs btn-outline btn-primary flex flex-row items-center gap-1 flex-nowrap">
-                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 flex-shrink-0">
-                               <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                           </svg>
-                           <span class="whitespace-nowrap">{{ $t('common.reprocess') || 'Reprocesar' }}</span>
-                       </button>
-                   </div>
-                    <!-- Numista Reprocess Action -->
-                    <div class="tooltip" :data-tip="$t('details.reprocess_numista_tooltip') || 'Reprocesar Numista'">
-                        <button @click="syncNumista" class="btn btn-xs btn-outline btn-primary flex flex-row items-center gap-1 flex-nowrap" :disabled="syncing">
-                            <span v-if="syncing" class="loading loading-spinner loading-xs"></span>
-                            <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 flex-shrink-0">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                            </svg>
-                            <span class="whitespace-nowrap">{{ $t('common.reprocess') }}</span>
-                        </button>
-                    </div>
-                </div>
-           </div>
-           <div v-if="coin.gemini_details && coin.gemini_details.error" class="mt-1 text-error">
-               Warning: {{ coin.gemini_details.error }}
-           </div>
-        </div>
-
-        <!-- Notes Sections -->
-        <template v-if="coin.technical_notes || coin.personal_notes">
-            <div class="divider mt-6">{{ $t('details.sections.notes') }}</div>
-            
-            <div v-if="coin.technical_notes" class="mb-4">
-                <h3 class="font-bold text-sm text-gray-500 mb-2 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
-                    </svg>
-                    {{ $t('details.sections.technical_notes') }}
-                </h3>
-                <p class="text-sm whitespace-pre-line bg-base-200 p-3 rounded-lg">{{ coin.technical_notes }}</p>
-            </div>
-            
-            <div v-if="coin.personal_notes" class="mb-4">
-                <h3 class="font-bold text-sm text-gray-500 mb-2 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                    </svg>
-                    {{ $t('details.sections.personal_notes') }}
-                </h3>
-                <p class="text-sm italic whitespace-pre-line bg-base-200 p-3 rounded-lg">{{ coin.personal_notes }}</p>
-            </div>
-        </template>
-        
-
-      </div>
     </div>
-  </div>
   </div>
   <div v-else class="flex justify-center p-20">
     <span class="loading loading-spinner loading-lg"></span>
@@ -1060,6 +894,18 @@ const formatCurrency = (val) => {
   const settingsStore = useSettingsStore()
   if (settingsStore.privacyMode) return '***'
   return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(val || 0)
+}
+
+const getMaterialName = (material) => {
+    if (!material) return 'N/A'
+    return material.split('(')[0].trim()
+}
+
+const getMaterialComposition = (material) => {
+    if (!material || !material.includes('(')) return null
+    const parts = material.split('(')
+    if (parts.length < 2) return null
+    return '(' + parts.slice(1).join('(').trim()
 }
 
 const getAppraisalText = () => {

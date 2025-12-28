@@ -1,10 +1,6 @@
--- Drop everything to ensure clean slate (User requested reset)
-DROP TABLE IF EXISTS schema_migrations CASCADE;
-DROP TABLE IF EXISTS coin_images CASCADE;
-DROP TABLE IF EXISTS coins CASCADE;
-DROP TABLE IF EXISTS groups CASCADE;
-DROP TYPE IF EXISTS image_type CASCADE;
-DROP TYPE IF EXISTS coin_side CASCADE;
+-- Initial Schema
+-- Removed destructive DROP statements to prevent accidental data loss
+
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
