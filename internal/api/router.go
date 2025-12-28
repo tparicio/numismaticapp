@@ -49,6 +49,11 @@ func SetupRouter(app *fiber.App, coinHandler *CoinHandler, healthHandler *Health
 	v1.Get("/export/csv", coinHandler.ExportCSV)
 	v1.Get("/export/sql", coinHandler.ExportSQL)
 
+	// Links
+	v1.Get("/coins/:id/links", coinHandler.ListCoinLinks)
+	v1.Post("/coins/:id/links", coinHandler.AddCoinLink)
+	v1.Delete("/coins/:id/links/:link_id", coinHandler.DeleteCoinLink)
+
 	// SPA Fallback: Serve index.html for any other route not handled above
 	// This ensures that refreshing pages like /coins/add works
 	app.Get("*", func(c *fiber.Ctx) error {

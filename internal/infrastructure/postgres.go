@@ -717,3 +717,52 @@ func (r *PostgresCoinRepository) GetSaleChannels(ctx context.Context) ([]string,
 	}
 	return channels, nil
 }
+
+// AddLink adds a new coin link
+func (r *PostgresCoinRepository) AddLink(ctx context.Context, link *domain.CoinLink) error {
+	params := db.AddCoinLinkParams{
+		CoinID:        pgtype.UUID{Bytes: link.CoinID, Valid: true},
+		Url:           link.URL,
+		Name:          toNullString(link.Name),
+		OgTitle:       toNullString(link.OGTitle),
+		OgDescription: toNullString(link.OGDescription),
+		OgImage:       toNullString(link.OGImage),
+	}
+
+	row, err := r.q.AddCoinLink(ctx, params)
+	if err != nil {
+		return fmt.Errorf("failed to add link: %w", err)
+	}
+
+	link.ID = uuid.UUID(row.ID.Bytes)
+	link.CreatedAt = row.CreatedAt.Time
+	return nil
+}
+
+// RemoveLink removes a coin link
+func (r *PostgresCoinRepository) RemoveLink(ctx context.Context, linkID uuid.UUID) error {
+	return r.q.DeleteCoinLink(ctx, pgtype.UUID{Bytes: linkID, Valid: true})
+}
+
+// ListLinks lists all links for a coin
+func (r *PostgresCoinRepository) ListLinks(ctx context.Context, coinID uuid.UUID) ([]*domain.CoinLink, error) {
+	rows, err := r.q.ListCoinLinks(ctx, pgtype.UUID{Bytes: coinID, Valid: true})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list links: %w", err)
+	}
+
+	links := make([]*domain.CoinLink, len(rows))
+	for i, row := range rows {
+		links[i] = &domain.CoinLink{
+			ID:            uuid.UUID(row.ID.Bytes),
+			CoinID:        uuid.UUID(row.CoinID.Bytes),
+			URL:           row.Url,
+			Name:          row.Name.String,
+			OGTitle:       row.OgTitle.String,
+			OGDescription: row.OgDescription.String,
+			OGImage:       row.OgImage.String,
+			CreatedAt:     row.CreatedAt.Time,
+		}
+	}
+	return links, nil
+}

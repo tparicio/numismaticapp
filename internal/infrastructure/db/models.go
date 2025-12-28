@@ -155,6 +155,17 @@ type CoinImage struct {
 	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
 }
 
+type CoinLink struct {
+	ID            pgtype.UUID        `json:"id"`
+	CoinID        pgtype.UUID        `json:"coin_id"`
+	Url           string             `json:"url"`
+	Name          pgtype.Text        `json:"name"`
+	OgTitle       pgtype.Text        `json:"og_title"`
+	OgDescription pgtype.Text        `json:"og_description"`
+	OgImage       pgtype.Text        `json:"og_image"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+}
+
 type Group struct {
 	ID          int32              `json:"id"`
 	Name        string             `json:"name"`

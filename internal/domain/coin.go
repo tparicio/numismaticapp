@@ -123,6 +123,22 @@ type CoinRepository interface {
 	// Sell operations
 	MarkAsSold(ctx context.Context, id uuid.UUID, soldAt time.Time, soldPrice float64, saleChannel string) (*Coin, error)
 	GetSaleChannels(ctx context.Context) ([]string, error)
+	// Link operations
+	AddLink(ctx context.Context, link *CoinLink) error
+	RemoveLink(ctx context.Context, linkID uuid.UUID) error
+	ListLinks(ctx context.Context, coinID uuid.UUID) ([]*CoinLink, error)
+}
+
+// CoinLink represents an external link associated with a coin.
+type CoinLink struct {
+	ID            uuid.UUID `json:"id"`
+	CoinID        uuid.UUID `json:"coin_id"`
+	URL           string    `json:"url"`
+	Name          string    `json:"name"`
+	OGTitle       string    `json:"og_title"`
+	OGDescription string    `json:"og_description"`
+	OGImage       string    `json:"og_image"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 // GroupRepository defines the interface for persisting groups.

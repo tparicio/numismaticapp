@@ -217,6 +217,16 @@
         "reprocess_modal": {
             "title": "Reprocess with Artificial Intelligence",
             "warning": "Warning! This will re-send original images to Gemini and OVERWRITE all coin details (Name, year, country, description, etc) with new response. Personal notes will be kept."
+        },
+        "links": {
+            "title": "Links",
+            "add": "Add Link",
+            "url_placeholder": "https://example.com",
+            "empty": "No links added.",
+            "empty_subtitle": "Add links to auctions, catalogs, or forums related to this coin.",
+            "name_label": "Name (Optional)",
+            "delete_confirm": "Are you sure you want to delete this link permanently?",
+            "delete_title": "Delete Link"
         }
     },
     "dashboard": {

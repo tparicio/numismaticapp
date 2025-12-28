@@ -98,6 +98,24 @@
       </div>
     </div>
     
+    <!-- Active Group Header -->
+    <div v-if="filters.group_id && activeGroupName" class="mb-8 p-6 bg-primary/10 rounded-2xl border border-primary/20 flex flex-col md:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+        <div class="flex items-center gap-4">
+             <div class="p-3 bg-primary rounded-xl text-primary-content shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" /></svg>
+             </div>
+             <div>
+                 <div class="text-sm font-bold uppercase tracking-wider opacity-60">Colección</div>
+                 <h2 class="text-3xl font-black text-primary">{{ activeGroupName }}</h2>
+                 <p class="opacity-70 text-sm mt-1" v-if="activeGroupDesc">{{ activeGroupDesc }}</p>
+             </div>
+        </div>
+        <button @click="clearFilters" class="btn btn-outline btn-sm gap-2 hover:btn-error">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            Salir del grupo
+        </button>
+    </div>
+    
     <div v-if="loading" class="flex justify-center p-10">
       <span class="loading loading-spinner loading-lg"></span>
     </div>
@@ -482,6 +500,18 @@ const uniqueMaterials = computed(() => {
     }
   })
   return Array.from(materials).sort()
+})
+
+const activeGroupName = computed(() => {
+    if (!filters.value.group_id) return null
+    const group = groups.value.find(g => g.id === parseInt(filters.value.group_id)) || groups.value.find(g => g.id === filters.value.group_id) // Handle string/int types
+    return group ? group.name : null
+})
+
+const activeGroupDesc = computed(() => {
+    if (!filters.value.group_id) return null
+    const group = groups.value.find(g => g.id === parseInt(filters.value.group_id)) || groups.value.find(g => g.id === filters.value.group_id)
+    return group ? group.description : null
 })
 
 // Fetch coins

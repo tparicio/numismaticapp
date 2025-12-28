@@ -225,6 +225,16 @@
         "reprocess_modal": {
             "title": "Reprocesar con Inteligencia Artificial",
             "warning": "¡Advertencia! Esta acción volverá a enviar las imágenes originales a Gemini y SOBREESCRIBIRÁ todos los detalles de la moneda (Nombre, año, país, descripción, etc) con la nueva respuesta. Las notas personales se mantendrán."
+        },
+        "links": {
+            "title": "Enlaces",
+            "add": "Añadir Enlace",
+            "url_placeholder": "https://ejemplo.com",
+            "empty": "No hay enlaces añadidos.",
+            "empty_subtitle": "Añade enlaces a subastas, catálogos o foros relacionados con esta moneda.",
+            "name_label": "Nombre (Opcional)",
+            "delete_confirm": "¿Seguro que quieres eliminar este enlace permanentemente?",
+            "delete_title": "Eliminar Enlace"
         }
     },
     "dashboard": {

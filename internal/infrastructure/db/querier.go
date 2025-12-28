@@ -11,15 +11,16 @@ import (
 )
 
 type Querier interface {
+	AddCoinLink(ctx context.Context, arg AddCoinLinkParams) (CoinLink, error)
 	CountCoins(ctx context.Context) (int64, error)
 	CreateCoin(ctx context.Context, arg CreateCoinParams) (Coin, error)
 	CreateCoinImage(ctx context.Context, arg CreateCoinImageParams) (CoinImage, error)
 	CreateGroup(ctx context.Context, arg CreateGroupParams) (Group, error)
 	DeleteCoin(ctx context.Context, id pgtype.UUID) error
+	DeleteCoinLink(ctx context.Context, id pgtype.UUID) error
 	DeleteGroup(ctx context.Context, id int32) error
 	GetAllCoins(ctx context.Context) ([]Coin, error)
 	GetAllValues(ctx context.Context) ([]pgtype.Numeric, error)
-	GetAverageSaleValue(ctx context.Context) (float64, error)
 	GetAverageValue(ctx context.Context) (float64, error)
 	GetCoin(ctx context.Context, id pgtype.UUID) (Coin, error)
 	GetCountryDistribution(ctx context.Context) ([]GetCountryDistributionRow, error)
@@ -33,17 +34,15 @@ type Querier interface {
 	GetOldestCoin(ctx context.Context) (Coin, error)
 	GetRandomCoin(ctx context.Context) (Coin, error)
 	GetRarestCoins(ctx context.Context, limit int32) ([]Coin, error)
-	GetSalesCount(ctx context.Context) (int64, error)
 	GetSmallestCoin(ctx context.Context) (Coin, error)
-	GetTotalSalesAmount(ctx context.Context) (float64, error)
 	GetTotalValue(ctx context.Context) (float64, error)
 	GetTotalWeightByMaterial(ctx context.Context, material pgtype.Text) (float64, error)
 	ListCoinImagesByCoinID(ctx context.Context, coinID pgtype.UUID) ([]CoinImage, error)
 	ListCoinImagesByCoinIDs(ctx context.Context, dollar_1 []pgtype.UUID) ([]CoinImage, error)
+	ListCoinLinks(ctx context.Context, coinID pgtype.UUID) ([]CoinLink, error)
 	ListCoins(ctx context.Context, arg ListCoinsParams) ([]Coin, error)
 	ListGroups(ctx context.Context) ([]Group, error)
 	ListRecentCoins(ctx context.Context) ([]Coin, error)
-	ListRecentSales(ctx context.Context) ([]Coin, error)
 	ListTopValuableCoins(ctx context.Context) ([]Coin, error)
 	MarkCoinAsSold(ctx context.Context, arg MarkCoinAsSoldParams) (Coin, error)
 	UpdateCoin(ctx context.Context, arg UpdateCoinParams) (Coin, error)

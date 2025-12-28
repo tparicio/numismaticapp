@@ -141,7 +141,7 @@
                             <line x1="65" y1="0" x2="65" y2="40" stroke="currentColor" stroke-width="2" class="text-warning"/>
                             <line x1="63" y1="0" x2="67" y2="0" stroke="currentColor" stroke-width="2" class="text-warning"/>
                             <line x1="63" y1="40" x2="67" y2="40" stroke="currentColor" stroke-width="2" class="text-warning"/>
-                            <text x="30" y="25" text-anchor="middle" class="fill-current font-bold text-sm">{{ coin.thickness_mm }}mm</text>
+                            <text x="30" y="25" text-anchor="middle" class="fill-current text-base-content font-bold text-sm">{{ coin.thickness_mm }}mm</text>
                         </g>
                         
                         <defs>
@@ -187,6 +187,11 @@
                     <div class="badge badge-lg badge-accent text-accent-content font-bold shadow-glow" v-if="coin.grade">
                         {{ coin.grade }}
                     </div>
+                    <!-- Group Link -->
+                    <router-link :to="`/list?group_id=${coin.group_id}`" class="badge badge-lg badge-primary badge-outline gap-1 hover:bg-primary hover:text-primary-content transition-colors cursor-pointer" v-if="coin.group_id && getGroupName(coin.group_id)">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" /></svg>
+                        {{ getGroupName(coin.group_id) }}
+                    </router-link>
                      <!-- KM Code -->
                     <div class="badge badge-lg badge-ghost gap-1 font-mono opacity-70" v-if="coin.km_code">
                         {{ coin.km_code }}
@@ -269,6 +274,7 @@
             <div role="tablist" class="tabs tabs-lifted tabs-lg">
                 <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'overview' }" @click="activeTab = 'overview'">Resumen</a>
                 <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'technical' }" @click="activeTab = 'technical'">Numista</a>
+                <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'links' }" @click="activeTab = 'links'">{{ $t('details.links.title') || 'Enlaces' }}</a>
                 <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'notes' }" @click="activeTab = 'notes'">Notas</a>
             </div>
 
@@ -300,6 +306,52 @@
                                {{ $t('common.reprocess') || 'Reprocesar' }}
                            </button>
                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: LINKS (New) -->
+                <div v-if="activeTab === 'links'" class="space-y-6 animate-in fade-in duration-300">
+                    <div v-if="links.length === 0" class="text-center py-12 bg-base-200/50 rounded-xl border border-dashed border-base-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-12 h-12 mx-auto text-base-content/30 mb-2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
+                        <h3 class="font-bold text-lg opacity-60">{{ $t('details.links.empty') || 'No hay enlaces' }}</h3>
+                        <p class="text-sm opacity-50 mb-4">{{ $t('details.links.empty_subtitle') }}</p>
+                        <button class="btn btn-primary btn-sm gap-2" @click="openAddLinkModal">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                            {{ $t('details.links.add') }}
+                        </button>
+                    </div>
+
+                    <div v-else class="space-y-4">
+                        <div class="flex justify-end">
+                             <button class="btn btn-primary btn-xs gap-2" @click="openAddLinkModal">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                                {{ $t('details.links.add') }}
+                            </button>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 gap-4">
+                            <a v-for="link in links" :key="link.id" :href="link.url" target="_blank" class="group relative block bg-base-100 hover:bg-base-200 border border-base-300 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+                                <div class="flex h-full">
+                                    <div v-if="link.og_image" class="w-32 min-w-[8rem] bg-gray-100 dark:bg-gray-800 bg-cover bg-center" :style="`background-image: url('${link.og_image}')`"></div>
+                                    <div v-else class="w-32 min-w-[8rem] bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
+                                    </div>
+                                    <div class="p-4 flex-1 min-w-0 flex flex-col justify-center">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="badge badge-sm badge-accent badge-outline font-mono text-[10px] uppercase tracking-wider">
+                                                {{ getDomain(link.url) }}
+                                            </span>
+                                        </div>
+                                        <h4 class="font-bold text-base truncate pr-8 mb-1 leading-tight">{{ link.name || link.og_title || link.url }}</h4>
+                                        <p v-if="link.og_description" class="text-xs opacity-70 line-clamp-2 leading-relaxed">{{ link.og_description }}</p>
+                                        <div class="text-[10px] text-gray-400 mt-2 truncate font-mono opacity-40">{{ link.url }}</div>
+                                    </div>
+                                </div>
+                                <button @click.prevent="openDeleteLinkModal(link)" class="absolute top-2 right-2 btn btn-xs btn-circle btn-ghost text-error opacity-0 group-hover:opacity-100 transition-opacity bg-base-100/80 backdrop-blur-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+                                </button>
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -449,8 +501,8 @@
                         <div class="group relative">
                             <h3 class="font-bold text-sm text-gray-500 mb-2 flex items-center gap-2">
                                 {{ $t('details.sections.personal_notes') }}
-                                <button v-if="!editingNotes" @click="startEditingNotes" class="btn btn-ghost btn-xs btn-circle opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
+                                <button v-if="!editingNotes" @click="startEditingNotes" class="btn btn-ghost btn-xs btn-circle text-base-content/50 hover:text-primary transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
                                 </button>
                             </h3>
                             
@@ -472,7 +524,7 @@
                                 <div v-if="coin.personal_notes" class="text-sm italic whitespace-pre-line bg-blue-50 dark:bg-blue-900/10 p-3 rounded-lg border border-blue-100 dark:border-blue-900/30">
                                     {{ coin.personal_notes }}
                                 </div>
-                                <div v-else @click="startEditingNotes" class="text-sm italic text-gray-400 bg-base-200/50 p-4 rounded-lg border border-dashed border-base-300 cursor-pointer hover:bg-base-200 transition-colors flex items-center justify-center gap-2">
+                                <div v-else @click="startEditingNotes" class="text-sm italic text-gray-500 bg-base-200/50 p-4 rounded-lg border border-dashed border-base-300 cursor-pointer hover:bg-base-200 transition-colors flex items-center justify-center gap-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
                                     Añadir nota personal...
                                 </div>
@@ -596,6 +648,66 @@
     </div>
   </dialog>
 
+  <!-- Add Link Modal -->
+  <dialog v-if="addLinkModalOpen" id="add_link_modal" class="modal" :class="{ 'modal-open': addLinkModalOpen }">
+    <div class="modal-box">
+      <h3 class="font-bold text-lg text-primary flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
+          {{ $t('details.links.add') }}
+      </h3>
+      
+      <div class="py-4 space-y-4">
+          <div class="form-control w-full">
+              <label class="label">
+                  <span class="label-text">URL</span>
+              </label>
+              <input type="url" v-model="newLink.url" :placeholder="$t('details.links.url_placeholder')" class="input input-bordered w-full" :class="{ 'input-error': newLinkError }" @input="newLinkError = ''" />
+              <label class="label" v-if="newLinkError">
+                  <span class="label-text-alt text-error">{{ newLinkError }}</span>
+              </label>
+          </div>
+          <!-- Optional Name? We'll rely on OG for now or add if user wants. Let's keep it simple first. -->
+          <!-- Actually, let's allow optional name override -->
+<!--           <div class="form-control w-full">
+              <label class="label">
+                  <span class="label-text">{{ $t('details.links.name_label') }}</span>
+              </label>
+              <input type="text" v-model="newLink.name" placeholder="Opcional" class="input input-bordered w-full" />
+          </div> -->
+      </div>
+
+      <div class="modal-action">
+        <button class="btn" @click="closeAddLinkModal">{{ $t('common.cancel') }}</button>
+        <button class="btn btn-primary" @click="addLink" :disabled="addingLink || !newLink.url">
+          <span v-if="addingLink" class="loading loading-spinner"></span>
+          {{ $t('common.save') }}
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Delete Link Modal -->
+  <dialog v-if="deleteLinkModalOpen" id="delete_link_modal" class="modal" :class="{ 'modal-open': deleteLinkModalOpen }">
+    <div class="modal-box">
+      <h3 class="font-bold text-lg text-error flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+          {{ $t('details.links.delete_title') || 'Eliminar Enlace' }}
+      </h3>
+      <p class="py-4">
+          {{ $t('details.links.delete_confirm') }}
+          <br>
+          <span class="font-bold opacity-70 block mt-2 text-sm">{{ linkToDelete?.name || linkToDelete?.og_title || linkToDelete?.url }}</span>
+      </p>
+      <div class="modal-action">
+        <button class="btn" @click="deleteLinkModalOpen = false">{{ $t('common.cancel') }}</button>
+        <button class="btn btn-error" @click="confirmDeleteLink" :disabled="deletingLink">
+          <span v-if="deletingLink" class="loading loading-spinner"></span>
+          {{ $t('common.delete') }}
+        </button>
+      </div>
+    </div>
+  </dialog>
+
   <!-- Numista Results Modal -->
   <dialog v-if="numistaModalOpen" id="numista_modal" class="modal" :class="{ 'modal-open': numistaModalOpen }">
     <div class="modal-box w-11/12 max-w-4xl">
@@ -688,6 +800,24 @@ const viewerOpen = ref(false)
 const viewerImage = ref('')
 const activeImageSource = ref('processed') // processed, original
 const activeTab = ref('overview') // overview, technical, notes
+
+// Group State
+const groups = ref([])
+
+const fetchGroups = async () => {
+    try {
+        const res = await axios.get(`${API_URL}/groups`)
+        groups.value = res.data
+    } catch (e) {
+        console.error("Failed to fetch groups", e)
+    }
+}
+
+const getGroupName = (groupId) => {
+    if (!groupId) return null
+    const group = groups.value.find(g => g.id === groupId)
+    return group ? group.name : null
+}
 
 // Delete Modal State
 const deleteModalOpen = ref(false)
@@ -809,6 +939,99 @@ const deleteCoin = async () => {
     }
 }
 
+// Links Logic
+const links = ref([])
+const addLinkModalOpen = ref(false)
+const addingLink = ref(false)
+const newLink = reactive({ url: '', name: '' })
+const newLinkError = ref('')
+
+const deleteLinkModalOpen = ref(false)
+const linkToDelete = ref(null)
+const deletingLink = ref(false)
+
+const getDomain = (url) => {
+    try {
+        const hostname = new URL(url).hostname
+        return hostname.replace(/^www\./, '')
+    } catch (e) {
+        return url
+    }
+}
+
+const fetchLinks = async () => {
+    if (!coin.value) return
+    try {
+        const res = await axios.get(`${API_URL}/coins/${coin.value.id}/links`)
+        links.value = res.data
+    } catch (e) {
+        console.error("Failed to fetch links", e)
+    }
+}
+
+const openAddLinkModal = () => {
+    newLink.url = ''
+    newLink.name = ''
+    newLinkError.value = ''
+    addLinkModalOpen.value = true
+}
+
+const closeAddLinkModal = () => {
+    addLinkModalOpen.value = false
+}
+
+const isValidUrl = (string) => {
+  try {
+    new URL(string);
+    return true;
+  } catch (_) {
+    return false;  
+  }
+}
+
+const addLink = async () => {
+    if (!newLink.url) return
+    if (!isValidUrl(newLink.url)) {
+        newLinkError.value = 'URL inválida'
+        return
+    }
+
+    addingLink.value = true
+    try {
+        const res = await axios.post(`${API_URL}/coins/${coin.value.id}/links`, {
+            url: newLink.url
+        })
+        links.value.unshift(res.data) // Add to top
+        closeAddLinkModal()
+    } catch (e) {
+        console.error("Failed to add link", e)
+        newLinkError.value = e.response?.data?.error || e.message
+    } finally {
+        addingLink.value = false
+    }
+}
+
+const openDeleteLinkModal = (link) => {
+    linkToDelete.value = link
+    deleteLinkModalOpen.value = true
+}
+
+const confirmDeleteLink = async () => {
+    if (!linkToDelete.value) return
+    deletingLink.value = true
+    try {
+        await axios.delete(`${API_URL}/coins/${coin.value.id}/links/${linkToDelete.value.id}`)
+        links.value = links.value.filter(l => l.id !== linkToDelete.value.id)
+        deleteLinkModalOpen.value = false
+        linkToDelete.value = null
+    } catch (e) {
+         console.error("Failed to delete link", e)
+         alert('Failed to delete link')
+    } finally {
+        deletingLink.value = false
+    }
+}
+
 const getImageUrl = (path) => {
     if (!path) return '/broken_coin.png'
     if (path.includes('storage/')) {
@@ -900,6 +1123,7 @@ const getGradeDescription = (code) => {
 
 
 onMounted(async () => {
+    fetchGroups() // Fetch groups
     try {
         const response = await axios.get(`${API_URL}/coins/${route.params.id}`)
         coin.value = response.data
@@ -908,6 +1132,12 @@ onMounted(async () => {
         router.push('/list')
     } finally {
         loading.value = false
+        // Fetch Numista sync status (or just rely on coin data)
+        // checkNumistaCount() // Defined elsewhere? Not in variables I saw.
+        // Wait, checkNumistaCount is not defined in the code I inserted or saw?
+        // Ah, numistaCount is computed.
+        // I will just add fetchLinks() here.
+        fetchLinks()
     }
 })
 // Numista Manual Selection

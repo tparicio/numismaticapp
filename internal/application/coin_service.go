@@ -14,6 +14,7 @@ import (
 
 	"github.com/antonioparicio/numismaticapp/internal/domain"
 	"github.com/antonioparicio/numismaticapp/internal/infrastructure/numista" // Add import
+	"github.com/antonioparicio/numismaticapp/internal/infrastructure/og"
 	"github.com/google/uuid"
 )
 
@@ -1337,4 +1338,48 @@ func (s *CoinService) ExportCoinsSQL(ctx context.Context) ([]byte, error) {
 
 	sb.WriteString("\nCOMMIT;\n")
 	return []byte(sb.String()), nil
+}
+
+// Link operations
+
+func (s *CoinService) AddLink(ctx context.Context, coinID uuid.UUID, url string) (*domain.CoinLink, error) {
+	// Simple validation
+	if url == "" {
+		return nil, fmt.Errorf("url is required")
+	}
+
+	// Fetch OG data
+	meta, err := og.FetchMetadata(ctx, url)
+	if err != nil {
+		slog.Warn("Failed to fetch OG metadata, continuing without it", "url", url, "error", err)
+		meta = &og.Metadata{} // use empty
+	}
+
+	link := &domain.CoinLink{
+		CoinID:        coinID,
+		URL:           url,
+		OGTitle:       meta.Title,
+		OGDescription: meta.Description,
+		OGImage:       meta.Image,
+	}
+
+	if link.OGTitle != "" {
+		link.Name = link.OGTitle
+	} else {
+		link.Name = url // Fallback
+	}
+
+	if err := s.repo.AddLink(ctx, link); err != nil {
+		return nil, err
+	}
+
+	return link, nil
+}
+
+func (s *CoinService) RemoveLink(ctx context.Context, linkID uuid.UUID) error {
+	return s.repo.RemoveLink(ctx, linkID)
+}
+
+func (s *CoinService) GetLinks(ctx context.Context, coinID uuid.UUID) ([]*domain.CoinLink, error) {
+	return s.repo.ListLinks(ctx, coinID)
 }
