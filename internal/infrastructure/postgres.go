@@ -766,3 +766,95 @@ func (r *PostgresCoinRepository) ListLinks(ctx context.Context, coinID uuid.UUID
 	}
 	return links, nil
 }
+
+// GetAllImages returns all images for export features
+func (r *PostgresCoinRepository) GetAllImages(ctx context.Context) ([]domain.CoinImage, error) {
+	rows, err := r.db.Query(ctx, `
+		SELECT id, coin_id, image_type, side, path, extension, size, width, height, mime_type, original_filename, created_at, updated_at
+		FROM coin_images
+		ORDER BY coin_id, created_at
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list all images: %w", err)
+	}
+	defer rows.Close()
+
+	var images []domain.CoinImage
+	for rows.Next() {
+		var i domain.CoinImage
+		var idBytes, coinIDBytes [16]byte
+		var createdAt, updatedAt time.Time
+		var width, height int32
+
+		// Using generic scanning since we don't have the generated struct easily accessible/compatible without mapping
+		err := rows.Scan(
+			&idBytes,
+			&coinIDBytes,
+			&i.ImageType,
+			&i.Side,
+			&i.Path,
+			&i.Extension,
+			&i.Size,
+			&width,
+			&height,
+			&i.MimeType,
+			&i.OriginalFilename,
+			&createdAt,
+			&updatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan image: %w", err)
+		}
+		i.ID = uuid.UUID(idBytes)
+		i.CoinID = uuid.UUID(coinIDBytes)
+		i.Width = int(width)
+		i.Height = int(height)
+		i.CreatedAt = createdAt
+		i.UpdatedAt = updatedAt
+		images = append(images, i)
+	}
+	return images, rows.Err()
+}
+
+// GetAllLinks returns all links for export features
+func (r *PostgresCoinRepository) GetAllLinks(ctx context.Context) ([]*domain.CoinLink, error) {
+	rows, err := r.db.Query(ctx, `
+		SELECT id, coin_id, url, name, og_title, og_description, og_image, created_at
+		FROM coin_links
+		ORDER BY coin_id, created_at
+	`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list all links: %w", err)
+	}
+	defer rows.Close()
+
+	var links []*domain.CoinLink
+	for rows.Next() {
+		l := &domain.CoinLink{}
+		var idBytes, coinIDBytes [16]byte
+		var pName, pOgTitle, pOgDesc, pOgImage pgtype.Text
+
+		err := rows.Scan(
+			&idBytes,
+			&coinIDBytes,
+			&l.URL,
+			&pName,
+			&pOgTitle,
+			&pOgDesc,
+			&pOgImage,
+			&l.CreatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan link: %w", err)
+		}
+		l.ID = uuid.UUID(idBytes)
+		l.CoinID = uuid.UUID(coinIDBytes)
+		l.Name = pName.String
+		l.OGTitle = pOgTitle.String
+		l.OGDescription = pOgDesc.String
+		l.OGImage = pOgImage.String
+
+		links = append(links, l)
+	}
+	return links, rows.Err()
+}

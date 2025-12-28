@@ -127,6 +127,9 @@ type CoinRepository interface {
 	AddLink(ctx context.Context, link *CoinLink) error
 	RemoveLink(ctx context.Context, linkID uuid.UUID) error
 	ListLinks(ctx context.Context, coinID uuid.UUID) ([]*CoinLink, error)
+	// Bulk operations for export
+	GetAllImages(ctx context.Context) ([]CoinImage, error)
+	GetAllLinks(ctx context.Context) ([]*CoinLink, error)
 }
 
 // CoinLink represents an external link associated with a coin.
