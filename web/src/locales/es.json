@@ -318,6 +318,7 @@
         "description": "Descripción",
         "count": "Monedas",
         "empty_state": "No hay grupos. ¡Crea uno para organizar tu colección!",
+        "view_collection": "Ver Colección",
         "delete_modal": {
             "title": "Eliminar Grupo",
             "confirm": "¿Estás seguro de que quieres eliminar el grupo",

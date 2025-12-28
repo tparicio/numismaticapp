@@ -310,6 +310,7 @@
         "description": "Description",
         "count": "Coins",
         "empty_state": "No groups found. Create one to organize your collection!",
+        "view_collection": "View Collection",
         "delete_modal": {
             "title": "Delete Group",
             "confirm": "Are you sure you want to delete group",
