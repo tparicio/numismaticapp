@@ -43,7 +43,7 @@ RUN npm run build
 FROM debian:bookworm-slim
 
 # Install runtime dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
     libvips \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
