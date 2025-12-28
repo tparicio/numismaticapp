@@ -199,7 +199,7 @@
                 </div>
 
                 <!-- Appraisal Widget (Compact) -->
-                <div v-if="coin.min_value > 0 || coin.max_value > 0" class="flex items-center p-4 bg-emerald-900/80 dark:bg-emerald-900/40 border border-emerald-500/30 rounded-xl relative overflow-hidden text-white shadow-lg">
+                <div v-if="coin.min_value > 0 || coin.max_value > 0" class="flex items-center p-4 bg-emerald-900 dark:bg-emerald-900 border border-emerald-500/30 rounded-xl relative overflow-hidden text-white shadow-lg">
                     <div class="absolute inset-0 bg-emerald-500/10 backdrop-blur-sm"></div>
                     <div class="relative flex items-center gap-4 w-full">
                          <div class="p-3 bg-emerald-500/20 rounded-full text-emerald-400">
@@ -366,93 +366,111 @@
                     
 
                     
-                    <!-- Numismatic Info (Ruler, Series, etc) -->
-                    <div v-if="coin.ruler || coin.series || coin.commemorated_topic || coin.orientation || coin.edge" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div v-if="coin.ruler">
-                            <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.ruler') }}</span>
-                            <span>{{ coin.ruler }}</span>
-                        </div>
-                        <div v-if="coin.series">
-                            <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.series') }}</span>
-                            <span>{{ coin.series }}</span>
-                        </div>
-                        <div v-if="coin.commemorated_topic">
-                            <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.commemorated') }}</span>
-                            <span>{{ coin.commemorated_topic }}</span>
-                        </div>
-                        <div v-if="coin.orientation">
-                            <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.orientation') }}</span>
-                            <span>{{ coin.orientation }}</span>
-                        </div>
-                        <div v-if="coin.edge">
-                            <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.edge') }}</span>
-                            <span>{{ coin.edge }}</span>
-                        </div>
+
+                    <div v-if="!coin.numista_number" class="text-center py-12 bg-base-200/50 rounded-xl border border-dashed border-base-300">
+                         <div class="mb-4 text-primary bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
+                         </div>
+                         <h3 class="font-bold text-lg opacity-80 mb-2">No vinculado con Numista</h3>
+                         <p class="text-sm opacity-50 mb-6 max-w-xs mx-auto">Vincula esta moneda para obtener detalles técnicos, rareza y valores de catálogo.</p>
+                         
+                         <div class="flex justify-center gap-2">
+                            <button @click="numistaModalOpen = true" class="btn btn-primary gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+                                Buscar en Numista
+                            </button>
+                         </div>
                     </div>
 
-                     <div v-if="coin.numista_details">
-
-                        
-                         <!-- Obverse -->
-                        <div v-if="coin.numista_details.obverse" class="mb-4">
-                            <h3 class="font-bold border-b border-gray-200 dark:border-gray-700 pb-1 mb-2 text-primary">Anverso</h3>
-                            <p v-if="coin.numista_details.obverse.lettering" class="mb-1 text-sm">
-                                <span class="font-semibold italic opacity-80">Leyenda:</span> 
-                                <span class="ml-1">{{ coin.numista_details.obverse.lettering }}</span>
-                            </p>
-                            <p v-if="coin.numista_details.obverse.description" class="text-sm">
-                                <span class="font-semibold italic opacity-80">Descripción:</span>
-                                <span class="ml-1">{{ coin.numista_details.obverse.description }}</span>
-                            </p>
+                    <div v-else>
+                        <!-- Numismatic Info (Ruler, Series, etc) -->
+                        <div v-if="coin.ruler || coin.series || coin.commemorated_topic || coin.orientation || coin.edge" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div v-if="coin.ruler">
+                                <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.ruler') }}</span>
+                                <span>{{ coin.ruler }}</span>
+                            </div>
+                            <div v-if="coin.series">
+                                <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.series') }}</span>
+                                <span>{{ coin.series }}</span>
+                            </div>
+                            <div v-if="coin.commemorated_topic">
+                                <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.commemorated') }}</span>
+                                <span>{{ coin.commemorated_topic }}</span>
+                            </div>
+                            <div v-if="coin.orientation">
+                                <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.orientation') }}</span>
+                                <span>{{ coin.orientation }}</span>
+                            </div>
+                            <div v-if="coin.edge">
+                                <span class="font-bold block text-sm text-gray-500">{{ $t('details.labels.edge') }}</span>
+                                <span>{{ coin.edge }}</span>
+                            </div>
                         </div>
 
-                        <!-- Reverse -->
-                        <div v-if="coin.numista_details.reverse" class="mb-4">
-                            <h3 class="font-bold border-b border-gray-200 dark:border-gray-700 pb-1 mb-2 text-primary">Reverso</h3>
-                            <p v-if="coin.numista_details.reverse.lettering" class="mb-1 text-sm">
-                                <span class="font-semibold italic opacity-80">Leyenda:</span>
-                                <span class="ml-1">{{ coin.numista_details.reverse.lettering }}</span>
-                            </p>
-                            <p v-if="coin.numista_details.reverse.description" class="text-sm">
-                                <span class="font-semibold italic opacity-80">Descripción:</span>
-                                <span class="ml-1">{{ coin.numista_details.reverse.description }}</span>
-                            </p>
+                        <div v-if="coin.numista_details">
+
+                            
+                            <!-- Obverse -->
+                            <div v-if="coin.numista_details.obverse" class="mb-4">
+                                <h3 class="font-bold border-b border-gray-200 dark:border-gray-700 pb-1 mb-2 text-primary">Anverso</h3>
+                                <p v-if="coin.numista_details.obverse.lettering" class="mb-1 text-sm">
+                                    <span class="font-semibold italic opacity-80">Leyenda:</span> 
+                                    <span class="ml-1">{{ coin.numista_details.obverse.lettering }}</span>
+                                </p>
+                                <p v-if="coin.numista_details.obverse.description" class="text-sm">
+                                    <span class="font-semibold italic opacity-80">Descripción:</span>
+                                    <span class="ml-1">{{ coin.numista_details.obverse.description }}</span>
+                                </p>
+                            </div>
+
+                            <!-- Reverse -->
+                            <div v-if="coin.numista_details.reverse" class="mb-4">
+                                <h3 class="font-bold border-b border-gray-200 dark:border-gray-700 pb-1 mb-2 text-primary">Reverso</h3>
+                                <p v-if="coin.numista_details.reverse.lettering" class="mb-1 text-sm">
+                                    <span class="font-semibold italic opacity-80">Leyenda:</span>
+                                    <span class="ml-1">{{ coin.numista_details.reverse.lettering }}</span>
+                                </p>
+                                <p v-if="coin.numista_details.reverse.description" class="text-sm">
+                                    <span class="font-semibold italic opacity-80">Descripción:</span>
+                                    <span class="ml-1">{{ coin.numista_details.reverse.description }}</span>
+                                </p>
+                            </div>
+
+                            <!-- Edge Detailed -->
+                            <div v-if="coin.numista_details.edge && (coin.numista_details.edge.description || coin.numista_details.edge.lettering)" class="mb-4">
+                                <h3 class="font-bold border-b border-gray-200 dark:border-gray-700 pb-1 mb-2 text-primary">Canto</h3>
+                                <p v-if="coin.numista_details.edge.description" class="mb-1 text-sm">{{ coin.numista_details.edge.description }}</p>
+                                <p v-if="coin.numista_details.edge.lettering" class="text-sm">
+                                    <span class="font-semibold italic opacity-80">Leyenda:</span>
+                                    <span class="ml-1">{{ coin.numista_details.edge.lettering }}</span>
+                                </p>
+                            </div>
+
+                            <!-- Technique -->
+                            <div v-if="coin.numista_details.technique && coin.numista_details.technique.text" class="mb-4">
+                                <h3 class="font-bold border-b border-gray-200 dark:border-gray-700 pb-1 mb-2 text-primary">Técnica</h3>
+                                <p class="text-sm">{{ coin.numista_details.technique.text }}</p>
+                            </div>
                         </div>
 
-                        <!-- Edge Detailed -->
-                        <div v-if="coin.numista_details.edge && (coin.numista_details.edge.description || coin.numista_details.edge.lettering)" class="mb-4">
-                            <h3 class="font-bold border-b border-gray-200 dark:border-gray-700 pb-1 mb-2 text-primary">Canto</h3>
-                            <p v-if="coin.numista_details.edge.description" class="mb-1 text-sm">{{ coin.numista_details.edge.description }}</p>
-                            <p v-if="coin.numista_details.edge.lettering" class="text-sm">
-                                <span class="font-semibold italic opacity-80">Leyenda:</span>
-                                <span class="ml-1">{{ coin.numista_details.edge.lettering }}</span>
-                            </p>
-                        </div>
 
-                        <!-- Technique -->
-                        <div v-if="coin.numista_details.technique && coin.numista_details.technique.text" class="mb-4">
-                            <h3 class="font-bold border-b border-gray-200 dark:border-gray-700 pb-1 mb-2 text-primary">Técnica</h3>
-                            <p class="text-sm">{{ coin.numista_details.technique.text }}</p>
+                        <!-- Numista Actions (Moved to bottom) -->
+                        <div class="flex flex-wrap items-center gap-4 mt-6 pt-6 border-t border-base-200">
+                            <div class="flex gap-2">
+                                <a v-if="coin.numista_number" :href="getNumistaUrl()" target="_blank" class="btn btn-sm btn-outline btn-info gap-2">
+                                    Ver en Numista
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
+                                </a>
+                                <button v-if="numistaCount >= 0" @click="numistaModalOpen = true" class="btn btn-sm btn-ghost gap-1 text-xs">
+                                    {{ numistaCount }} resultados alternativos
+                                </button>
+                            </div>
+                            <!-- Sync Button renamed and styled -->
+                            <button @click="syncNumista" class="btn btn-xs btn-outline btn-primary gap-1 ml-auto" :disabled="syncing">
+                                <span v-if="syncing" class="loading loading-spinner loading-xs"></span>
+                                {{ $t('common.reprocess') || 'Reprocesar' }}
+                            </button>
                         </div>
-                    </div>
-
-
-                    <!-- Numista Actions (Moved to bottom) -->
-                    <div class="flex flex-wrap items-center gap-4 mt-6 pt-6 border-t border-base-200">
-                         <div class="flex gap-2">
-                             <a v-if="coin.numista_number" :href="getNumistaUrl()" target="_blank" class="btn btn-sm btn-outline btn-info gap-2">
-                                Ver en Numista
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
-                             </a>
-                             <button v-if="numistaCount > 0" @click="numistaModalOpen = true" class="btn btn-sm btn-ghost gap-1 text-xs">
-                                {{ numistaCount }} resultados alternativos
-                             </button>
-                        </div>
-                         <!-- Sync Button renamed and styled -->
-                         <button @click="syncNumista" class="btn btn-xs btn-outline btn-primary gap-1 ml-auto" :disabled="syncing">
-                            <span v-if="syncing" class="loading loading-spinner loading-xs"></span>
-                            {{ $t('common.reprocess') || 'Reprocesar' }}
-                         </button>
                     </div>
                 </div>
 
