@@ -46,6 +46,7 @@ type CoinService struct {
 	storage       StorageService
 	bgRemover     domain.BackgroundRemover
 	numistaClient NumistaService
+	priceClient   domain.PriceClient
 }
 
 func NewCoinService(
@@ -56,6 +57,7 @@ func NewCoinService(
 	storage StorageService,
 	bgRemover domain.BackgroundRemover,
 	numistaClient NumistaService,
+	priceClient domain.PriceClient,
 ) *CoinService {
 	return &CoinService{
 		repo:          repo,
@@ -65,6 +67,7 @@ func NewCoinService(
 		storage:       storage,
 		bgRemover:     bgRemover,
 		numistaClient: numistaClient,
+		priceClient:   priceClient,
 	}
 }
 
@@ -923,6 +926,16 @@ func (s *CoinService) GetDashboardStats(ctx context.Context) (*domain.DashboardS
 
 	if random, err := s.repo.GetRandomCoin(ctx); err == nil && random != nil {
 		stats.RandomCoin = random
+	}
+
+	// Calculate Metal Values
+	goldPrice, silverPrice, err := s.priceClient.GetMetalPrices(ctx)
+	if err != nil {
+		slog.Error("Failed to get metal prices", "error", err)
+		// Don't fail the request, just leave values as 0 or use cached/defaults from client if it handles it
+	} else {
+		stats.TotalGoldValue = stats.TotalGoldWeight * goldPrice
+		stats.TotalSilverValue = stats.TotalSilverWeight * silverPrice
 	}
 
 	return stats, nil

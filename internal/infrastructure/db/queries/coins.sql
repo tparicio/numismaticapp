@@ -159,7 +159,7 @@ GROUP BY g.name;
 SELECT COALESCE(SUM(weight_g), 0)::float8 FROM coins WHERE material ILIKE $1;
 
 -- name: GetHeaviestCoin :one
-SELECT * FROM coins ORDER BY weight_g DESC LIMIT 1;
+SELECT * FROM coins WHERE weight_g > 0 ORDER BY weight_g DESC LIMIT 1;
 
 -- name: GetSmallestCoin :one
 SELECT * FROM coins WHERE diameter_mm > 0 ORDER BY diameter_mm ASC LIMIT 1;

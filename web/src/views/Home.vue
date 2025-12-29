@@ -357,17 +357,23 @@
         <div class="card bg-base-100 shadow-xl lg:col-span-1">
             <div class="card-body">
                 <h2 class="card-title text-sm uppercase text-base-content/70">{{ $t('dashboard.lists.trivia') }}</h2>
-                <div class="space-y-4">
-                    <div class="stats stats-vertical shadow w-full">
-                        <div class="stat">
-                            <div class="stat-title">{{ $t('dashboard.stats.silver_reserve') }}</div>
-                            <div class="stat-value text-primary text-2xl">{{ stats.total_silver_weight ? stats.total_silver_weight.toFixed(1) : 0 }}g</div>
-                            <div class="stat-desc">{{ $t('dashboard.stats.pure_silver') }}</div>
+                <div class="flex flex-col gap-4 mt-2">
+                    <!-- Metal Reserves -->
+                    <div class="flex flex-col gap-3">
+                        <div class="p-3 bg-base-200 rounded-lg">
+                            <div class="text-xs opacity-70 uppercase font-bold">{{ $t('dashboard.stats.silver_reserve') }}</div>
+                            <div class="text-xl font-bold text-slate-400 tooltip tooltip-right z-50" :data-tip="getMetalPriceTooltip('silver')">
+                                {{ formatCurrency(stats.total_silver_value) }}
+                            </div>
+                            <div class="text-xs opacity-60">{{ stats.total_silver_weight ? stats.total_silver_weight.toFixed(1) : 0 }}g {{ $t('dashboard.stats.pure_silver') }}</div>
                         </div>
-                        <div class="stat">
-                            <div class="stat-title">{{ $t('dashboard.stats.gold_reserve') }}</div>
-                            <div class="stat-value text-warning text-2xl">{{ stats.total_gold_weight ? stats.total_gold_weight.toFixed(1) : 0 }}g</div>
-                            <div class="stat-desc">{{ $t('dashboard.stats.pure_gold') }}</div>
+                        
+                        <div class="p-3 bg-base-200 rounded-lg">
+                            <div class="text-xs opacity-70 uppercase font-bold">{{ $t('dashboard.stats.gold_reserve') }}</div>
+                            <div class="text-xl font-bold text-warning tooltip tooltip-right z-50" :data-tip="getMetalPriceTooltip('gold')">
+                                {{ formatCurrency(stats.total_gold_value) }}
+                            </div>
+                            <div class="text-xs opacity-60">{{ stats.total_gold_weight ? stats.total_gold_weight.toFixed(1) : 0 }}g {{ $t('dashboard.stats.pure_gold') }}</div>
                         </div>
                     </div>
                     
@@ -500,7 +506,9 @@ const stats = ref({
   rarest_coins: [],
   group_distribution: {},
   total_silver_weight: 0,
+  total_silver_value: 0,
   total_gold_weight: 0,
+  total_gold_value: 0,
   heaviest_coin: null,
   smallest_coin: null,
   random_coin: null,
@@ -709,6 +717,24 @@ const formatMintage = (value) => {
     return value.toString()
 }
 
+const getMetalPriceTooltip = (metal) => {
+    let weight = 0
+    let value = 0
+    
+    if (metal === 'silver') {
+        weight = stats.value.total_silver_weight || 0
+        value = stats.value.total_silver_value || 0
+    } else {
+        weight = stats.value.total_gold_weight || 0
+        value = stats.value.total_gold_value || 0
+    }
+
+    if (weight <= 0 || value <= 0) return 'No data'
+    
+    const pricePerGram = value / weight
+    return `${formatCurrency(pricePerGram)} / g`
+}
+
 const scatterOptions = computed(() => ({
     responsive: true,
     maintainAspectRatio: false,
@@ -727,12 +753,13 @@ const scatterOptions = computed(() => ({
             type: 'linear',
             title: { display: true, text: t('dashboard.charts.labels.grade') },
             min: 0,
-            max: 75,
+            max: 85,
             ticks: {
                 stepSize: 10,
                 callback: function(value) {
                     // Map numeric values to grade labels
                     const gradeMap = {
+                        80: 'PROOF',
                         70: 'FDC',
                         60: 'SC',
                         50: 'EBC',
@@ -752,6 +779,7 @@ const scatterOptions = computed(() => ({
             callbacks: {
                 label: (context) => {
                     const gradeMap = {
+                        80: 'PROOF',
                         70: 'FDC',
                         60: 'SC',
                         50: 'EBC',

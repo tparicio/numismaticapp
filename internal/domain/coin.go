@@ -210,3 +210,7 @@ type CoinAnalysisResult struct {
 	ReferenceSourceName          string         `json:"reference_source_name"`
 	RawDetails                   map[string]any `json:"raw_details"`
 }
+
+type PriceClient interface {
+	GetMetalPrices(ctx context.Context) (float64, float64, error)
+}

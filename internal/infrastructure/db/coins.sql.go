@@ -466,7 +466,7 @@ func (q *Queries) GetGroupStats(ctx context.Context) ([]GetGroupStatsRow, error)
 }
 
 const getHeaviestCoin = `-- name: GetHeaviestCoin :one
-SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, numista_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, numista_number, acquired_at, sold_at, price_paid, sold_price, sale_channel, gemini_model, gemini_temperature, numista_search, ruler, orientation, series, commemorated_topic, created_at, updated_at FROM coins ORDER BY weight_g DESC LIMIT 1
+SELECT id, name, mint, mintage, country, year, face_value, currency, material, description, km_code, min_value, max_value, grade, technical_notes, gemini_details, numista_details, group_id, personal_notes, weight_g, diameter_mm, thickness_mm, edge, shape, numista_number, acquired_at, sold_at, price_paid, sold_price, sale_channel, gemini_model, gemini_temperature, numista_search, ruler, orientation, series, commemorated_topic, created_at, updated_at FROM coins WHERE weight_g > 0 ORDER BY weight_g DESC LIMIT 1
 `
 
 func (q *Queries) GetHeaviestCoin(ctx context.Context) (Coin, error) {

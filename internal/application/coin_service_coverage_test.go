@@ -16,7 +16,7 @@ import (
 
 func TestAddCoin_AICoverage(t *testing.T) {
 	t.Run("AI Returns Invalid Year/Mintage", func(t *testing.T) {
-		service, mockRepo, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, mockNumistaClient := setupTest(t)
+		service, mockRepo, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, mockNumistaClient, _ := setupTest(t)
 		ctx := context.Background()
 
 		// Standard setup
@@ -52,7 +52,7 @@ func TestAddCoin_AICoverage(t *testing.T) {
 }
 
 func TestUpdateCoin_GroupCreateError(t *testing.T) {
-	service, mockRepo, mockGroupRepo, _, _, _, _, _ := setupTest(t)
+	service, mockRepo, mockGroupRepo, _, _, _, _, _, _ := setupTest(t)
 	ctx := context.Background()
 	id := uuid.New()
 

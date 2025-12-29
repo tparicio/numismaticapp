@@ -13,6 +13,7 @@ import (
 	"github.com/antonioparicio/numismaticapp/internal/infrastructure/image"
 	infrastructure_migrations "github.com/antonioparicio/numismaticapp/internal/infrastructure/migrations"
 	"github.com/antonioparicio/numismaticapp/internal/infrastructure/numista"
+	"github.com/antonioparicio/numismaticapp/internal/infrastructure/prices"
 	"github.com/antonioparicio/numismaticapp/internal/infrastructure/storage"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -113,8 +114,11 @@ func main() {
 	numistaKey := os.Getenv("NUMISTA_API_KEY")
 	numistaClient := numista.NewClient(numistaKey)
 
+	// Initialize Price Client
+	priceClient := prices.NewCoinGeckoPriceClient()
+
 	// Initialize Application Services
-	coinService := application.NewCoinService(coinRepo, groupRepo, imageService, geminiClient, storageService, rembgClient, numistaClient)
+	coinService := application.NewCoinService(coinRepo, groupRepo, imageService, geminiClient, storageService, rembgClient, numistaClient, priceClient)
 
 	// 5. API
 	app := fiber.New(fiber.Config{

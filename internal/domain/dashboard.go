@@ -19,6 +19,8 @@ type DashboardStats struct {
 	GroupDistribution    map[string]int `json:"group_distribution"`
 	TotalSilverWeight    float64        `json:"total_silver_weight"`
 	TotalGoldWeight      float64        `json:"total_gold_weight"`
+	TotalSilverValue     float64        `json:"total_silver_value"`
+	TotalGoldValue       float64        `json:"total_gold_value"`
 	HeaviestCoin         *Coin          `json:"heaviest_coin"`
 	SmallestCoin         *Coin          `json:"smallest_coin"`
 	RandomCoin           *Coin          `json:"random_coin"`
