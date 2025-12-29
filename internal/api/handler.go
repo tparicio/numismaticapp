@@ -544,7 +544,7 @@ func (h *CoinHandler) AddGroupImage(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "failed to open image"})
 	}
-	defer src.Close()
+	defer func() { _ = src.Close() }()
 
 	if err := h.service.AddGroupImage(c.Context(), groupID, src, file.Filename); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
@@ -583,7 +583,7 @@ func (h *CoinHandler) AddCoinGalleryImage(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "failed to open image"})
 	}
-	defer src.Close()
+	defer func() { _ = src.Close() }()
 
 	if err := h.service.AddCoinGalleryImage(c.Context(), coinID, src, file.Filename); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
