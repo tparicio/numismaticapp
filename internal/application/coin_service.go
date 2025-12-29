@@ -719,14 +719,20 @@ func (s *CoinService) ListGroups(ctx context.Context) ([]*domain.Group, error) {
 		return groups, nil
 	}
 
-	statMap := make(map[int]int)
+	// Create a map for O(1) lookup
+	statMap := make(map[int]domain.GroupStat)
 	for _, stat := range stats {
-		statMap[stat.GroupID] = int(stat.Count)
+		statMap[stat.GroupID] = stat
 	}
 
 	for _, group := range groups {
-		if count, ok := statMap[group.ID]; ok {
-			group.CoinCount = count
+		if stat, ok := statMap[group.ID]; ok {
+			group.CoinCount = int(stat.Count)
+			group.AvgValue = stat.AvgVal
+			group.MinYear = stat.MinYear
+			group.MaxYear = stat.MaxYear
+			group.MinValue = stat.MinVal
+			group.MaxValue = stat.MaxVal
 		}
 	}
 

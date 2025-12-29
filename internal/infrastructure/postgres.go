@@ -243,6 +243,9 @@ func (r *PostgresCoinRepository) GetGroupStats(ctx context.Context) ([]domain.Gr
 			Count:     row.Count,
 			MinVal:    row.MinVal,
 			MaxVal:    row.MaxVal,
+			AvgVal:    row.AvgVal,
+			MinYear:   int(row.MinYear),
+			MaxYear:   int(row.MaxYear),
 		}
 	}
 	return stats, nil

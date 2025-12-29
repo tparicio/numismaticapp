@@ -424,7 +424,11 @@ SELECT
     COALESCE(g.name, 'Uncategorized') as group_name, 
     COUNT(c.id) as count,
     COALESCE(MIN(c.min_value), 0)::float8 as min_val,
-    COALESCE(MAX(c.max_value), 0)::float8 as max_val
+    COALESCE(MIN(c.min_value), 0)::float8 as min_val,
+    COALESCE(MAX(c.max_value), 0)::float8 as max_val,
+    COALESCE(AVG(c.max_value), 0)::float8 as avg_val,
+    COALESCE(MIN(NULLIF(c.year, 0)), 0)::int as min_year,
+    COALESCE(MAX(NULLIF(c.year, 0)), 0)::int as max_year
 FROM coins c 
 LEFT JOIN groups g ON c.group_id = g.id 
 GROUP BY g.id, g.name
@@ -437,6 +441,9 @@ type GetGroupStatsRow struct {
 	Count     int64       `json:"count"`
 	MinVal    float64     `json:"min_val"`
 	MaxVal    float64     `json:"max_val"`
+	AvgVal    float64     `json:"avg_val"`
+	MinYear   int32       `json:"min_year"`
+	MaxYear   int32       `json:"max_year"`
 }
 
 func (q *Queries) GetGroupStats(ctx context.Context) ([]GetGroupStatsRow, error) {
@@ -454,6 +461,9 @@ func (q *Queries) GetGroupStats(ctx context.Context) ([]GetGroupStatsRow, error)
 			&i.Count,
 			&i.MinVal,
 			&i.MaxVal,
+			&i.AvgVal,
+			&i.MinYear,
+			&i.MaxYear,
 		); err != nil {
 			return nil, err
 		}

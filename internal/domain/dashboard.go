@@ -34,4 +34,7 @@ type GroupStat struct {
 	Count     int64   `json:"count"`
 	MinVal    float64 `json:"min_value"`
 	MaxVal    float64 `json:"max_value"`
+	AvgVal    float64 `json:"avg_value"`
+	MinYear   int     `json:"min_year"`
+	MaxYear   int     `json:"max_year"`
 }

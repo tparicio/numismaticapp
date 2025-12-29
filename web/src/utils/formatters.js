@@ -10,3 +10,8 @@ export const formatMintage = (value) => {
 
     return value.toLocaleString()
 }
+
+export const formatCurrency = (value) => {
+    if (!value && value !== 0) return '-'
+    return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(value)
+}

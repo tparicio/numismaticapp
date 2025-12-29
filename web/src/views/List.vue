@@ -108,6 +108,26 @@
                  <div class="text-sm font-bold uppercase tracking-wider opacity-60">Colección</div>
                  <h2 class="text-3xl font-black text-primary">{{ activeGroupName }}</h2>
                  <p class="opacity-70 text-sm mt-1" v-if="activeGroupDesc">{{ activeGroupDesc }}</p>
+                 
+                 <!-- Group Stats Report -->
+                 <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4" v-if="activeGroupStats">
+                    <div class="stat bg-base-100/50 rounded-lg p-3 shadow-sm border border-base-content/5">
+                        <div class="stat-title text-xs font-bold uppercase opacity-60">Valor Total</div>
+                        <div class="stat-value text-lg text-primary">{{ formatCurrency(activeGroupStats.min_value) }} - {{ formatCurrency(activeGroupStats.max_value) }}</div>
+                    </div>
+                    <div class="stat bg-base-100/50 rounded-lg p-3 shadow-sm border border-base-content/5">
+                        <div class="stat-title text-xs font-bold uppercase opacity-60">Valor Medio</div>
+                        <div class="stat-value text-lg text-secondary">{{ formatCurrency(activeGroupStats.avg_value) }}</div>
+                    </div>
+                    <div class="stat bg-base-100/50 rounded-lg p-3 shadow-sm border border-base-content/5">
+                        <div class="stat-title text-xs font-bold uppercase opacity-60">Monedas</div>
+                        <div class="stat-value text-lg text-accent">{{ activeGroupStats.coin_count }}</div>
+                    </div>
+                    <div class="stat bg-base-100/50 rounded-lg p-3 shadow-sm border border-base-content/5">
+                        <div class="stat-title text-xs font-bold uppercase opacity-60">Año(s)</div>
+                        <div class="stat-value text-lg">{{ formatYearRange(activeGroupStats.min_year, activeGroupStats.max_year) }}</div>
+                    </div>
+                 </div>
              </div>
         </div>
         <button @click="clearFilters" class="btn btn-outline btn-sm gap-2 hover:btn-error">
@@ -352,7 +372,7 @@ import { ref, onMounted, watch, computed } from 'vue'
 import axios from 'axios'
 import { useRouter, useRoute } from 'vue-router'
 import ImageViewer from '../components/ImageViewer.vue'
-import { formatMintage } from '../utils/formatters'
+import { formatMintage, formatCurrency } from '../utils/formatters'
 
 const coins = ref([])
 const groups = ref([])
@@ -513,6 +533,29 @@ const activeGroupDesc = computed(() => {
     const group = groups.value.find(g => g.id === parseInt(filters.value.group_id)) || groups.value.find(g => g.id === filters.value.group_id)
     return group ? group.description : null
 })
+
+const activeGroupStats = computed(() => {
+    if (!filters.value.group_id) return null
+    const group = groups.value.find(g => g.id === parseInt(filters.value.group_id)) || groups.value.find(g => g.id === filters.value.group_id)
+    if (!group) return null
+    // If backend doesn't return these fields yet (or we haven't updated backend), handle gracefully
+    return {
+        coin_count: group.coin_count || 0,
+        min_value: group.min_value || 0,
+        max_value: group.max_value || 0,
+        avg_value: group.avg_value || 0,
+        min_year: group.min_year || 0,
+        max_year: group.max_year || 0
+    }
+})
+
+const formatYearRange = (min, max) => {
+    if (!min && !max) return '-'
+    if (min === max) return `${min}`
+    if (min && !max) return `${min} - ?`
+    if (!min && max) return `? - ${max}`
+    return `${min} - ${max}`
+}
 
 // Fetch coins
 const fetchCoins = async () => {

@@ -58,6 +58,11 @@ type Group struct {
 	Description string    `json:"description"`
 	CreatedAt   time.Time `json:"created_at"`
 	CoinCount   int       `json:"coin_count"` // Populated for display purposes
+	AvgValue    float64   `json:"avg_value"`
+	MinYear     int       `json:"min_year"`
+	MaxYear     int       `json:"max_year"`
+	MinValue    float64   `json:"min_value"` // Total Value Range
+	MaxValue    float64   `json:"max_value"` // Total Value Range
 }
 
 type CoinImage struct {
