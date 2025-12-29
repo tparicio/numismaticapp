@@ -440,6 +440,7 @@ type GetGroupStatsRow struct {
 	GroupName string      `json:"group_name"`
 	Count     int64       `json:"count"`
 	MinVal    float64     `json:"min_val"`
+	MinVal_2  float64     `json:"min_val_2"`
 	MaxVal    float64     `json:"max_val"`
 	AvgVal    float64     `json:"avg_val"`
 	MinYear   int32       `json:"min_year"`
@@ -460,6 +461,7 @@ func (q *Queries) GetGroupStats(ctx context.Context) ([]GetGroupStatsRow, error)
 			&i.GroupName,
 			&i.Count,
 			&i.MinVal,
+			&i.MinVal_2,
 			&i.MaxVal,
 			&i.AvgVal,
 			&i.MinYear,

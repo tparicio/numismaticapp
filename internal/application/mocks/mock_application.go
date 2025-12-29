@@ -127,6 +127,21 @@ func (mr *MockStorageServiceMockRecorder) SaveFile(coinID, filename, content any
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveFile", reflect.TypeOf((*MockStorageService)(nil).SaveFile), coinID, filename, content)
 }
 
+// SaveGroupFile mocks base method.
+func (m *MockStorageService) SaveGroupFile(groupID int, filename string, content io.Reader) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SaveGroupFile", groupID, filename, content)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SaveGroupFile indicates an expected call of SaveGroupFile.
+func (mr *MockStorageServiceMockRecorder) SaveGroupFile(groupID, filename, content any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveGroupFile", reflect.TypeOf((*MockStorageService)(nil).SaveGroupFile), groupID, filename, content)
+}
+
 // DeleteCoinDirectory mocks base method.
 func (m *MockStorageService) DeleteCoinDirectory(coinID uuid.UUID) error {
 	m.ctrl.T.Helper()

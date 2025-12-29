@@ -11,6 +11,29 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const createCoinGalleryImage = `-- name: CreateCoinGalleryImage :one
+INSERT INTO coin_gallery_images (coin_id, path)
+VALUES ($1, $2)
+RETURNING id, coin_id, path, created_at
+`
+
+type CreateCoinGalleryImageParams struct {
+	CoinID pgtype.UUID `json:"coin_id"`
+	Path   string      `json:"path"`
+}
+
+func (q *Queries) CreateCoinGalleryImage(ctx context.Context, arg CreateCoinGalleryImageParams) (CoinGalleryImage, error) {
+	row := q.db.QueryRow(ctx, createCoinGalleryImage, arg.CoinID, arg.Path)
+	var i CoinGalleryImage
+	err := row.Scan(
+		&i.ID,
+		&i.CoinID,
+		&i.Path,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const createCoinImage = `-- name: CreateCoinImage :one
 INSERT INTO coin_images (
     coin_id,
@@ -71,6 +94,80 @@ func (q *Queries) CreateCoinImage(ctx context.Context, arg CreateCoinImageParams
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const createGroupImage = `-- name: CreateGroupImage :one
+INSERT INTO group_images (group_id, path)
+VALUES ($1, $2)
+RETURNING id, group_id, path, created_at
+`
+
+type CreateGroupImageParams struct {
+	GroupID int32  `json:"group_id"`
+	Path    string `json:"path"`
+}
+
+func (q *Queries) CreateGroupImage(ctx context.Context, arg CreateGroupImageParams) (GroupImage, error) {
+	row := q.db.QueryRow(ctx, createGroupImage, arg.GroupID, arg.Path)
+	var i GroupImage
+	err := row.Scan(
+		&i.ID,
+		&i.GroupID,
+		&i.Path,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const deleteCoinGalleryImage = `-- name: DeleteCoinGalleryImage :exec
+DELETE FROM coin_gallery_images
+WHERE id = $1
+`
+
+func (q *Queries) DeleteCoinGalleryImage(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteCoinGalleryImage, id)
+	return err
+}
+
+const deleteGroupImage = `-- name: DeleteGroupImage :exec
+DELETE FROM group_images
+WHERE id = $1
+`
+
+func (q *Queries) DeleteGroupImage(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteGroupImage, id)
+	return err
+}
+
+const listCoinGalleryImages = `-- name: ListCoinGalleryImages :many
+SELECT id, coin_id, path, created_at FROM coin_gallery_images
+WHERE coin_id = $1
+ORDER BY created_at ASC
+`
+
+func (q *Queries) ListCoinGalleryImages(ctx context.Context, coinID pgtype.UUID) ([]CoinGalleryImage, error) {
+	rows, err := q.db.Query(ctx, listCoinGalleryImages, coinID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []CoinGalleryImage
+	for rows.Next() {
+		var i CoinGalleryImage
+		if err := rows.Scan(
+			&i.ID,
+			&i.CoinID,
+			&i.Path,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listCoinImagesByCoinID = `-- name: ListCoinImagesByCoinID :many
@@ -142,6 +239,37 @@ func (q *Queries) ListCoinImagesByCoinIDs(ctx context.Context, dollar_1 []pgtype
 			&i.OriginalFilename,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listGroupImages = `-- name: ListGroupImages :many
+SELECT id, group_id, path, created_at FROM group_images
+WHERE group_id = $1
+ORDER BY created_at ASC
+`
+
+func (q *Queries) ListGroupImages(ctx context.Context, groupID int32) ([]GroupImage, error) {
+	rows, err := q.db.Query(ctx, listGroupImages, groupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GroupImage
+	for rows.Next() {
+		var i GroupImage
+		if err := rows.Scan(
+			&i.ID,
+			&i.GroupID,
+			&i.Path,
+			&i.CreatedAt,
 		); err != nil {
 			return nil, err
 		}

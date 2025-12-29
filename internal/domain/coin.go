@@ -23,46 +23,62 @@ type Coin struct {
 	NumistaNumber  int            `json:"numista_number"`
 	NumistaDetails map[string]any `json:"numista_details"`
 	// Detailed fields
-	Ruler             string         `json:"ruler"`
-	Orientation       string         `json:"orientation"`
-	Series            string         `json:"series"`
-	CommemoratedTopic string         `json:"commemorated_topic"`
-	MinValue          float64        `json:"min_value"`
-	MaxValue          float64        `json:"max_value"`
-	Grade             Grade          `json:"grade"`
-	TechnicalNotes    string         `json:"technical_notes"`
-	GeminiDetails     map[string]any `json:"gemini_details"` // Raw JSON from Gemini
-	GeminiModel       string         `json:"gemini_model"`
-	GeminiTemperature float64        `json:"gemini_temperature"`
-	NumistaSearch     string         `json:"numista_search"`
-	Images            []CoinImage    `json:"images"`
-	GroupID           *int           `json:"group_id"`
-	PersonalNotes     string         `json:"personal_notes"`
-	WeightG           float64        `json:"weight_g"`
-	DiameterMM        float64        `json:"diameter_mm"`
-	ThicknessMM       float64        `json:"thickness_mm"`
-	Edge              string         `json:"edge"`
-	Shape             string         `json:"shape"`
-	AcquiredAt        *time.Time     `json:"acquired_at"`
-	SoldAt            *time.Time     `json:"sold_at"`
-	PricePaid         float64        `json:"price_paid"`
-	SoldPrice         float64        `json:"sold_price"`
-	SaleChannel       string         `json:"sale_channel"`
-	CreatedAt         time.Time      `json:"created_at"`
-	UpdatedAt         time.Time      `json:"updated_at"`
+	Ruler             string             `json:"ruler"`
+	Orientation       string             `json:"orientation"`
+	Series            string             `json:"series"`
+	CommemoratedTopic string             `json:"commemorated_topic"`
+	MinValue          float64            `json:"min_value"`
+	MaxValue          float64            `json:"max_value"`
+	Grade             Grade              `json:"grade"`
+	TechnicalNotes    string             `json:"technical_notes"`
+	GeminiDetails     map[string]any     `json:"gemini_details"` // Raw JSON from Gemini
+	GeminiModel       string             `json:"gemini_model"`
+	GeminiTemperature float64            `json:"gemini_temperature"`
+	NumistaSearch     string             `json:"numista_search"`
+	Images            []CoinImage        `json:"images"`
+	GalleryImages     []CoinGalleryImage `json:"gallery_images"`
+	GroupID           *int               `json:"group_id"`
+	PersonalNotes     string             `json:"personal_notes"`
+	WeightG           float64            `json:"weight_g"`
+	DiameterMM        float64            `json:"diameter_mm"`
+	ThicknessMM       float64            `json:"thickness_mm"`
+	Edge              string             `json:"edge"`
+	Shape             string             `json:"shape"`
+	AcquiredAt        *time.Time         `json:"acquired_at"`
+	SoldAt            *time.Time         `json:"sold_at"`
+	PricePaid         float64            `json:"price_paid"`
+	SoldPrice         float64            `json:"sold_price"`
+	SaleChannel       string             `json:"sale_channel"`
+	CreatedAt         time.Time          `json:"created_at"`
+	UpdatedAt         time.Time          `json:"updated_at"`
 }
 
 type Group struct {
-	ID          int       `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	CreatedAt   time.Time `json:"created_at"`
-	CoinCount   int       `json:"coin_count"` // Populated for display purposes
-	AvgValue    float64   `json:"avg_value"`
-	MinYear     int       `json:"min_year"`
-	MaxYear     int       `json:"max_year"`
-	MinValue    float64   `json:"min_value"` // Total Value Range
-	MaxValue    float64   `json:"max_value"` // Total Value Range
+	ID          int          `json:"id"`
+	Name        string       `json:"name"`
+	Description string       `json:"description"`
+	CreatedAt   time.Time    `json:"created_at"`
+	CoinCount   int          `json:"coin_count"` // Populated for display purposes
+	AvgValue    float64      `json:"avg_value"`
+	MinYear     int          `json:"min_year"`
+	MaxYear     int          `json:"max_year"`
+	MinValue    float64      `json:"min_value"` // Total Value Range
+	MaxValue    float64      `json:"max_value"` // Total Value Range
+	Images      []GroupImage `json:"images"`
+}
+
+type GroupImage struct {
+	ID        uuid.UUID `json:"id"`
+	GroupID   int       `json:"group_id"`
+	Path      string    `json:"path"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type CoinGalleryImage struct {
+	ID        uuid.UUID `json:"id"`
+	CoinID    uuid.UUID `json:"coin_id"`
+	Path      string    `json:"path"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type CoinImage struct {
@@ -137,6 +153,10 @@ type CoinRepository interface {
 	// Bulk operations for export
 	GetAllImages(ctx context.Context) ([]CoinImage, error)
 	GetAllLinks(ctx context.Context) ([]*CoinLink, error)
+	// Gallery
+	AddGalleryImage(ctx context.Context, img CoinGalleryImage) error
+	RemoveGalleryImage(ctx context.Context, id uuid.UUID) error
+	ListGalleryImages(ctx context.Context, coinID uuid.UUID) ([]CoinGalleryImage, error)
 }
 
 // CoinLink represents an external link associated with a coin.
@@ -158,6 +178,10 @@ type GroupRepository interface {
 	List(ctx context.Context) ([]*Group, error)
 	Update(ctx context.Context, group *Group) error
 	Delete(ctx context.Context, id int) error
+	// Images
+	AddImage(ctx context.Context, img GroupImage) error
+	RemoveImage(ctx context.Context, id uuid.UUID) error
+	ListImages(ctx context.Context, groupID int) ([]GroupImage, error)
 }
 
 // ImageService defines the interface for image processing operations.

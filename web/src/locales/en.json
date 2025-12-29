@@ -22,7 +22,9 @@
         "process": "Process",
         "name": "Name",
         "count": "Count",
-        "value_range": "Value Range"
+        "value_range": "Value Range",
+        "upload": "Upload",
+        "close": "Close"
     },
     "grades": {
         "PROOF": {
@@ -82,6 +84,14 @@
         "empty_state": "No coins found. Start by adding one!",
         "add_button": "Add Coin",
         "actions": "Actions",
+        "toggles": {
+            "processed": "Processed",
+            "original": "Original",
+            "samples": "Samples"
+        },
+        "tabs": {
+            "gallery": "Gallery"
+        },
         "table": {
             "images": "Images",
             "name": "Name",
@@ -156,7 +166,8 @@
             "images_only": "Please select image files only.",
             "both_images": "Both images are required (Front & Back).",
             "upload_failed": "Error uploading coin",
-            "update_failed": "Error updating coin"
+            "update_failed": "Error updating coin",
+            "delete_failed": "Failed to delete"
         },
         "ai_settings": "Gemini Configuration"
     },
@@ -217,6 +228,12 @@
         "reprocess_modal": {
             "title": "Reprocess with Artificial Intelligence",
             "warning": "Warning! This will re-send original images to Gemini and OVERWRITE all coin details (Name, year, country, description, etc) with new response. Personal notes will be kept."
+        },
+        "gallery": {
+            "title": "Gallery",
+            "upload": "Upload Image",
+            "empty_title": "No additional images",
+            "empty_subtitle": "Upload photos of details, edges or variants."
         },
         "links": {
             "title": "Links",
@@ -311,6 +328,9 @@
         "count": "Coins",
         "empty_state": "No groups found. Create one to organize your collection!",
         "view_collection": "View Collection",
+        "images": "Images",
+        "images_title": "Group Images",
+        "images_empty": "This group has no additional images yet.",
         "delete_modal": {
             "title": "Delete Group",
             "confirm": "Are you sure you want to delete group",

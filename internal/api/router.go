@@ -55,6 +55,16 @@ func SetupRouter(app *fiber.App, coinHandler *CoinHandler, healthHandler *Health
 	v1.Delete("/coins/:id/links/:link_id", coinHandler.DeleteCoinLink)
 	v1.Post("/coins/:id/links/:link_id/refresh", coinHandler.RefreshCoinLink)
 
+	// Group Images
+	v1.Post("/groups/:id/images", coinHandler.AddGroupImage)
+	v1.Get("/groups/:id/images", coinHandler.ListGroupImages)
+	v1.Delete("/groups/:id/images/:image_id", coinHandler.RemoveGroupImage)
+
+	// Coin Gallery
+	v1.Post("/coins/:id/gallery", coinHandler.AddCoinGalleryImage)
+	v1.Get("/coins/:id/gallery", coinHandler.ListCoinGalleryImages)
+	v1.Delete("/coins/:id/gallery/:image_id", coinHandler.RemoveCoinGalleryImage)
+
 	// SPA Fallback: Serve index.html for any other route not handled above
 	// This ensures that refreshing pages like /coins/add works
 	app.Get("*", func(c *fiber.Ctx) error {

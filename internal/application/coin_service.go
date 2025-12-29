@@ -34,6 +34,7 @@ type NumistaService interface {
 
 type StorageService interface {
 	SaveFile(coinID uuid.UUID, filename string, content io.Reader) (string, error)
+	SaveGroupFile(groupID int, filename string, content io.Reader) (string, error)
 	EnsureDir(coinID uuid.UUID) (string, error)
 	DeleteCoinDirectory(coinID uuid.UUID) error
 }
@@ -1554,4 +1555,63 @@ func (s *CoinService) RefreshLink(ctx context.Context, linkID uuid.UUID) (*domai
 	}
 
 	return link, nil
+}
+
+// Image Management Methods
+
+func (s *CoinService) AddGroupImage(ctx context.Context, groupID int, file io.Reader, filename string) error {
+	// 1. Save file
+	path, err := s.storage.SaveGroupFile(groupID, filename, file)
+	if err != nil {
+		return fmt.Errorf("failed to save group image: %w", err)
+	}
+
+	// 2. Create DB record
+	img := domain.GroupImage{
+		GroupID: groupID,
+		Path:    path,
+	}
+	if err := s.groupRepo.AddImage(ctx, img); err != nil {
+		return fmt.Errorf("failed to add group image record: %w", err)
+	}
+	return nil
+}
+
+func (s *CoinService) RemoveGroupImage(ctx context.Context, id uuid.UUID) error {
+	// ideally we should delete file too, but we need to fetch path first.
+	// For now, simple DB delete. Orphaned files can be cleaned up later.
+	return s.groupRepo.RemoveImage(ctx, id)
+}
+
+func (s *CoinService) AddCoinGalleryImage(ctx context.Context, coinID uuid.UUID, file io.Reader, filename string) error {
+	// 1. Save file
+	// Use subdirectory "gallery" or just generic? generic is fine.
+	path, err := s.storage.SaveFile(coinID, filename, file)
+	if err != nil {
+		return fmt.Errorf("failed to save gallery image: %w", err)
+	}
+
+	// 2. Create DB record
+	img := domain.CoinGalleryImage{
+		CoinID: coinID,
+		Path:   path,
+	}
+	if err := s.repo.AddGalleryImage(ctx, img); err != nil {
+		return fmt.Errorf("failed to add gallery image record: %w", err)
+	}
+	return nil
+}
+
+func (s *CoinService) RemoveCoinGalleryImage(ctx context.Context, id uuid.UUID) error {
+	// Fetch image to get path?
+	// For now, just DB delete.
+	return s.repo.RemoveGalleryImage(ctx, id)
+}
+
+func (s *CoinService) ListCoinGalleryImages(ctx context.Context, coinID uuid.UUID) ([]domain.CoinGalleryImage, error) {
+	return s.repo.ListGalleryImages(ctx, coinID)
+}
+
+func (s *CoinService) ListGroupImages(ctx context.Context, groupID int) ([]domain.GroupImage, error) {
+	return s.groupRepo.ListImages(ctx, groupID)
 }

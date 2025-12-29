@@ -67,3 +67,27 @@ func (s *LocalFileStorage) SaveFile(coinID uuid.UUID, filename string, content i
 
 	return fullPath, nil
 }
+
+func (s *LocalFileStorage) SaveGroupFile(groupID int, filename string, content io.Reader) (string, error) {
+	dir := filepath.Join(s.BaseDir, "groups", fmt.Sprintf("%d", groupID))
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create directory: %w", err)
+	}
+
+	fullPath := filepath.Join(dir, filename)
+	dst, err := os.Create(fullPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to create file: %w", err)
+	}
+	defer func() {
+		if err := dst.Close(); err != nil {
+			slog.Error("Failed to close destination file", "path", fullPath, "error", err)
+		}
+	}()
+
+	if _, err := io.Copy(dst, content); err != nil {
+		return "", fmt.Errorf("failed to save content: %w", err)
+	}
+
+	return fullPath, nil
+}

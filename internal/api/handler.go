@@ -527,3 +527,109 @@ func (h *CoinHandler) RefreshCoinLink(c *fiber.Ctx) error {
 
 	return c.JSON(link)
 }
+
+func (h *CoinHandler) AddGroupImage(c *fiber.Ctx) error {
+	idStr := c.Params("id")
+	groupID, err := strconv.Atoi(idStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid group id"})
+	}
+
+	file, err := c.FormFile("image")
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "image is required"})
+	}
+
+	src, err := file.Open()
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "failed to open image"})
+	}
+	defer src.Close()
+
+	if err := h.service.AddGroupImage(c.Context(), groupID, src, file.Filename); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.SendStatus(fiber.StatusCreated)
+}
+
+func (h *CoinHandler) RemoveGroupImage(c *fiber.Ctx) error {
+	imgIDStr := c.Params("image_id")
+	imgID, err := uuid.Parse(imgIDStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid image uuid"})
+	}
+
+	if err := h.service.RemoveGroupImage(c.Context(), imgID); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.SendStatus(fiber.StatusNoContent)
+}
+
+func (h *CoinHandler) AddCoinGalleryImage(c *fiber.Ctx) error {
+	idStr := c.Params("id")
+	coinID, err := uuid.Parse(idStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid coin uuid"})
+	}
+
+	file, err := c.FormFile("image")
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "image is required"})
+	}
+
+	src, err := file.Open()
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "failed to open image"})
+	}
+	defer src.Close()
+
+	if err := h.service.AddCoinGalleryImage(c.Context(), coinID, src, file.Filename); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.SendStatus(fiber.StatusCreated)
+}
+
+func (h *CoinHandler) RemoveCoinGalleryImage(c *fiber.Ctx) error {
+	imgIDStr := c.Params("image_id")
+	imgID, err := uuid.Parse(imgIDStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid image uuid"})
+	}
+
+	if err := h.service.RemoveCoinGalleryImage(c.Context(), imgID); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.SendStatus(fiber.StatusNoContent)
+}
+
+func (h *CoinHandler) ListGroupImages(c *fiber.Ctx) error {
+	idStr := c.Params("id")
+	groupID, err := strconv.Atoi(idStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid group id"})
+	}
+
+	images, err := h.service.ListGroupImages(c.Context(), groupID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(images)
+}
+
+func (h *CoinHandler) ListCoinGalleryImages(c *fiber.Ctx) error {
+	idStr := c.Params("id")
+	coinID, err := uuid.Parse(idStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid coin uuid"})
+	}
+
+	images, err := h.service.ListCoinGalleryImages(c.Context(), coinID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(images)
+}

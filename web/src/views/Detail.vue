@@ -275,6 +275,7 @@
                 <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'overview' }" @click="activeTab = 'overview'">Resumen</a>
                 <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'technical' }" @click="activeTab = 'technical'">Numista</a>
                 <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'links' }" @click="activeTab = 'links'">{{ $t('details.links.title') || 'Enlaces' }}</a>
+                <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'gallery' }" @click="activeTab = 'gallery'">{{ $t('details.tabs.gallery') }}</a>
                 <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'notes' }" @click="activeTab = 'notes'">Notas</a>
             </div>
 
@@ -306,6 +307,43 @@
                                {{ $t('common.reprocess') || 'Reprocesar' }}
                            </button>
                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: GALLERY -->
+                <div v-if="activeTab === 'gallery'" class="space-y-6 animate-in fade-in duration-300">
+                     <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-lg">{{ $t('details.gallery.title') }}</h3>
+                        <div>
+                            <input type="file" ref="galleryInput" class="hidden" @change="uploadGalleryImage" accept="image/*">
+                            <button class="btn btn-primary btn-sm gap-2" @click="$refs.galleryInput.click()" :disabled="uploadingGallery">
+                                <span v-if="uploadingGallery" class="loading loading-spinner loading-xs"></span>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
+                                {{ $t('details.gallery.upload') }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div v-if="!coin.gallery_images || coin.gallery_images.length === 0" class="text-center py-16 bg-base-200/50 rounded-xl border border-dashed border-base-300 flex flex-col items-center justify-center">
+                         <div class="mb-4 text-base-content/20 w-16 h-16 flex items-center justify-center bg-base-200 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
+                         </div>
+                         <h3 class="font-bold text-lg opacity-60">{{ $t('details.gallery.empty_title') }}</h3>
+                         <p class="text-sm opacity-50 max-w-xs mx-auto mb-6">{{ $t('details.gallery.empty_subtitle') }}</p>
+                         <button class="btn btn-outline btn-sm gap-2" @click="$refs.galleryInput.click()" :disabled="uploadingGallery">
+                            {{ $t('details.gallery.upload') }}
+                         </button>
+                    </div>
+
+                    <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                        <div v-for="img in coin.gallery_images" :key="img.id" class="relative group aspect-square bg-base-200 rounded-xl overflow-hidden shadow-sm border border-base-300">
+                            <img :src="getImageUrl(img.path)" class="w-full h-full object-cover cursor-zoom-in transition-transform group-hover:scale-105" @click="openViewerForPath(img.path)">
+                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-start justify-end p-2 pointer-events-none">
+                                <button @click.stop="deleteGalleryImage(img.id)" class="btn btn-xs btn-circle btn-error pointer-events-auto" :class="{'loading': deletingImageId === img.id}">
+                                    <svg v-if="deletingImageId !== img.id" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -562,6 +600,21 @@
             </div>
         </div>
     </div>
+
+    <!-- Modals -->
+    <!-- Delete Coin Modal (already exists presumably) -->
+    
+    <!-- Gallery Delete Modal -->
+    <dialog class="modal" :class="{'modal-open': galleryDeleteId}">
+        <div class="modal-box">
+             <h3 class="font-bold text-lg">{{ $t('common.delete') }}</h3>
+             <p class="py-4">{{ $t('common.delete_modal.confirm') }}?</p>
+             <div class="modal-action">
+                 <button class="btn" @click="galleryDeleteId = null">{{ $t('common.cancel') }}</button>
+                 <button class="btn btn-error" @click="confirmDeleteGalleryImageAction">{{ $t('common.delete') }}</button>
+             </div>
+        </div>
+    </dialog>
   </div>
   <div v-else class="flex justify-center p-20">
     <span class="loading loading-spinner loading-lg"></span>
@@ -1142,6 +1195,68 @@ const getGradeDescription = (code) => {
     const base = normalizeGrade(code)
     return t(`grades.${base}.desc`)
 }
+
+// Gallery Logic
+const galleryInput = ref(null)
+const uploadingGallery = ref(false)
+const deletingImageId = ref(null)
+
+const uploadGalleryImage = async (event) => {
+    const file = event.target.files[0]
+    if (!file) return
+
+    uploadingGallery.value = true
+    const formData = new FormData()
+    formData.append('image', file)
+
+    try {
+        await axios.post(`${API_URL}/coins/${coin.value.id}/gallery`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        })
+        // Refresh coin
+        const res = await axios.get(`${API_URL}/coins/${coin.value.id}`)
+        coin.value = res.data
+    } catch (e) {
+        console.error("Failed to upload gallery image", e)
+        alert(t('form.errors.upload_failed'))
+    } finally {
+        uploadingGallery.value = false
+        // Reset input
+        event.target.value = ''
+    }
+}
+
+const galleryDeleteId = ref(null)
+
+const confirmDeleteGalleryImage = (id) => {
+    galleryDeleteId.value = id
+}
+
+const confirmDeleteGalleryImageAction = async () => {
+    if (!galleryDeleteId.value) return
+    const imageId = galleryDeleteId.value
+    galleryDeleteId.value = null
+    
+    deletingImageId.value = imageId
+    try {
+        await axios.delete(`${API_URL}/coins/${coin.value.id}/gallery/${imageId}`)
+        // Remove locally
+        if (coin.value.gallery_images) {
+            coin.value.gallery_images = coin.value.gallery_images.filter(img => img.id !== imageId)
+        }
+    } catch (e) {
+        console.error("Failed to delete gallery image", e)
+        alert(t('form.errors.delete_failed'))
+    } finally {
+        deletingImageId.value = null
+    }
+}
+
+const openViewerForPath = (path) => {
+    viewerImage.value = getImageUrl(path)
+    viewerOpen.value = true
+} 
+
 
 
 
