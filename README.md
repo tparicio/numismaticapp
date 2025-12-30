@@ -34,6 +34,16 @@ Forget about manual data entry. Simply upload a photo of your coin and let AI do
 *   **📱 Responsive Design:** Modern and adaptable interface built with Vue 3 and DaisyUI.
 *   **🐳 Docker Ready:** Simple and consistent deployment using Docker containers (Secure Alpine-based image).
 
+## 🎥 Application Demo
+
+| **AI Identification** | **Detail View** |
+| :---: | :---: |
+| ![AI Identification](docs/images/001_add_coin.gif) | ![Detail View](docs/images/002_coin_details.gif) |
+
+| **Coin List** | **Interactive Dashboard** |
+| :---: | :---: |
+| ![Coin List](docs/images/004_list_coins.gif) | ![Dashboard](docs/images/003_dashboard.gif) |
+
 ## 🛠️ Technology Stack
 
 | Component | Technology | Description |
