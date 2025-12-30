@@ -1,10 +1,12 @@
 # Stage 1: Build Modules and Generate Code
-FROM golang:1.25-bookworm AS builder
+FROM golang:1.25-alpine AS builder
 
 # Install system dependencies (libvips for image processing, sqlc for code gen)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libvips-dev \
-    && rm -rf /var/lib/apt/lists/*
+# build-base needed for CGO
+RUN apk add --no-cache \
+    vips-dev \
+    build-base \
+    git
 
 # Install SQLC
 RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
@@ -15,7 +17,7 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source code (Optimized to avoid cache invalidation)
+# Copy source code
 COPY cmd ./cmd
 COPY internal ./internal
 COPY sqlc.yaml schema.sql ./
@@ -28,7 +30,7 @@ RUN sqlc generate
 RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-w -s" -o /app/bin/server ./cmd/api/main.go
 
 # Stage 2: Build Frontend
-FROM node:20-alpine AS frontend-builder
+FROM node:22-alpine AS frontend-builder
 WORKDIR /app
 COPY web/package*.json ./
 # Use ci for deterministic builds
@@ -37,17 +39,17 @@ COPY web/ .
 RUN npm run build
 
 # Stage 3: Final Image
-FROM debian:bookworm-slim
+FROM alpine:3.23.2
 
 # Create non-root user
-RUN groupadd -g 1001 appuser && \
-    useradd -u 1001 -g appuser -s /bin/bash -m appuser
+RUN adduser -D -u 1001 appuser
 
 # Install runtime dependencies
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
-    libvips \
+# bash is required for entrypoint.sh script
+RUN apk add --no-cache \
+    vips \
     ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+    bash
 
 WORKDIR /app
 
