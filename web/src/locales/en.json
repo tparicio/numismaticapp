@@ -69,8 +69,12 @@
             "country": "Country",
             "min_price": "Min €",
             "max_price": "Max €",
+            "all_groups": "All Groups",
             "all_grades": "All grades",
-            "all_materials": "All materials"
+            "all_materials": "All materials",
+            "active": "Active Filters",
+            "title": "Filters",
+            "clear": "Clear Filters"
         },
         "sort": {
             "label": "Sort by",
@@ -187,6 +191,13 @@
         "obverse": "Obverse",
         "reverse": "Reverse",
         "view_sample": "View Sample",
+        "tabs": {
+            "gallery": "Gallery",
+            "overview": "Overview",
+            "numista": "Numista",
+            "stats": "Statistics",
+            "notes": "Notes"
+        },
         "sections": {
             "details": "Details",
             "description": "Description",
@@ -225,6 +236,7 @@
         "no_notes": "No notes available.",
         "back_gallery": "Back to Gallery",
         "reprocess_tooltip": "Reprocess with AI",
+        "reprocess_numista_tooltip": "Reprocess Numista",
         "reprocess_modal": {
             "title": "Reprocess with Artificial Intelligence",
             "warning": "Warning! This will re-send original images to Gemini and OVERWRITE all coin details (Name, year, country, description, etc) with new response. Personal notes will be kept."

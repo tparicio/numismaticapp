@@ -273,12 +273,12 @@
             <!-- Tabs Navigation -->
             <div class="overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide">
                 <div role="tablist" class="tabs tabs-lifted tabs-md lg:tabs-lg min-w-max mx-auto lg:mx-0">
-                    <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'overview' }" @click="activeTab = 'overview'">Resumen</a>
-                    <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'technical' }" @click="activeTab = 'technical'">Numista</a>
-                    <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'links' }" @click="activeTab = 'links'">{{ $t('details.links.title') || 'Enlaces' }}</a>
+                    <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'overview' }" @click="activeTab = 'overview'">{{ $t('details.tabs.overview') }}</a>
+                    <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'technical' }" @click="activeTab = 'technical'">{{ $t('details.tabs.numista') }}</a>
+                    <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'links' }" @click="activeTab = 'links'">{{ $t('details.links.title') }}</a>
                     <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'gallery' }" @click="activeTab = 'gallery'">{{ $t('details.tabs.gallery') }}</a>
-                    <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'stats' }" @click="activeTab = 'stats'">Estadísticas</a>
-                    <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'notes' }" @click="activeTab = 'notes'">Notas</a>
+                    <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'stats' }" @click="activeTab = 'stats'">{{ $t('details.tabs.stats') }}</a>
+                    <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'notes' }" @click="activeTab = 'notes'">{{ $t('details.tabs.notes') }}</a>
                 </div>
             </div>
 
@@ -342,7 +342,7 @@
                         <div v-for="img in coin.gallery_images" :key="img.id" class="relative group aspect-square bg-base-200 rounded-xl overflow-hidden shadow-sm border border-base-300">
                             <img :src="getImageUrl(img.path)" class="w-full h-full object-cover cursor-zoom-in transition-transform group-hover:scale-105" @click="openViewerForPath(img.path)">
                             <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-start justify-end p-2 pointer-events-none">
-                                <button @click.stop="deleteGalleryImage(img.id)" class="btn btn-xs btn-circle btn-error pointer-events-auto" :class="{'loading': deletingImageId === img.id}">
+                                <button @click.stop="confirmDeleteGalleryImage(img.id)" class="btn btn-xs btn-circle btn-error pointer-events-auto" :class="{'loading': deletingImageId === img.id}">
                                     <svg v-if="deletingImageId !== img.id" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                                 </button>
                             </div>

@@ -7,84 +7,85 @@
 ![Go Version](https://img.shields.io/github/go-mod/go-version/tparicio/numismaticapp/main)
 ![Vue Version](https://img.shields.io/badge/vue-3.x-42b883.svg?logo=vue.js)
 
-**Gestiona tu colección de monedas con el poder de la Inteligencia Artificial.**
+**Manage your coin collection with the power of Artificial Intelligence.**
 
-[Ver en DockerHub](https://hub.docker.com/r/tparicio/numismaticapp) • [Reportar Bug](https://github.com/antonioparicio/numismaticapp/issues)
+[View on DockerHub](https://hub.docker.com/r/tparicio/numismaticapp) • [Report Bug](https://github.com/antonioparicio/numismaticapp/issues)
 
 </div>
 
 ---
 
-## 📋 Descripción
+## 📋 Description
 
-**NumismaticApp** es una aplicación web moderna diseñada para coleccionistas de monedas.
-- **Integración con Numista API:** Obtén datos detallados y referencias cruzadas de tus monedas directamente desde la mayor base de datos numismática.
-- **Identificación con IA:** Sube fotos de tus monedas y deja que Google Gemini AI identifique y extraiga los detalles clave (país, año, valor, etc.).
-Utiliza la IA de **Google Gemini** para analizar fotografías de monedas, extraer automáticamente metadatos (país, año, valor, ceca) y evaluar su estado de conservación.
+**NumismaticApp** is a modern web application designed for coin collectors.
+- **Numista API Integration:** Get detailed data and cross-references for your coins directly from the largest numismatic database.
+- **AI Identification:** Upload photos of your coins and let Google Gemini AI identify and extract key details (country, year, value, mint, rule, etc.).
+- **Automatic Grading:** Uses AI to estimate the conservation state (grade) of your coins.
 
-Olvídate de introducir datos manualmente. Simplemente sube una foto de tu moneda y deja que la IA haga el trabajo pesado, organizando tu colección en una base de datos segura y presentándola en un galería visualmente atractiva.
+Forget about manual data entry. Simply upload a photo of your coin and let AI do the heavy lifting, organizing your collection into a secure database and presenting it in a visually appealing gallery.
 
-## ✨ Características Principales
+## ✨ Key Features
 
-*   **🤖 Análisis con IA:** Identificación automática de monedas y evaluación de grado (estado de conservación) mediante Google Gemini Vision.
-*   **🖼️ Procesamiento de Imagen:** Recorte automático a círculo, eliminación de fondo y rotación inteligente con `libvips`.
-*   **📁 Gestión de Colección:** Crea, edita y organiza tus monedas en grupos personalizados.
-*   **📊 Dashboard Interactivo:** Visualiza estadísticas de tu colección, distribución por países, materiales y valor total.
-*   **🔍 Integración con Numista:** Enlaza tus monedas con la base de datos de Numista para obtener información detallada y referencias.
-*   **📱 Diseño Responsivo:** Interfaz moderna y adaptable construida con Vue 3 y DaisyUI.
-*   **🐳 Docker Ready:** Despliegue sencillo y consistente mediante contenedores Docker.
+*   **🤖 AI Analysis:** Automatic coin identification and grading using Google Gemini Vision.
+*   **🖼️ Image Processing:** Auto-crop to circle, background removal, and smart rotation using `vips` (Alpine optimized).
+*   **📁 Collection Management:** Create, edit, and organize your coins into custom groups.
+*   **📊 Interactive Dashboard:** Visualize collection statistics, distribution by country, material, and total value.
+*   **🔍 Numista Integration:** Link your coins with the Numista database for detailed information and references.
+*   **📱 Responsive Design:** Modern and adaptable interface built with Vue 3 and DaisyUI.
+*   **🐳 Docker Ready:** Simple and consistent deployment using Docker containers (Secure Alpine-based image).
 
-## 🛠️ Tecnologías
+## 🛠️ Technology Stack
 
-| Componente | Tecnología | Descripción |
+| Component | Technology | Description |
 | :--- | :--- | :--- |
-| **Backend** | ![Go](https://img.shields.io/badge/Go-00ADD8?style=flat-square&logo=go&logoColor=white) | API RESTful rápida y eficiente con Fiber. |
-| **Frontend** | ![Vue.js](https://img.shields.io/badge/Vue.js-35495E?style=flat-square&logo=vue.js&logoColor=4FC08D) | SPA reactiva y ligera. |
-| **Base de Datos** | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=flat-square&logo=postgresql&logoColor=white) | Persistencia robusta y relacional. |
-| **AI** | ![Gemini](https://img.shields.io/badge/Google%20Gemini-8E75B2?style=flat-square&logo=google&logoColor=white) | Motor de análisis visual. |
-| **Imágenes** | **libvips** | Procesamiento de imágenes de alto rendimiento. |
-| **Background Removal** | **rembg** | Eliminación de fondo inteligente. |
-| **Datos Externos** | **Numista API** | Información y catálogos de monedas. |
+| **Backend** | ![Go](https://img.shields.io/badge/Go-00ADD8?style=flat-square&logo=go&logoColor=white) | Fast and efficient RESTful API with Fiber (Go 1.25). |
+| **Frontend** | ![Vue.js](https://img.shields.io/badge/Vue.js-35495E?style=flat-square&logo=vue.js&logoColor=4FC08D) | Reactive and lightweight SPA. |
+| **Database** | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=flat-square&logo=postgresql&logoColor=white) | Robust relational persistence. |
+| **AI** | ![Gemini](https://img.shields.io/badge/Google%20Gemini-8E75B2?style=flat-square&logo=google&logoColor=white) | Visual analysis engine. |
+| **Images** | **libvips** | High-performance image processing (Alpine optimized). |
+| **Background Removal** | **rembg** | Smart background removal. |
+| **External Data** | **Numista API** | Coin information and catalogs. |
 
-## 🚀 Guía de Instalación
+## 🚀 Installation Guide
 
-### Prerrequisitos
+### Prerequisites
 
 *   Docker & Docker Compose
-*   Una [API Key de Google Gemini](https://aistudio.google.com/app/apikey)
-*   Una [API Key de Numista](https://en.numista.com/api/doc/) (Opcional, para enriquecer datos)
+*   A [Google Gemini API Key](https://aistudio.google.com/app/apikey)
+*   A [Numista API Key](https://en.numista.com/api/doc/) (Optional, for data enrichment)
 
-### Opción 1: Docker Compose (Recomendado)
+### Option 1: Docker Compose (Recommended)
 
-La forma más rápida de empezar es utilizando la imagen pre-construida desde DockerHub.
+The fastest way to start is using the pre-built image from DockerHub.
 
-1.  **Crea el directorio de storage (importante para persistencia):**
+1.  **Create a storage directory (important for persistence):**
 
     ```bash
     mkdir -p ./storage
     ```
 
-    **Para despliegues en NAS (Synology, QNAP, etc.):** Si necesitas usar un UID/GID específico, asegúrate de que el directorio tenga los permisos correctos:
+    **For NAS deployments (Synology, QNAP, etc.):** The container runs as a non-root user (`appuser`, UID 1001), so ensure the directory has correct permissions:
 
     ```bash
-    # Ejemplo para UID 1000 y GID 100
+    # Set owner to UID 1001 (appuser)
     mkdir -p ./storage
-    chown 1000:100 ./storage
+    chown 1001:1001 ./storage
     chmod 755 ./storage
     ```
 
-2.  **Crea un archivo `docker-compose.yml`:**
+2.  **Create a `docker-compose.yml` file:**
 
     ```yaml
     services:
       app:
         image: tparicio/numismaticapp:latest
-        user: ${UID:-1000}:${GID:-1000}
+        restart: unless-stopped
+        user: "1001:1001" # Default appuser, but good to be explicit
         ports:
-          - "8080:8080" # change port if needed
+          - "8080:8080"
         environment:
-          - GEMINI_API_KEY=tu_api_key_aqui
-          - NUMISTA_API_KEY=tu_api_key_numista_opcional
+          - GEMINI_API_KEY=your_api_key_here
+          - NUMISTA_API_KEY=your_optional_numista_key
           - REMBG_URL=http://rembg:5000/api/remove
           - POSTGRES_HOST=db
           - POSTGRES_USER=postgres
@@ -98,6 +99,7 @@ La forma más rápida de empezar es utilizando la imagen pre-construida desde Do
 
       db:
         image: postgres:15-alpine
+        restart: unless-stopped
         environment:
           - POSTGRES_USER=postgres
           - POSTGRES_PASSWORD=secret
@@ -121,157 +123,100 @@ La forma más rápida de empezar es utilizando la imagen pre-construida desde Do
       postgres_data:
     ```
 
-3.  **Inicia la aplicación:**
+3.  **Start the application:**
 
     ```bash
     docker compose up -d
     ```
 
-4.  **Accede al navegador:**
-    *   Abre `http://localhost:8080` para ver tu colección.
+4.  **Access in browser:**
+    *   Open `http://localhost:8080` to view your collection.
 
-### Opción 2: Compilación Local
+### Option 2: Local Build
 
-Si prefieres compilar desde el código fuente:
+If you prefer building from source:
 
-1.  **Clona el repositorio:**
+1.  **Clone the repository:**
     ```bash
     git clone https://github.com/tparicio/numismaticapp.git
     cd numismaticapp
     ```
 
-2.  **Configura el entorno:**
-    Crea un archivo `.env` en la raíz:
+2.  **Configure environment:**
+    Create a `.env` file in the root directory:
     ```bash
-    GEMINI_API_KEY=tu_api_key_aqui
-    NUMISTA_API_KEY=tu_api_key_numista_opcional
+    GEMINI_API_KEY=your_api_key
+    NUMISTA_API_KEY=your_optional_key
     POSTGRES_USER=postgres
     POSTGRES_PASSWORD=postgres
     POSTGRES_DB=numismatic
     ```
 
-3.  **Ejecuta con Make:**
+3.  **Run with Make:**
     ```bash
     make run
     ```
-    Esto levantará los servicios usando el `docker-compose.yml` de desarrollo incluido en el proyecto.
+    This will start services using the development `docker-compose.yml`.
 
-## 📖 Uso
+## 📖 Usage
 
-### Añadir una Moneda
+### Adding a Coin
 
-1.  Ve a la sección **"Añadir Moneda"**.
-2.  Sube una foto del **Anverso** y otra del **Reverso**.
-3.  Selecciona el grupo (opcional) o crea uno nuevo.
-4.  Haz clic en **"Analizar y Guardar"**.
-5.  La IA procesará las imágenes y rellenará los datos automáticamente.
+1.  Go to **"Add Coin"** section.
+2.  Upload a photo of the **Obverse** and **Reverse**.
+3.  Select a group (optional) or create a new one.
+4.  Click **"Analyze and Save"**.
+5.  AI will process images and fill in data automatically.
 
-### Gestionar Grupos
+### Managing Groups
 
-1.  Ve a la sección **"Grupos"**.
-2.  Crea colecciones temáticas (ej: "Pesetas de Juan Carlos I", "Dólares de Plata").
-3.  Asigna tus monedas a estos grupos para mantener tu colección organizada.
+1.  Go to **"Groups"** section.
+2.  Create thematic collections (e.g., "Silver Dollars", "Ancient Rome").
+3.  Assign your coins to these groups to keep your collection organized.
 
-## ❓ Solución de Problemas
+## ❓ Troubleshooting
 
-### Problemas de Persistencia y Permisos en NAS (Synology, QNAP, etc.)
+### Persistence & Permissions on NAS (Synology, QNAP, etc.)
 
-#### Problema: Se borran los datos al re-desplegar
-**Causa:** El directorio `storage` no está correctamente montado como volumen persistente.
+#### Issue: Data lost on re-deploy
+**Cause:** `storage` directory is not correctly mounted as a persistent volume.
 
-**Solución:**
-1. Asegúrate de crear el directorio `storage` en el host **antes** del primer despliegue:
-   ```bash
-   mkdir -p ./storage
-   ```
-
-2. Verifica que el `docker-compose.yml` incluya el volumen:
+**Solution:**
+1. Ensure the `storage` directory exists on the host **before** first deployment.
+2. Verify `docker-compose.yml` includes the volume mapping:
    ```yaml
    volumes:
      - ./storage:/app/storage
    ```
 
-3. **IMPORTANTE:** No borres el directorio `./storage` del host al re-desplegar. Solo ejecuta `docker compose down` y `docker compose up -d`.
+#### Issue: Permission Denied errors
+**Cause:** The container runs as non-root user `appuser` (UID 1001), but the host directory belongs to root or another user.
 
-#### Problema: Permisos incorrectos después de re-desplegar
-**Causa:** El contenedor se ejecuta con un UID/GID específico (ej: `1000:100`) pero el directorio `storage` tiene permisos diferentes.
-
-**Solución para NAS:**
-1. Identifica tu UID y GID en el NAS:
+**Solution:**
+1. Change ownership of the folder on the host machine:
    ```bash
-   id
-   # Ejemplo de salida: uid=1000(usuario) gid=100(users)
+   chown -R 1001:1001 ./storage
    ```
-
-2. Configura el directorio `storage` con los permisos correctos:
-   ```bash
-   chown 1000:100 ./storage
-   chmod 755 ./storage
-   ```
-
-3. Añade la directiva `user` en tu `docker-compose.yml`:
+2. Or explicitly set the user in `docker-compose.yml` if you need a different UID:
    ```yaml
-   services:
-     app:
-       image: tparicio/numismaticapp:latest
-       user: "1000:100"  # Usa tu UID:GID específico
-       volumes:
-         - ./storage:/app/storage
+   user: "1026:100" # Example user:group in Synology
    ```
 
-4. Re-despliega:
-   ```bash
-   docker compose down
-   docker compose up -d
-   ```
+## 🤝 Contribution
 
-#### Verificación de Permisos
-Después del despliegue, verifica que el contenedor puede escribir en storage:
-```bash
-# Verifica permisos del directorio
-ls -la ./storage
+Contributions are welcome! If you have ideas to improve the application:
 
-# Prueba de escritura desde el contenedor
-docker compose exec app touch /app/storage/test.txt
-ls -la ./storage/test.txt
-```
-
-### Problemas de Permisos en Linux (Desarrollo Local)
-Si experimentas errores como `permission denied` en desarrollo local:
-
-**Solución Recomendada:**
-Usa las variables de entorno para que el contenedor use tu UID/GID actual:
-
-```yaml
-services:
-  app:
-    image: tparicio/numismaticapp:latest
-    user: "${UID}:${GID}"
-    # ... resto de la configuración
-```
-
-Luego exporta las variables antes de levantar el contenedor:
-```bash
-export UID=$(id -u)
-export GID=$(id -g)
-docker compose up -d
-```
-
-## 🤝 Contribución
-
-¡Las contribuciones son bienvenidas! Si tienes ideas para mejorar la aplicación:
-
-1.  Haz un Fork del proyecto.
-2.  Crea una rama con tu nueva funcionalidad (`git checkout -b feature/AmazingFeature`).
-3.  Haz Commit de tus cambios (`git commit -m 'Add some AmazingFeature'`).
-4.  Haz Push a la rama (`git push origin feature/AmazingFeature`).
+1.  Fork the project.
+2.  Create a feature branch (`git checkout -b feature/AmazingFeature`).
+3.  Commit your changes (`git commit -m 'Add some AmazingFeature'`).
+4.  Push to the branch (`git push origin feature/AmazingFeature`).
 5.  Abre un Pull Request.
 
-## 📄 Licencia
+## 📄 License
 
-Distribuido bajo la licencia MIT. Ver el archivo `LICENSE` para más información.
+Distributed under the MIT License. See `LICENSE` file for more information.
 
 ---
 
 <div align="center">
-  Hecho con ❤️ por <a href="https://github.com/tparicio">Toni Paricio</a> con ayuda de 🚀 Antigravity y ✨ Gemini</div>
+  Made with ❤️ by <a href="https://github.com/tparicio">Toni Paricio</a> with help from 🚀 Antigravity & ✨ Gemini</div>
