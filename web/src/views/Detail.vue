@@ -91,63 +91,59 @@
                     <!-- SVG Diagram (Preserved) -->
                     <svg viewBox="0 0 400 320" class="w-full h-auto max-h-48" xmlns="http://www.w3.org/2000/svg">
                         <defs>
-                            <linearGradient id="coinGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color:#fbbf24;stop-opacity:0.3" />
-                            <stop offset="50%" style="stop-color:#f59e0b;stop-opacity:0.5" />
-                            <stop offset="100%" style="stop-color:#d97706;stop-opacity:0.3" />
-                            </linearGradient>
-                            <radialGradient id="coinShine" cx="30%" cy="30%">
-                            <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.4" />
-                            <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
-                            </radialGradient>
+                            <clipPath id="coinClip">
+                                <circle cx="200" cy="160" r="90" />
+                            </clipPath>
+                            <marker id="arrowStart" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto"><polygon points="8,5 2,2 2,8" fill="currentColor" class="text-secondary"/></marker>
+                            <marker id="arrowEnd" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto"><polygon points="2,5 8,2 8,8" fill="currentColor" class="text-secondary"/></marker>
                         </defs>
                         
-                        <!-- Main coin circle -->
-                        <circle cx="200" cy="160" r="90" fill="url(#coinGradient)" stroke="currentColor" stroke-width="2" class="text-primary" opacity="0.8"/>
-                        <circle cx="200" cy="160" r="90" fill="url(#coinShine)" />
-                        <circle cx="200" cy="160" r="85" fill="none" stroke="currentColor" stroke-width="1" class="text-primary" opacity="0.3" stroke-dasharray="5,5"/>
+                        <!-- Main coin circle (Image) -->
+                        <circle cx="200" cy="160" r="92" class="text-primary" fill="currentColor" opacity="0.1" />
+                        <image 
+                            :href="getCurrentImageUrl('front')" 
+                            x="110" y="70" width="180" height="180" 
+                            clip-path="url(#coinClip)" 
+                            preserveAspectRatio="xMidYMid slice" 
+                        />
+                        <circle cx="200" cy="160" r="90" fill="none" stroke="currentColor" stroke-width="1" class="text-base-content" opacity="0.1"/>
                         
                         <!-- Diameter measurement line -->
                         <g v-if="coin.diameter_mm > 0">
-                            <line x1="110" y1="160" x2="290" y2="160" stroke="currentColor" stroke-width="2" class="text-secondary" marker-start="url(#arrowStart)" marker-end="url(#arrowEnd)"/>
-                            <line x1="110" y1="155" x2="110" y2="165" stroke="currentColor" stroke-width="2" class="text-secondary"/>
-                            <line x1="290" y1="155" x2="290" y2="165" stroke="currentColor" stroke-width="2" class="text-secondary"/>
+                            <line x1="105" y1="160" x2="295" y2="160" stroke="currentColor" stroke-width="2" class="text-secondary" marker-start="url(#arrowStart)" marker-end="url(#arrowEnd)"/>
+                            <line x1="105" y1="155" x2="105" y2="165" stroke="currentColor" stroke-width="2" class="text-secondary"/>
+                            <line x1="295" y1="155" x2="295" y2="165" stroke="currentColor" stroke-width="2" class="text-secondary"/>
                             
                             <!-- Diameter label -->
-                            <rect x="170" y="140" width="60" height="24" rx="4" fill="currentColor" class="text-secondary" opacity="0.9"/>
-                            <text x="200" y="156" text-anchor="middle" class="fill-white font-bold text-lg">Ø{{ coin.diameter_mm }}mm</text>
+                            <rect x="160" y="135" width="80" height="30" rx="4" fill="currentColor" class="text-secondary" opacity="0.9"/>
+                            <text x="200" y="157" text-anchor="middle" class="fill-white font-bold text-2xl drop-shadow-md">Ø{{ coin.diameter_mm }} mm</text>
                         </g>
                         
                         <!-- Weight indicator -->
-                        <g v-if="coin.weight_g > 0" transform="translate(60, 40)">
+                        <g v-if="coin.weight_g > 0" transform="translate(50, 40)">
                             <path d="M20,30 L10,10 L30,10 Z M10,10 L30,10 L30,12 L10,12 Z" fill="currentColor" class="text-info" opacity="0.8"/>
                             <rect x="8" y="28" width="24" height="4" rx="2" fill="currentColor" class="text-info" opacity="0.8"/>
-                            <rect x="0" y="35" width="40" height="20" rx="4" fill="currentColor" class="text-info" opacity="0.9"/>
-                            <text x="20" y="49" text-anchor="middle" class="fill-white font-bold text-sm">{{ coin.weight_g }}g</text>
+                            <rect x="-10" y="35" width="60" height="24" rx="4" fill="currentColor" class="text-info" opacity="0.9"/>
+                            <text x="20" y="52" text-anchor="middle" class="fill-white font-bold text-lg">{{ coin.weight_g }}g</text>
                         </g>
                         
                         <!-- Material badge -->
-                        <g transform="translate(200, 270)" class="cursor-help">
+                        <g transform="translate(200, 275)" class="cursor-help">
                             <title>{{ coin.material }}</title>
-                            <rect x="-80" y="0" width="160" height="32" rx="16" fill="currentColor" class="text-accent" opacity="0.9"/>
-                            <text x="0" y="21" text-anchor="middle" class="fill-white font-bold text-lg">{{ coin.material ? coin.material.split('(')[0].trim() : 'N/A' }}</text>
+                            <rect x="-100" y="0" width="200" height="36" rx="18" fill="currentColor" class="text-accent" opacity="0.9"/>
+                            <text x="0" y="24" text-anchor="middle" class="fill-white font-bold text-xl drop-shadow-sm">{{ coin.material ? coin.material.split('(')[0].trim() : 'N/A' }}</text>
                         </g>
                         
                         <!-- Thickness indicator (side view) -->
-                        <g v-if="coin.thickness_mm > 0" transform="translate(320, 140)">
+                        <g v-if="coin.thickness_mm > 0" transform="translate(310, 140)">
                             <rect x="0" y="0" width="60" height="40" rx="4" fill="currentColor" class="text-warning" opacity="0.2" stroke="currentColor" stroke-width="2"/>
                             <line x1="0" y1="0" x2="60" y2="0" stroke="currentColor" stroke-width="3" class="text-warning"/>
                             <line x1="0" y1="40" x2="60" y2="40" stroke="currentColor" stroke-width="3" class="text-warning"/>
                             <line x1="65" y1="0" x2="65" y2="40" stroke="currentColor" stroke-width="2" class="text-warning"/>
                             <line x1="63" y1="0" x2="67" y2="0" stroke="currentColor" stroke-width="2" class="text-warning"/>
                             <line x1="63" y1="40" x2="67" y2="40" stroke="currentColor" stroke-width="2" class="text-warning"/>
-                            <text x="30" y="25" text-anchor="middle" class="fill-current text-base-content font-bold text-sm">{{ coin.thickness_mm }}mm</text>
+                            <text x="30" y="25" text-anchor="middle" class="fill-current text-base-content font-bold text-lg shadow-sm">{{ coin.thickness_mm }}mm</text>
                         </g>
-                        
-                        <defs>
-                            <marker id="arrowStart" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto"><polygon points="8,5 2,2 2,8" fill="currentColor" class="text-secondary"/></marker>
-                            <marker id="arrowEnd" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto"><polygon points="2,5 8,2 8,8" fill="currentColor" class="text-secondary"/></marker>
-                        </defs>
                     </svg>
                 </div>
             </div>
