@@ -108,12 +108,40 @@
                  <div class="text-sm font-bold uppercase tracking-wider opacity-60">Colección</div>
                  <h2 class="text-3xl font-black text-primary">{{ activeGroupName }}</h2>
                  <p class="opacity-70 text-sm mt-1" v-if="activeGroupDesc">{{ activeGroupDesc }}</p>
+                 
+                 <!-- Group Stats Report -->
+                 <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4" v-if="activeGroupStats">
+                    <div class="stat bg-base-100/50 rounded-lg p-3 shadow-sm border border-base-content/5">
+                        <div class="stat-title text-xs font-bold uppercase opacity-60">Valor Total</div>
+                        <div class="stat-value text-lg text-primary">{{ formatCurrency(activeGroupStats.min_value) }} - {{ formatCurrency(activeGroupStats.max_value) }}</div>
+                    </div>
+                    <div class="stat bg-base-100/50 rounded-lg p-3 shadow-sm border border-base-content/5">
+                        <div class="stat-title text-xs font-bold uppercase opacity-60">Valor Medio</div>
+                        <div class="stat-value text-lg text-secondary">{{ formatCurrency(activeGroupStats.avg_value) }}</div>
+                    </div>
+                    <div class="stat bg-base-100/50 rounded-lg p-3 shadow-sm border border-base-content/5">
+                        <div class="stat-title text-xs font-bold uppercase opacity-60">Monedas</div>
+                        <div class="stat-value text-lg text-accent">{{ activeGroupStats.coin_count }}</div>
+                    </div>
+                    <div class="stat bg-base-100/50 rounded-lg p-3 shadow-sm border border-base-content/5">
+                        <div class="stat-title text-xs font-bold uppercase opacity-60">Año(s)</div>
+                        <div class="stat-value text-lg">{{ formatYearRange(activeGroupStats.min_year, activeGroupStats.max_year) }}</div>
+                    </div>
+                 </div>
              </div>
         </div>
-        <button @click="clearFilters" class="btn btn-outline btn-sm gap-2 hover:btn-error">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-            Salir del grupo
-        </button>
+        <div class="flex flex-col sm:flex-row gap-2">
+             <button class="btn btn-secondary btn-sm gap-2" @click="openGroupImages" :title="$t('groups.images')">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                </svg>
+                {{ $t('groups.images') }}
+            </button>
+            <button @click="clearFilters" class="btn btn-outline btn-sm gap-2 hover:btn-error">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                Salir del grupo
+            </button>
+        </div>
     </div>
     
     <div v-if="loading" class="flex justify-center p-10">
@@ -344,6 +372,12 @@
       :image-url="viewerImage" 
       @close="viewerOpen = false" 
     />
+
+    <GroupImagesModal 
+        :is-open="groupImagesModalOpen" 
+        :group="currentGroupObject" 
+        @close="groupImagesModalOpen = false" 
+    />
   </div>
 </template>
 
@@ -352,7 +386,8 @@ import { ref, onMounted, watch, computed } from 'vue'
 import axios from 'axios'
 import { useRouter, useRoute } from 'vue-router'
 import ImageViewer from '../components/ImageViewer.vue'
-import { formatMintage } from '../utils/formatters'
+import GroupImagesModal from '../components/GroupImagesModal.vue'
+import { formatMintage, formatCurrency } from '../utils/formatters'
 
 const coins = ref([])
 const groups = ref([])
@@ -513,6 +548,41 @@ const activeGroupDesc = computed(() => {
     const group = groups.value.find(g => g.id === parseInt(filters.value.group_id)) || groups.value.find(g => g.id === filters.value.group_id)
     return group ? group.description : null
 })
+
+const currentGroupObject = computed(() => {
+    if (!filters.value.group_id) return null
+    return groups.value.find(g => g.id === parseInt(filters.value.group_id)) || groups.value.find(g => g.id === filters.value.group_id)
+})
+
+const groupImagesModalOpen = ref(false)
+const openGroupImages = () => {
+    if (currentGroupObject.value) {
+        groupImagesModalOpen.value = true
+    }
+}
+
+const activeGroupStats = computed(() => {
+    if (!filters.value.group_id) return null
+    const group = groups.value.find(g => g.id === parseInt(filters.value.group_id)) || groups.value.find(g => g.id === filters.value.group_id)
+    if (!group) return null
+    // If backend doesn't return these fields yet (or we haven't updated backend), handle gracefully
+    return {
+        coin_count: group.coin_count || 0,
+        min_value: group.min_value || 0,
+        max_value: group.max_value || 0,
+        avg_value: group.avg_value || 0,
+        min_year: group.min_year || 0,
+        max_year: group.max_year || 0
+    }
+})
+
+const formatYearRange = (min, max) => {
+    if (!min && !max) return '-'
+    if (min === max) return `${min}`
+    if (min && !max) return `${min} - ?`
+    if (!min && max) return `? - ${max}`
+    return `${min} - ${max}`
+}
 
 // Fetch coins
 const fetchCoins = async () => {

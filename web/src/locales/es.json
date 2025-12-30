@@ -22,7 +22,9 @@
         "process": "Procesar",
         "name": "Nombre",
         "count": "Cantidad",
-        "value_range": "Rango de Valor"
+        "value_range": "Rango de Valor",
+        "upload": "Subir",
+        "close": "Cerrar"
     },
     "grades": {
         "PROOF": {
@@ -157,7 +159,8 @@
             "images_only": "Por favor selecciona solo archivos de imagen.",
             "both_images": "Se requieren ambas imágenes (Anverso y Reverso).",
             "upload_failed": "Error al subir la moneda",
-            "update_failed": "Error al actualizar la moneda"
+            "update_failed": "Error al actualizar la moneda",
+            "delete_failed": "Error al eliminar"
         },
         "ai_settings": "Configuración de Gemini"
     },
@@ -181,6 +184,9 @@
             "processed": "Procesadas",
             "original": "Original",
             "samples": "Muestras"
+        },
+        "tabs": {
+            "gallery": "Galería"
         },
         "sections": {
             "details": "Detalles",
@@ -225,6 +231,12 @@
         "reprocess_modal": {
             "title": "Reprocesar con Inteligencia Artificial",
             "warning": "¡Advertencia! Esta acción volverá a enviar las imágenes originales a Gemini y SOBREESCRIBIRÁ todos los detalles de la moneda (Nombre, año, país, descripción, etc) con la nueva respuesta. Las notas personales se mantendrán."
+        },
+        "gallery": {
+            "title": "Galería",
+            "upload": "Subir Imagen",
+            "empty_title": "Sin imágenes adicionales",
+            "empty_subtitle": "Sube fotos de detalles, cantos o variantes."
         },
         "links": {
             "title": "Enlaces",
@@ -319,6 +331,9 @@
         "count": "Monedas",
         "empty_state": "No hay grupos. ¡Crea uno para organizar tu colección!",
         "view_collection": "Ver Colección",
+        "images": "Imágenes",
+        "images_title": "Imágenes del Grupo",
+        "images_empty": "Este grupo aún no tiene imágenes adicionales.",
         "delete_modal": {
             "title": "Eliminar Grupo",
             "confirm": "¿Estás seguro de que quieres eliminar el grupo",

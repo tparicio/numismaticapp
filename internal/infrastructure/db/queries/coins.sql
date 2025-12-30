@@ -159,7 +159,7 @@ GROUP BY g.name;
 SELECT COALESCE(SUM(weight_g), 0)::float8 FROM coins WHERE material ILIKE $1;
 
 -- name: GetHeaviestCoin :one
-SELECT * FROM coins ORDER BY weight_g DESC LIMIT 1;
+SELECT * FROM coins WHERE weight_g > 0 ORDER BY weight_g DESC LIMIT 1;
 
 -- name: GetSmallestCoin :one
 SELECT * FROM coins WHERE diameter_mm > 0 ORDER BY diameter_mm ASC LIMIT 1;
@@ -176,7 +176,11 @@ SELECT
     COALESCE(g.name, 'Uncategorized') as group_name, 
     COUNT(c.id) as count,
     COALESCE(MIN(c.min_value), 0)::float8 as min_val,
-    COALESCE(MAX(c.max_value), 0)::float8 as max_val
+    COALESCE(MIN(c.min_value), 0)::float8 as min_val,
+    COALESCE(MAX(c.max_value), 0)::float8 as max_val,
+    COALESCE(AVG(c.max_value), 0)::float8 as avg_val,
+    COALESCE(MIN(NULLIF(c.year, 0)), 0)::int as min_year,
+    COALESCE(MAX(NULLIF(c.year, 0)), 0)::int as max_year
 FROM coins c 
 LEFT JOIN groups g ON c.group_id = g.id 
 GROUP BY g.id, g.name

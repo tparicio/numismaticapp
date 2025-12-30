@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	domain "github.com/antonioparicio/numismaticapp/internal/domain"
+	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -112,4 +113,47 @@ func (m *MockGroupRepository) Update(ctx context.Context, group *domain.Group) e
 func (mr *MockGroupRepositoryMockRecorder) Update(ctx, group any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockGroupRepository)(nil).Update), ctx, group)
+}
+
+// AddImage mocks base method.
+func (m *MockGroupRepository) AddImage(ctx context.Context, img domain.GroupImage) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddImage", ctx, img)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddImage indicates an expected call of AddImage.
+func (mr *MockGroupRepositoryMockRecorder) AddImage(ctx, img any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddImage", reflect.TypeOf((*MockGroupRepository)(nil).AddImage), ctx, img)
+}
+
+// RemoveImage mocks base method.
+func (m *MockGroupRepository) RemoveImage(ctx context.Context, id uuid.UUID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveImage", ctx, id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveImage indicates an expected call of RemoveImage.
+func (mr *MockGroupRepositoryMockRecorder) RemoveImage(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveImage", reflect.TypeOf((*MockGroupRepository)(nil).RemoveImage), ctx, id)
+}
+
+// ListImages mocks base method.
+func (m *MockGroupRepository) ListImages(ctx context.Context, groupID int) ([]domain.GroupImage, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListImages", ctx, groupID)
+	ret0, _ := ret[0].([]domain.GroupImage)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListImages indicates an expected call of ListImages.
+func (mr *MockGroupRepositoryMockRecorder) ListImages(ctx, groupID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListImages", reflect.TypeOf((*MockGroupRepository)(nil).ListImages), ctx, groupID)
 }

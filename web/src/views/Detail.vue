@@ -271,11 +271,15 @@
             </div>
 
             <!-- Tabs Navigation -->
-            <div role="tablist" class="tabs tabs-lifted tabs-lg">
-                <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'overview' }" @click="activeTab = 'overview'">Resumen</a>
-                <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'technical' }" @click="activeTab = 'technical'">Numista</a>
-                <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'links' }" @click="activeTab = 'links'">{{ $t('details.links.title') || 'Enlaces' }}</a>
-                <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'notes' }" @click="activeTab = 'notes'">Notas</a>
+            <div class="overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide">
+                <div role="tablist" class="tabs tabs-lifted tabs-md lg:tabs-lg min-w-max mx-auto lg:mx-0">
+                    <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'overview' }" @click="activeTab = 'overview'">Resumen</a>
+                    <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'technical' }" @click="activeTab = 'technical'">Numista</a>
+                    <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'links' }" @click="activeTab = 'links'">{{ $t('details.links.title') || 'Enlaces' }}</a>
+                    <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'gallery' }" @click="activeTab = 'gallery'">{{ $t('details.tabs.gallery') }}</a>
+                    <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'stats' }" @click="activeTab = 'stats'">Estadísticas</a>
+                    <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'notes' }" @click="activeTab = 'notes'">Notas</a>
+                </div>
             </div>
 
             <!-- Tab Content Area -->
@@ -306,6 +310,95 @@
                                {{ $t('common.reprocess') || 'Reprocesar' }}
                            </button>
                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: GALLERY -->
+                <div v-if="activeTab === 'gallery'" class="space-y-6 animate-in fade-in duration-300">
+                     <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-lg">{{ $t('details.gallery.title') }}</h3>
+                        <div>
+                            <input type="file" ref="galleryInput" class="hidden" @change="uploadGalleryImage" accept="image/*">
+                            <button class="btn btn-primary btn-sm gap-2" @click="$refs.galleryInput.click()" :disabled="uploadingGallery">
+                                <span v-if="uploadingGallery" class="loading loading-spinner loading-xs"></span>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
+                                {{ $t('details.gallery.upload') }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div v-if="(!coin.gallery_images || coin.gallery_images.length === 0) && groupImages.length === 0" class="text-center py-16 bg-base-200/50 rounded-xl border border-dashed border-base-300 flex flex-col items-center justify-center">
+                         <div class="mb-4 text-base-content/20 w-16 h-16 flex items-center justify-center bg-base-200 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
+                         </div>
+                         <h3 class="font-bold text-lg opacity-60">{{ $t('details.gallery.empty_title') }}</h3>
+                         <p class="text-sm opacity-50 max-w-xs mx-auto mb-6">{{ $t('details.gallery.empty_subtitle') }}</p>
+                         <button class="btn btn-outline btn-sm gap-2" @click="$refs.galleryInput.click()" :disabled="uploadingGallery">
+                            {{ $t('details.gallery.upload') }}
+                         </button>
+                    </div>
+
+                    <div v-if="coin.gallery_images && coin.gallery_images.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                        <div v-for="img in coin.gallery_images" :key="img.id" class="relative group aspect-square bg-base-200 rounded-xl overflow-hidden shadow-sm border border-base-300">
+                            <img :src="getImageUrl(img.path)" class="w-full h-full object-cover cursor-zoom-in transition-transform group-hover:scale-105" @click="openViewerForPath(img.path)">
+                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-start justify-end p-2 pointer-events-none">
+                                <button @click.stop="deleteGalleryImage(img.id)" class="btn btn-xs btn-circle btn-error pointer-events-auto" :class="{'loading': deletingImageId === img.id}">
+                                    <svg v-if="deletingImageId !== img.id" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Group Images Section -->
+                    <div v-if="groupImages.length > 0" class="pt-6 border-t border-base-200">
+                        <h4 class="font-bold text-sm mb-3 opacity-70 flex items-center gap-2 uppercase tracking-wide">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" /></svg>
+                            Imágenes del Grupo ({{ getGroupName(coin.group_id) }})
+                        </h4>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                            <div v-for="img in groupImages" :key="img.id" class="relative group aspect-square bg-base-200 rounded-xl overflow-hidden shadow-sm border border-base-300">
+                                <img :src="getImageUrl(img.path)" class="w-full h-full object-cover cursor-zoom-in transition-transform group-hover:scale-105" @click="openViewerForPath(img.path)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB: STATISTICS -->
+                <div v-if="activeTab === 'stats'" class="space-y-8 animate-in fade-in duration-300">
+                    <div v-if="!coinStats" class="flex justify-center py-12">
+                         <span class="loading loading-spinner text-primary"></span>
+                    </div>
+                    <div v-else class="space-y-8">
+                         <!-- Radar Chart: Percentiles -->
+                         <div class="card bg-base-100 shadow-sm border border-base-200">
+                             <div class="card-body">
+                                 <h3 class="card-title text-sm uppercase opacity-70 mb-4">Comparativa (Percentiles)</h3>
+                                 <div class="h-64 relative flex justify-center">
+                                     <Radar :data="percentileChartData" :options="radarOptions" />
+                                 </div>
+                                 <p class="text-xs text-center opacity-50 mt-2">Comparación con el resto de su colección.</p>
+                             </div>
+                         </div>
+
+                         <!-- Year Distribution -->
+                         <div class="card bg-base-100 shadow-sm border border-base-200">
+                             <div class="card-body">
+                                 <h3 class="card-title text-sm uppercase opacity-70 mb-4">Distribución por Año</h3>
+                                 <div class="h-64 relative">
+                                     <Bar :data="yearDistributionData" :options="barOptions" />
+                                 </div>
+                             </div>
+                         </div>
+
+                         <!-- Grade Distribution -->
+                         <div class="card bg-base-100 shadow-sm border border-base-200">
+                             <div class="card-body">
+                                 <h3 class="card-title text-sm uppercase opacity-70 mb-4">Distribución por Estado</h3>
+                                 <div class="h-64 relative">
+                                     <Bar :data="gradeDistributionData" :options="barOptions" />
+                                 </div>
+                             </div>
+                         </div>
                     </div>
                 </div>
 
@@ -562,6 +655,21 @@
             </div>
         </div>
     </div>
+
+    <!-- Modals -->
+    <!-- Delete Coin Modal (already exists presumably) -->
+    
+    <!-- Gallery Delete Modal -->
+    <dialog class="modal" :class="{'modal-open': galleryDeleteId}">
+        <div class="modal-box">
+             <h3 class="font-bold text-lg">{{ $t('common.delete') }}</h3>
+             <p class="py-4">{{ $t('common.delete_modal.confirm') }}?</p>
+             <div class="modal-action">
+                 <button class="btn" @click="galleryDeleteId = null">{{ $t('common.cancel') }}</button>
+                 <button class="btn btn-error" @click="confirmDeleteGalleryImageAction">{{ $t('common.delete') }}</button>
+             </div>
+        </div>
+    </dialog>
   </div>
   <div v-else class="flex justify-center p-20">
     <span class="loading loading-spinner loading-lg"></span>
@@ -801,14 +909,16 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, reactive } from 'vue'
+import { ref, onMounted, computed, reactive, watch } from 'vue'
 import axios from 'axios'
 import { useRoute, useRouter } from 'vue-router'
-import { normalizeGrade } from '../utils/grades'
+import { normalizeGrade, GRADE_ORDER } from '../utils/grades'
 import ImageViewer from '../components/ImageViewer.vue'
 import GeminiConfig from '../components/GeminiConfig.vue'
 import { formatMintage } from '../utils/formatters'
 import { useI18n } from 'vue-i18n'
+import { Chart as ChartJS } from 'chart.js/auto'
+import { Bar, Radar } from 'vue-chartjs'
 
 const { t } = useI18n()
 
@@ -824,8 +934,148 @@ const viewerImage = ref('')
 const activeImageSource = ref('processed') // processed, original
 const activeTab = ref('overview') // overview, technical, notes
 
+const updatingLink = ref(null)
+
+const coinStats = ref(null)
+
+const fetchStats = async () => {
+    if (!coin.value) return
+    try {
+        const res = await axios.get(`${API_URL}/coins/${coin.value.id}/stats`)
+        coinStats.value = res.data
+    } catch (e) {
+        console.error("Failed to fetch coin stats", e)
+    }
+}
+
+// Charts Data
+const percentileChartData = computed(() => {
+    if (!coinStats.value) return null
+    return {
+        labels: ['Valor', 'Rareza', 'Peso', 'Tamaño'],
+        datasets: [{
+            label: 'Percentil',
+            data: [
+                (coinStats.value.value_percentile || 0) * 100,
+                (coinStats.value.rarity_percentile || 0) * 100,
+                (coinStats.value.weight_percentile || 0) * 100,
+                (coinStats.value.size_percentile || 0) * 100
+            ],
+            backgroundColor: 'rgba(234, 179, 8, 0.2)',
+            borderColor: 'rgba(234, 179, 8, 1)',
+            pointBackgroundColor: 'rgba(234, 179, 8, 1)',
+            pointBorderColor: '#fff',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: 'rgba(234, 179, 8, 1)'
+        }]
+    }
+})
+
+const radarOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+        r: {
+            angleLines: {
+                color: 'rgba(128, 128, 128, 0.2)'
+            },
+            grid: {
+                color: 'rgba(128, 128, 128, 0.2)'
+            },
+            pointLabels: {
+                font: {
+                    size: 12
+                }
+            },
+            suggestedMin: 0,
+            suggestedMax: 100
+        }
+    },
+    plugins: {
+        legend: { display: false }
+    }
+}
+
+const yearDistributionData = computed(() => {
+    if (!coinStats.value || !coinStats.value.year_distribution) return null
+    
+    // Convert map to sorted arrays
+    const years = Object.keys(coinStats.value.year_distribution).map(Number).sort((a,b) => a-b)
+    // Filter to a reasonable range around the current coin if too many?
+    // For now show all, or maybe aggregate by decade if too many.
+    // Let's just show all for now.
+    
+    const relevantYears = years.filter(y => y > 0)
+    const labels = relevantYears.map(String)
+    const data = relevantYears.map(y => coinStats.value.year_distribution[y])
+    
+    const backgroundColors = relevantYears.map(y => y === coin.value.year ? 'rgba(234, 179, 8, 0.8)' : 'rgba(128, 128, 128, 0.2)')
+
+    return {
+        labels,
+        datasets: [{
+            label: 'Monedas',
+            data,
+            backgroundColor: backgroundColors,
+            borderRadius: 4
+        }]
+    }
+})
+
+const gradeDistributionData = computed(() => {
+    if (!coinStats.value || !coinStats.value.grade_distribution) return null
+
+    // Use predefined grade order for sorting
+    const labels = GRADE_ORDER.filter(g => coinStats.value.grade_distribution[g] !== undefined)
+    const data = labels.map(g => coinStats.value.grade_distribution[g])
+    
+    const currentGrade = coin.value.grade_code || coin.value.grade // Assuming grade_code or grade matches map keys
+    // Need to ensure coin.grade matches keys in GRADE_ORDER ("S/C" vs "SC" etc).
+    // The backend uses normalized keys probably.
+    
+    const backgroundColors = labels.map(g => g === currentGrade ? 'rgba(234, 179, 8, 0.8)' : 'rgba(128, 128, 128, 0.2)')
+
+    return {
+        labels,
+        datasets: [{
+            label: 'Monedas',
+            data,
+            backgroundColor: backgroundColors,
+            borderRadius: 4
+        }]
+    }
+})
+
+const barOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: { display: false }
+    },
+    scales: {
+        y: {
+            beginAtZero: true,
+            ticks: { precision: 0 }
+        },
+        x: {
+            grid: { display: false }
+        }
+    }
+}
+
 // Group State
 const groups = ref([])
+const groupImages = ref([])
+
+const fetchGroupImages = async () => {
+    if (!coin.value || !coin.value.group_id) return
+    try {
+        const res = await axios.get(`${API_URL}/groups/${coin.value.group_id}/images`)
+        groupImages.value = res.data
+    } catch (e) {
+        console.error("Failed to fetch group images", e)
+    }
+}
 
 const fetchGroups = async () => {
     try {
@@ -1143,6 +1393,68 @@ const getGradeDescription = (code) => {
     return t(`grades.${base}.desc`)
 }
 
+// Gallery Logic
+const galleryInput = ref(null)
+const uploadingGallery = ref(false)
+const deletingImageId = ref(null)
+
+const uploadGalleryImage = async (event) => {
+    const file = event.target.files[0]
+    if (!file) return
+
+    uploadingGallery.value = true
+    const formData = new FormData()
+    formData.append('image', file)
+
+    try {
+        await axios.post(`${API_URL}/coins/${coin.value.id}/gallery`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        })
+        // Refresh coin
+        const res = await axios.get(`${API_URL}/coins/${coin.value.id}`)
+        coin.value = res.data
+    } catch (e) {
+        console.error("Failed to upload gallery image", e)
+        alert(t('form.errors.upload_failed'))
+    } finally {
+        uploadingGallery.value = false
+        // Reset input
+        event.target.value = ''
+    }
+}
+
+const galleryDeleteId = ref(null)
+
+const confirmDeleteGalleryImage = (id) => {
+    galleryDeleteId.value = id
+}
+
+const confirmDeleteGalleryImageAction = async () => {
+    if (!galleryDeleteId.value) return
+    const imageId = galleryDeleteId.value
+    galleryDeleteId.value = null
+    
+    deletingImageId.value = imageId
+    try {
+        await axios.delete(`${API_URL}/coins/${coin.value.id}/gallery/${imageId}`)
+        // Remove locally
+        if (coin.value.gallery_images) {
+            coin.value.gallery_images = coin.value.gallery_images.filter(img => img.id !== imageId)
+        }
+    } catch (e) {
+        console.error("Failed to delete gallery image", e)
+        alert(t('form.errors.delete_failed'))
+    } finally {
+        deletingImageId.value = null
+    }
+}
+
+const openViewerForPath = (path) => {
+    viewerImage.value = getImageUrl(path)
+    viewerOpen.value = true
+} 
+
+
 
 
 onMounted(async () => {
@@ -1161,6 +1473,16 @@ onMounted(async () => {
         // Ah, numistaCount is computed.
         // I will just add fetchLinks() here.
         fetchLinks()
+        fetchGroupImages()
+    }
+})
+
+watch(activeTab, (newTab) => {
+    if (newTab === 'links' && links.value.length === 0) {
+        fetchLinks()
+    }
+    if (newTab === 'stats' && !coinStats.value) {
+        fetchStats()
     }
 })
 // Numista Manual Selection

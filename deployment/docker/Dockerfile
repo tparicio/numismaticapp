@@ -1,10 +1,12 @@
 # Stage 1: Build Modules and Generate Code
-FROM golang:1.25-bookworm AS builder
+FROM golang:1.25-alpine AS builder
 
 # Install system dependencies (libvips for image processing, sqlc for code gen)
-RUN apt-get update && apt-get install -y \
-    libvips-dev \
-    && rm -rf /var/lib/apt/lists/*
+# build-base needed for CGO
+RUN apk add --no-cache \
+    vips-dev \
+    build-base \
+    git
 
 # Install SQLC
 RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
@@ -15,7 +17,7 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source code (Optimized to avoid cache invalidation)
+# Copy source code
 COPY cmd ./cmd
 COPY internal ./internal
 COPY sqlc.yaml schema.sql ./
@@ -24,48 +26,46 @@ COPY sqlc.yaml schema.sql ./
 RUN sqlc generate
 
 # Build the application
-RUN CGO_ENABLED=1 GOOS=linux go build -o /app/bin/server ./cmd/api/main.go
+# Optimized binary with stripped debug info
+RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-w -s" -o /app/bin/server ./cmd/api/main.go
 
 # Stage 2: Build Frontend
-FROM node:20-alpine AS frontend-builder
+FROM node:22-alpine AS frontend-builder
 WORKDIR /app
 COPY web/package*.json ./
-# If package.json doesn't exist yet, this might fail. 
-# We assume the web directory will be populated.
-# For now, we'll use a conditional copy or assume the user follows the order.
-# We will create a dummy package.json in the next steps if needed, 
-# but for now let's assume standard flow.
-RUN npm install
+# Use ci for deterministic builds
+RUN npm ci
 COPY web/ .
 RUN npm run build
 
 # Stage 3: Final Image
-FROM debian:bookworm-slim
+FROM alpine:3.23.2
+
+# Create non-root user
+RUN adduser -D -u 1001 appuser
 
 # Install runtime dependencies
-RUN apt-get update && apt-get upgrade -y && apt-get install -y \
-    libvips \
+# bash is required for entrypoint.sh script
+RUN apk add --no-cache \
+    vips \
     ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+    bash
 
 WORKDIR /app
 
-# Copy binary from builder
-COPY --from=builder /app/bin/server /app/server
+# Create storage directory with correct permissions
+RUN mkdir -p /app/storage && \
+    chown -R appuser:appuser /app/storage
 
-# Copy frontend assets (served by Go Fiber or Nginx - assuming Fiber for simplicity here)
-COPY --from=frontend-builder /app/dist /app/web/dist
+# Copy binary from builder with correct ownership
+COPY --from=builder --chown=appuser:appuser /app/bin/server /app/server
 
-# Copy migrations
-# Copy migrations (Embedded in binary now, but keeping folder structure if needed for other tools)
-# COPY --from=builder /app/migrations /app/migrations
+# Copy frontend assets with correct ownership
+COPY --from=frontend-builder --chown=appuser:appuser /app/dist /app/web/dist
 
-# Copy entrypoint script
-COPY deployment/docker/entrypoint.sh /app/entrypoint.sh
+# Copy entrypoint script with correct ownership and permissions
+COPY --chown=appuser:appuser deployment/docker/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
-
-# Create storage directory (permissions will be handled by volume mount and user directive)
-RUN mkdir -p /app/storage
 
 # Expose port
 EXPOSE 8080
@@ -73,6 +73,9 @@ EXPOSE 8080
 # Environment variables
 ENV PORT=8080
 ENV APP_ENV=production
+
+# Switch to non-root user
+USER appuser
 
 ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["/app/server"]

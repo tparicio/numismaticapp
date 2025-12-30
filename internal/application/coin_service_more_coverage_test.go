@@ -17,7 +17,7 @@ import (
 func TestEnrichCoinWithNumista_MoreCoverage(t *testing.T) {
 	coinID := uuid.New()
 	t.Run("Candidate Detail Fetch Error", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
+		service, mockRepo, _, _, _, _, _, mockNumistaClient, _ := setupTest(t)
 		ctx := context.Background()
 		// Explicit expectations for originals to avoid generic matching issues
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(&domain.Coin{
@@ -54,7 +54,7 @@ func TestEnrichCoinWithNumista_MoreCoverage(t *testing.T) {
 	})
 
 	t.Run("Too Many Results", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
+		service, mockRepo, _, _, _, _, _, mockNumistaClient, _ := setupTest(t)
 		ctx := context.Background()
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(&domain.Coin{ID: coinID}, nil)
 
@@ -70,7 +70,7 @@ func TestEnrichCoinWithNumista_MoreCoverage(t *testing.T) {
 	})
 
 	t.Run("Non-Numeric Face Value", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
+		service, mockRepo, _, _, _, _, _, mockNumistaClient, _ := setupTest(t)
 		ctx := context.Background()
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(&domain.Coin{
 			ID:        coinID,
@@ -99,7 +99,7 @@ func TestEnrichCoinWithNumista_MoreCoverage(t *testing.T) {
 
 func TestAddCoin_GroupCreateError(t *testing.T) {
 	t.Run("Group Create Failure", func(t *testing.T) {
-		service, _, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, _ := setupTest(t)
+		service, _, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, _, _ := setupTest(t)
 		ctx := context.Background()
 
 		mockStorage.EXPECT().SaveFile(gomock.Any(), gomock.Any(), gomock.Any()).Return("p", nil).AnyTimes()
@@ -120,7 +120,7 @@ func TestAddCoin_GroupCreateError(t *testing.T) {
 
 func TestAddCoin_ImageProcErrors(t *testing.T) {
 	t.Run("Crop Error Front", func(t *testing.T) {
-		service, _, _, mockImageService, mockAIService, mockStorage, mockBgRemover, _ := setupTest(t)
+		service, _, _, mockImageService, mockAIService, mockStorage, mockBgRemover, _, _ := setupTest(t)
 		ctx := context.Background()
 		mockStorage.EXPECT().SaveFile(gomock.Any(), gomock.Any(), gomock.Any()).Return("p", nil).AnyTimes()
 		mockBgRemover.EXPECT().RemoveBackground(gomock.Any(), gomock.Any()).Return([]byte("p"), nil).AnyTimes()
@@ -135,7 +135,7 @@ func TestAddCoin_ImageProcErrors(t *testing.T) {
 	})
 
 	t.Run("Save Processed Front Error", func(t *testing.T) {
-		service, _, _, mockImageService, mockAIService, mockStorage, mockBgRemover, _ := setupTest(t)
+		service, _, _, mockImageService, mockAIService, mockStorage, mockBgRemover, _, _ := setupTest(t)
 		ctx := context.Background()
 		// Note: SaveFile is called for original first (2 calls), then processed.
 		// Use explicit filenames to distinguish or order.
@@ -155,7 +155,7 @@ func TestAddCoin_ImageProcErrors(t *testing.T) {
 	})
 
 	t.Run("Generate Thumbnail Front Error", func(t *testing.T) {
-		service, _, _, mockImageService, mockAIService, mockStorage, mockBgRemover, _ := setupTest(t)
+		service, _, _, mockImageService, mockAIService, mockStorage, mockBgRemover, _, _ := setupTest(t)
 		ctx := context.Background()
 		mockStorage.EXPECT().SaveFile(gomock.Any(), gomock.Any(), gomock.Any()).Return("p", nil).AnyTimes()
 		mockBgRemover.EXPECT().RemoveBackground(gomock.Any(), gomock.Any()).Return([]byte("p"), nil).AnyTimes()
@@ -171,7 +171,7 @@ func TestAddCoin_ImageProcErrors(t *testing.T) {
 	})
 
 	t.Run("Remove Background Back Error", func(t *testing.T) {
-		service, _, _, mockImageService, mockAIService, mockStorage, mockBgRemover, _ := setupTest(t)
+		service, _, _, mockImageService, mockAIService, mockStorage, mockBgRemover, _, _ := setupTest(t)
 		ctx := context.Background()
 		// Explicit expectations for originals to avoid generic matching issues
 		mockStorage.EXPECT().SaveFile(gomock.Any(), "original_front.jpg", gomock.Any()).Return("p", nil)
@@ -196,7 +196,7 @@ func TestAddCoin_ImageProcErrors(t *testing.T) {
 
 func TestAddCoin_AIAnalysisError(t *testing.T) {
 	t.Run("AI Returns Error", func(t *testing.T) {
-		service, mockRepo, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, mockNumistaClient := setupTest(t)
+		service, mockRepo, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, mockNumistaClient, _ := setupTest(t)
 		ctx := context.Background()
 
 		// Standard setup for success except AI
@@ -230,7 +230,7 @@ func TestAddCoin_AIAnalysisError(t *testing.T) {
 func TestReanalyzeCoin_MoreCoverage(t *testing.T) {
 	coinID := uuid.New()
 	t.Run("Missing Images", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, _ := setupTest(t)
+		service, mockRepo, _, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		// Coin has NO original images
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(&domain.Coin{
@@ -246,7 +246,7 @@ func TestReanalyzeCoin_MoreCoverage(t *testing.T) {
 	})
 
 	t.Run("Update Repo Error", func(t *testing.T) {
-		service, mockRepo, _, _, mockAIService, _, _, _ := setupTest(t)
+		service, mockRepo, _, _, mockAIService, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(&domain.Coin{
 			ID: coinID,

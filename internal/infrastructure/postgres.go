@@ -88,7 +88,19 @@ func (r *PostgresCoinRepository) GetByID(ctx context.Context, id uuid.UUID) (*do
 		return nil, fmt.Errorf("failed to get coin: %w", err)
 	}
 
-	return r.coinFromDB(ctx, row)
+	coin, err := r.coinFromDB(ctx, row)
+	if err != nil {
+		return nil, err
+	}
+
+	// Fetch Gallery Images
+	galleryImages, err := r.ListGalleryImages(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch gallery images: %w", err)
+	}
+	coin.GalleryImages = galleryImages
+
+	return coin, nil
 }
 
 func (r *PostgresCoinRepository) List(ctx context.Context, filter domain.CoinFilter) ([]*domain.Coin, error) {
@@ -243,6 +255,9 @@ func (r *PostgresCoinRepository) GetGroupStats(ctx context.Context) ([]domain.Gr
 			Count:     row.Count,
 			MinVal:    row.MinVal,
 			MaxVal:    row.MaxVal,
+			AvgVal:    row.AvgVal,
+			MinYear:   int(row.MinYear),
+			MaxYear:   int(row.MaxYear),
 		}
 	}
 	return stats, nil
@@ -359,6 +374,83 @@ func (r *PostgresCoinRepository) Delete(ctx context.Context, id uuid.UUID) error
 
 // Group Repository Implementation
 
+func (r *PostgresCoinRepository) AddGalleryImage(ctx context.Context, img domain.CoinGalleryImage) error {
+	params := db.CreateCoinGalleryImageParams{
+		CoinID: pgtype.UUID{Bytes: img.CoinID, Valid: true},
+		Path:   img.Path,
+	}
+	if _, err := r.q.CreateCoinGalleryImage(ctx, params); err != nil {
+		return fmt.Errorf("failed to add gallery image: %w", err)
+	}
+	return nil
+}
+
+func (r *PostgresCoinRepository) RemoveGalleryImage(ctx context.Context, id uuid.UUID) error {
+	if err := r.q.DeleteCoinGalleryImage(ctx, pgtype.UUID{Bytes: id, Valid: true}); err != nil {
+		return fmt.Errorf("failed to remove gallery image: %w", err)
+	}
+	return nil
+}
+
+func (r *PostgresCoinRepository) ListGalleryImages(ctx context.Context, coinID uuid.UUID) ([]domain.CoinGalleryImage, error) {
+	rows, err := r.q.ListCoinGalleryImages(ctx, pgtype.UUID{Bytes: coinID, Valid: true})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list gallery images: %w", err)
+	}
+
+	images := make([]domain.CoinGalleryImage, len(rows))
+	for i, row := range rows {
+		images[i] = domain.CoinGalleryImage{
+			ID:        uuid.UUID(row.ID.Bytes),
+			CoinID:    uuid.UUID(row.CoinID.Bytes),
+			Path:      row.Path,
+			CreatedAt: row.CreatedAt.Time,
+		}
+	}
+	return images, nil
+}
+
+func (r *PostgresCoinRepository) GetCoinStats(ctx context.Context, id uuid.UUID) (*domain.CoinStats, error) {
+	// 1. Get Percentiles
+	percentiles, err := r.q.GetCoinPercentiles(ctx, pgtype.UUID{Bytes: id, Valid: true})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get coin percentiles: %w", err)
+	}
+
+	// 2. Get Year Distribution
+	yearRows, err := r.q.GetCollectionYearDistribution(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get year distribution: %w", err)
+	}
+	yearDist := make(map[int]int)
+	for _, row := range yearRows {
+		if row.Year.Valid {
+			yearDist[int(row.Year.Int32)] = int(row.Count)
+		}
+	}
+
+	// 3. Get Grade Distribution
+	gradeRows, err := r.q.GetCollectionGradeDistribution(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get grade distribution: %w", err)
+	}
+	gradeDist := make(map[string]int)
+	for _, row := range gradeRows {
+		if row.Grade.Valid {
+			gradeDist[row.Grade.String] = int(row.Count)
+		}
+	}
+
+	return &domain.CoinStats{
+		ValuePercentile:   percentiles.ValuePercentile,
+		RarityPercentile:  percentiles.RarityPercentile,
+		WeightPercentile:  percentiles.WeightPercentile,
+		SizePercentile:    percentiles.SizePercentile,
+		YearDistribution:  yearDist,
+		GradeDistribution: gradeDist,
+	}, nil
+}
+
 type PostgresGroupRepository struct {
 	q *db.Queries
 }
@@ -418,6 +510,42 @@ func (r *PostgresGroupRepository) Update(ctx context.Context, group *domain.Grou
 
 func (r *PostgresGroupRepository) Delete(ctx context.Context, id int) error {
 	return r.q.DeleteGroup(ctx, int32(id))
+}
+
+func (r *PostgresGroupRepository) AddImage(ctx context.Context, img domain.GroupImage) error {
+	params := db.CreateGroupImageParams{
+		GroupID: int32(img.GroupID),
+		Path:    img.Path,
+	}
+	if _, err := r.q.CreateGroupImage(ctx, params); err != nil {
+		return fmt.Errorf("failed to add group image: %w", err)
+	}
+	return nil
+}
+
+func (r *PostgresGroupRepository) RemoveImage(ctx context.Context, id uuid.UUID) error {
+	if err := r.q.DeleteGroupImage(ctx, pgtype.UUID{Bytes: id, Valid: true}); err != nil {
+		return fmt.Errorf("failed to remove group image: %w", err)
+	}
+	return nil
+}
+
+func (r *PostgresGroupRepository) ListImages(ctx context.Context, groupID int) ([]domain.GroupImage, error) {
+	rows, err := r.q.ListGroupImages(ctx, int32(groupID))
+	if err != nil {
+		return nil, fmt.Errorf("failed to list group images: %w", err)
+	}
+
+	images := make([]domain.GroupImage, len(rows))
+	for i, row := range rows {
+		images[i] = domain.GroupImage{
+			ID:        uuid.UUID(row.ID.Bytes),
+			GroupID:   int(row.GroupID),
+			Path:      row.Path,
+			CreatedAt: row.CreatedAt.Time,
+		}
+	}
+	return images, nil
 }
 
 func (r *PostgresCoinRepository) coinFromDB(ctx context.Context, row db.Coin) (*domain.Coin, error) {

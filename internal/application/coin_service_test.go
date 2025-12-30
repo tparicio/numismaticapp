@@ -42,6 +42,7 @@ func setupTest(t *testing.T) (
 	*mocks.MockStorageService,
 	*mocks.MockBackgroundRemover,
 	*mocks.MockNumistaService,
+	*mocks.MockPriceClient,
 ) {
 	ctrl := gomock.NewController(t)
 	mockRepo := mocks.NewMockCoinRepository(ctrl)
@@ -51,6 +52,7 @@ func setupTest(t *testing.T) (
 	mockStorage := mocks.NewMockStorageService(ctrl)
 	mockBgRemover := mocks.NewMockBackgroundRemover(ctrl)
 	mockNumistaClient := mocks.NewMockNumistaService(ctrl)
+	mockPriceClient := mocks.NewMockPriceClient(ctrl)
 
 	service := application.NewCoinService(
 		mockRepo,
@@ -60,14 +62,15 @@ func setupTest(t *testing.T) (
 		mockStorage,
 		mockBgRemover,
 		mockNumistaClient,
+		mockPriceClient,
 	)
 
-	return service, mockRepo, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, mockNumistaClient
+	return service, mockRepo, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, mockNumistaClient, mockPriceClient
 }
 
 func TestListCoins(t *testing.T) {
 	t.Run("Basic List", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, _ := setupTest(t)
+		service, mockRepo, _, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		expectedCoins := []*domain.Coin{
 			{ID: uuid.New(), Name: "Coin 1"},
@@ -81,7 +84,7 @@ func TestListCoins(t *testing.T) {
 	})
 
 	t.Run("Filtered List (Year, Query)", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, _ := setupTest(t)
+		service, mockRepo, _, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		year := 2000
 		query := "Euro"
@@ -93,7 +96,7 @@ func TestListCoins(t *testing.T) {
 	})
 
 	t.Run("Filtered List (Country)", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, _ := setupTest(t)
+		service, mockRepo, _, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		country := "Spain"
 		filter := domain.CoinFilter{Country: &country}
@@ -106,7 +109,7 @@ func TestListCoins(t *testing.T) {
 
 func TestGetCoin(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, _ := setupTest(t)
+		service, mockRepo, _, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		id := uuid.New()
 		expectedCoin := &domain.Coin{ID: id, Name: "Test Coin"}
@@ -117,7 +120,7 @@ func TestGetCoin(t *testing.T) {
 	})
 
 	t.Run("Error", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, _ := setupTest(t)
+		service, mockRepo, _, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		id := uuid.New()
 		mockRepo.EXPECT().GetByID(ctx, id).Return(nil, assert.AnError)
@@ -127,7 +130,7 @@ func TestGetCoin(t *testing.T) {
 }
 
 func TestGetDashboardStats(t *testing.T) {
-	service, mockRepo, _, _, _, _, _, _ := setupTest(t)
+	service, mockRepo, _, _, _, _, _, _, mockPriceClient := setupTest(t)
 	ctx := context.Background()
 
 	mockRepo.EXPECT().Count(ctx).Return(int64(10), nil)
@@ -154,6 +157,7 @@ func TestGetDashboardStats(t *testing.T) {
 	mockRepo.EXPECT().GetHeaviestCoin(ctx).Return(&domain.Coin{}, nil)
 	mockRepo.EXPECT().GetSmallestCoin(ctx).Return(&domain.Coin{}, nil)
 	mockRepo.EXPECT().GetRandomCoin(ctx).Return(&domain.Coin{}, nil)
+	mockPriceClient.EXPECT().GetMetalPrices(ctx).Return(50.0, 0.5, nil) // Gold 50, Silver 0.5
 
 	stats, err := service.GetDashboardStats(ctx)
 	assert.NoError(t, err)
@@ -166,7 +170,7 @@ func TestAddCoin_Flows(t *testing.T) {
 	backData := []byte("b")
 
 	t.Run("Success", func(t *testing.T) {
-		service, mockRepo, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, mockNumistaClient := setupTest(t)
+		service, mockRepo, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, mockNumistaClient, _ := setupTest(t)
 		ctx := context.Background()
 		mockStorage.EXPECT().SaveFile(gomock.Any(), gomock.Any(), gomock.Any()).Return("p1", nil).Times(2)
 		mockAIService.EXPECT().AnalyzeCoin(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&domain.CoinAnalysisResult{Name: "C"}, nil)
@@ -188,7 +192,7 @@ func TestAddCoin_Flows(t *testing.T) {
 	})
 
 	t.Run("Storage Err", func(t *testing.T) {
-		service, _, _, _, _, mockStorage, _, _ := setupTest(t)
+		service, _, _, _, _, mockStorage, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		// Fail first save
 		mockStorage.EXPECT().SaveFile(gomock.Any(), gomock.Any(), gomock.Any()).Return("", assert.AnError).MaxTimes(1)
@@ -201,7 +205,7 @@ func TestAddCoin_Flows(t *testing.T) {
 
 	t.Run("AI Err", func(t *testing.T) {
 
-		service, mockRepo, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, mockNumistaClient := setupTest(t)
+		service, mockRepo, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, mockNumistaClient, _ := setupTest(t)
 		ctx := context.Background()
 		// Storage succeeds
 		mockStorage.EXPECT().SaveFile(gomock.Any(), gomock.Any(), gomock.Any()).Return("p", nil).AnyTimes()
@@ -233,7 +237,7 @@ func TestEnrichCoinWithNumista(t *testing.T) {
 	coinID := uuid.New()
 
 	t.Run("Match Found", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
+		service, mockRepo, _, _, _, _, _, mockNumistaClient, _ := setupTest(t)
 		ctx := context.Background()
 		coin := &domain.Coin{ID: coinID, FaceValue: "20 Euro Cent", Year: mustYear(2008)}
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(coin, nil)
@@ -257,7 +261,7 @@ func TestEnrichCoinWithNumista(t *testing.T) {
 	})
 
 	t.Run("No Match Found", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
+		service, mockRepo, _, _, _, _, _, mockNumistaClient, _ := setupTest(t)
 		ctx := context.Background()
 		coin := &domain.Coin{ID: coinID, FaceValue: "Rare Coin", Year: mustYear(1900)}
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(coin, nil)
@@ -268,7 +272,7 @@ func TestEnrichCoinWithNumista(t *testing.T) {
 	})
 
 	t.Run("Repo Error Get", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, _ := setupTest(t)
+		service, mockRepo, _, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(nil, assert.AnError)
 		err := service.EnrichCoinWithNumista(ctx, coinID)
@@ -276,7 +280,7 @@ func TestEnrichCoinWithNumista(t *testing.T) {
 	})
 
 	t.Run("Search Error", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
+		service, mockRepo, _, _, _, _, _, mockNumistaClient, _ := setupTest(t)
 		ctx := context.Background()
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(&domain.Coin{FaceValue: "V", Year: mustYear(2000)}, nil)
 		mockNumistaClient.EXPECT().SearchTypes(ctx, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, assert.AnError)
@@ -285,7 +289,7 @@ func TestEnrichCoinWithNumista(t *testing.T) {
 	})
 
 	t.Run("Repo Update Error", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
+		service, mockRepo, _, _, _, _, _, mockNumistaClient, _ := setupTest(t)
 		ctx := context.Background()
 		coin := &domain.Coin{ID: coinID, FaceValue: "20", Year: mustYear(2000)}
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(coin, nil)
@@ -301,7 +305,7 @@ func TestApplyNumistaCandidate(t *testing.T) {
 	coinID := uuid.New()
 
 	t.Run("Success", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
+		service, mockRepo, _, _, _, _, _, mockNumistaClient, _ := setupTest(t)
 		ctx := context.Background()
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(&domain.Coin{ID: coinID}, nil)
 		mockNumistaClient.EXPECT().GetType(ctx, 999).Return(map[string]any{"title": "Manual Selection"}, nil)
@@ -311,7 +315,7 @@ func TestApplyNumistaCandidate(t *testing.T) {
 	})
 
 	t.Run("Error GetType", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
+		service, mockRepo, _, _, _, _, _, mockNumistaClient, _ := setupTest(t)
 		ctx := context.Background()
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(&domain.Coin{}, nil)
 		mockNumistaClient.EXPECT().GetType(ctx, 999).Return(nil, assert.AnError)
@@ -320,7 +324,7 @@ func TestApplyNumistaCandidate(t *testing.T) {
 	})
 
 	t.Run("Full Mapping", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
+		service, mockRepo, _, _, _, _, _, mockNumistaClient, _ := setupTest(t)
 		ctx := context.Background()
 
 		fullDetails := map[string]any{
@@ -370,7 +374,7 @@ func TestApplyNumistaCandidate(t *testing.T) {
 	})
 
 	t.Run("Repo Update Error", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
+		service, mockRepo, _, _, _, _, _, mockNumistaClient, _ := setupTest(t)
 		ctx := context.Background()
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(&domain.Coin{ID: coinID}, nil)
 		mockNumistaClient.EXPECT().GetType(ctx, 999).Return(map[string]any{"title": "T"}, nil)
@@ -383,7 +387,7 @@ func TestApplyNumistaCandidate(t *testing.T) {
 
 func TestListGroups(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		service, mockCoinRepo, mockGroupRepo, _, _, _, _, _ := setupTest(t)
+		service, mockCoinRepo, mockGroupRepo, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 
 		mockGroupRepo.EXPECT().List(ctx).Return([]*domain.Group{
@@ -403,7 +407,7 @@ func TestListGroups(t *testing.T) {
 	})
 
 	t.Run("List Error", func(t *testing.T) {
-		service, _, mockGroupRepo, _, _, _, _, _ := setupTest(t)
+		service, _, mockGroupRepo, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 
 		mockGroupRepo.EXPECT().List(ctx).Return(nil, errors.New("list error"))
@@ -415,7 +419,7 @@ func TestListGroups(t *testing.T) {
 	})
 
 	t.Run("Stats Error", func(t *testing.T) {
-		service, mockCoinRepo, mockGroupRepo, _, _, _, _, _ := setupTest(t)
+		service, mockCoinRepo, mockGroupRepo, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 
 		mockGroupRepo.EXPECT().List(ctx).Return([]*domain.Group{{ID: 1, Name: "G1"}}, nil)
@@ -431,7 +435,7 @@ func TestListGroups(t *testing.T) {
 
 func TestCreateGroup(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		service, _, mockGroupRepo, _, _, _, _, _ := setupTest(t)
+		service, _, mockGroupRepo, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		mockGroupRepo.EXPECT().Create(ctx, "G1", "Desc").Return(&domain.Group{ID: 1}, nil)
 		g, err := service.CreateGroup(ctx, "G1", "Desc")
@@ -440,7 +444,7 @@ func TestCreateGroup(t *testing.T) {
 	})
 
 	t.Run("Repo Error", func(t *testing.T) {
-		service, _, mockGroupRepo, _, _, _, _, _ := setupTest(t)
+		service, _, mockGroupRepo, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		mockGroupRepo.EXPECT().Create(ctx, "G1", "Desc").Return(nil, errors.New("create error"))
 		g, err := service.CreateGroup(ctx, "G1", "Desc")
@@ -452,7 +456,7 @@ func TestCreateGroup(t *testing.T) {
 
 func TestUpdateGroup(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		service, _, mockGroupRepo, _, _, _, _, _ := setupTest(t)
+		service, _, mockGroupRepo, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		mockGroupRepo.EXPECT().Update(ctx, gomock.Any()).Return(nil)
 		_, err := service.UpdateGroup(ctx, 1, "G2", "Desc2")
@@ -463,7 +467,7 @@ func TestUpdateGroup(t *testing.T) {
 
 func TestDeleteGroup(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
-		service, _, mockGroupRepo, _, _, _, _, _ := setupTest(t)
+		service, _, mockGroupRepo, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		mockGroupRepo.EXPECT().Delete(ctx, 1).Return(nil)
 		err := service.DeleteGroup(ctx, 1)
@@ -471,7 +475,7 @@ func TestDeleteGroup(t *testing.T) {
 	})
 
 	t.Run("Repo Error", func(t *testing.T) {
-		service, _, mockGroupRepo, _, _, _, _, _ := setupTest(t)
+		service, _, mockGroupRepo, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		mockGroupRepo.EXPECT().Delete(ctx, 1).Return(errors.New("delete error"))
 		err := service.DeleteGroup(ctx, 1)
@@ -485,7 +489,7 @@ func TestUpdateCoin(t *testing.T) {
 	params := application.UpdateCoinParams{Name: "Updated Name", GroupName: "New Group"}
 
 	t.Run("Success", func(t *testing.T) {
-		service, mockRepo, mockGroupRepo, _, _, _, _, _ := setupTest(t)
+		service, mockRepo, mockGroupRepo, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		mockRepo.EXPECT().GetByID(ctx, id).Return(&domain.Coin{ID: id}, nil)
 		mockGroupRepo.EXPECT().GetByName(ctx, "New Group").Return(&domain.Group{ID: 2}, nil)
@@ -495,7 +499,7 @@ func TestUpdateCoin(t *testing.T) {
 	})
 
 	t.Run("Get Error", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, _ := setupTest(t)
+		service, mockRepo, _, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		mockRepo.EXPECT().GetByID(ctx, id).Return(nil, assert.AnError)
 		_, err := service.UpdateCoin(ctx, id, params)
@@ -506,7 +510,7 @@ func TestUpdateCoin(t *testing.T) {
 func TestDeleteCoin(t *testing.T) {
 	id := uuid.New()
 	t.Run("Success", func(t *testing.T) {
-		service, mockRepo, _, _, _, mockStorage, _, _ := setupTest(t)
+		service, mockRepo, _, _, _, mockStorage, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		mockStorage.EXPECT().DeleteCoinDirectory(id).Return(nil)
 		mockRepo.EXPECT().Delete(ctx, id).Return(nil)
@@ -515,7 +519,7 @@ func TestDeleteCoin(t *testing.T) {
 	})
 
 	t.Run("Error", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, _ := setupTest(t)
+		service, mockRepo, _, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		mockRepo.EXPECT().Delete(ctx, id).Return(assert.AnError)
 		err := service.DeleteCoin(ctx, id)
@@ -527,7 +531,7 @@ func TestRotateCoinImage(t *testing.T) {
 	coinID := uuid.New()
 
 	t.Run("Success", func(t *testing.T) {
-		service, mockRepo, _, mockImageService, _, _, _, _ := setupTest(t)
+		service, mockRepo, _, mockImageService, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(&domain.Coin{
 			ID:     coinID,
@@ -543,7 +547,7 @@ func TestRotateCoinImage(t *testing.T) {
 	})
 
 	t.Run("Repo Get Error", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, _ := setupTest(t)
+		service, mockRepo, _, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(nil, assert.AnError)
 		err := service.RotateCoinImage(ctx, coinID, "front", 90.0)
@@ -555,7 +559,7 @@ func TestReanalyzeCoin(t *testing.T) {
 	coinID := uuid.New()
 
 	t.Run("Success", func(t *testing.T) {
-		service, mockRepo, _, _, mockAIService, _, _, _ := setupTest(t)
+		service, mockRepo, _, _, mockAIService, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(&domain.Coin{
 			ID: coinID,
@@ -577,7 +581,7 @@ func TestReanalyzeCoin(t *testing.T) {
 	})
 
 	t.Run("AI Error", func(t *testing.T) {
-		service, mockRepo, _, _, mockAIService, _, _, _ := setupTest(t)
+		service, mockRepo, _, _, mockAIService, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(&domain.Coin{
 			Images: []domain.CoinImage{{Side: "front", ImageType: "original", Path: "p1"}, {Side: "back", ImageType: "original", Path: "p2"}},
@@ -589,7 +593,7 @@ func TestReanalyzeCoin(t *testing.T) {
 }
 
 func TestGetGeminiModels(t *testing.T) {
-	service, _, _, _, mockAIService, _, _, _ := setupTest(t)
+	service, _, _, _, mockAIService, _, _, _, _ := setupTest(t)
 	ctx := context.Background()
 	mockAIService.EXPECT().ListModels(ctx).Return([]domain.GeminiModelInfo{{Name: "gemini-pro"}}, nil)
 	models, err := service.GetGeminiModels(ctx)
@@ -599,7 +603,7 @@ func TestGetGeminiModels(t *testing.T) {
 
 func TestUpdateCoin_Grades(t *testing.T) {
 	t.Run("Normalize Grades", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, _ := setupTest(t)
+		service, mockRepo, _, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		id := uuid.New()
 
@@ -640,7 +644,7 @@ func TestUpdateCoin_Grades(t *testing.T) {
 
 func TestGetDashboardStats_Century(t *testing.T) {
 	// Tests the fallback in toRoman for centuries > 21
-	service, mockRepo, _, _, _, _, _, _ := setupTest(t)
+	service, mockRepo, _, _, _, _, _, _, mockPriceClient := setupTest(t)
 	ctx := context.Background()
 
 	mockRepo.EXPECT().Count(ctx).Return(int64(1), nil)
@@ -659,6 +663,7 @@ func TestGetDashboardStats_Century(t *testing.T) {
 	mockRepo.EXPECT().GetHeaviestCoin(ctx).Return(&domain.Coin{}, nil)
 	mockRepo.EXPECT().GetSmallestCoin(ctx).Return(&domain.Coin{}, nil)
 	mockRepo.EXPECT().GetRandomCoin(ctx).Return(&domain.Coin{}, nil)
+	mockPriceClient.EXPECT().GetMetalPrices(ctx).Return(0.0, 0.0, nil)
 
 	// Inject a futuristic coin to trigger toRoman fallback (22nd century)
 	mockRepo.EXPECT().GetAllCoins(ctx).Return([]*domain.Coin{
@@ -674,7 +679,7 @@ func TestGetDashboardStats_Century(t *testing.T) {
 
 func TestRotateCoinImage_Errors(t *testing.T) {
 	t.Run("Thumbnail Error", func(t *testing.T) {
-		service, mockRepo, _, mockImageService, _, _, _, _ := setupTest(t)
+		service, mockRepo, _, mockImageService, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		coinID := uuid.New()
 
@@ -691,7 +696,7 @@ func TestRotateCoinImage_Errors(t *testing.T) {
 	})
 
 	t.Run("Image Not Found", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, _ := setupTest(t)
+		service, mockRepo, _, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		coinID := uuid.New()
 
@@ -707,14 +712,14 @@ func TestRotateCoinImage_Errors(t *testing.T) {
 
 func TestCreateGroup_Errors(t *testing.T) {
 	t.Run("Repo Error", func(t *testing.T) {
-		service, _, mockGroupRepo, _, _, _, _, _ := setupTest(t)
+		service, _, mockGroupRepo, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		mockGroupRepo.EXPECT().Create(ctx, "G1", "Desc").Return(nil, errors.New("db error"))
 		_, err := service.CreateGroup(ctx, "G1", "Desc")
 		assert.Error(t, err)
 	})
 	t.Run("Validation Error", func(t *testing.T) {
-		service, _, _, _, _, _, _, _ := setupTest(t)
+		service, _, _, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		_, err := service.CreateGroup(ctx, "", "Desc")
 		assert.Error(t, err)
@@ -727,7 +732,7 @@ func TestAddCoin_ErrorPaths(t *testing.T) {
 	backData := []byte("b")
 
 	t.Run("Group Create Error", func(t *testing.T) {
-		service, _, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, _ := setupTest(t)
+		service, _, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, _, _ := setupTest(t)
 		ctx := context.Background()
 
 		// Storage succeeds
@@ -758,7 +763,7 @@ func TestAddCoin_ErrorPaths(t *testing.T) {
 	})
 
 	t.Run("Image Process Error", func(t *testing.T) {
-		service, _, _, _, mockAIService, mockStorage, mockBgRemover, _ := setupTest(t)
+		service, _, _, _, mockAIService, mockStorage, mockBgRemover, _, _ := setupTest(t)
 		ctx := context.Background()
 
 		mockStorage.EXPECT().SaveFile(gomock.Any(), gomock.Any(), gomock.Any()).Return("p", nil).AnyTimes()
@@ -775,7 +780,7 @@ func TestAddCoin_ErrorPaths(t *testing.T) {
 }
 
 func TestUpdateGroup_Validation(t *testing.T) {
-	service, _, _, _, _, _, _, _ := setupTest(t)
+	service, _, _, _, _, _, _, _, _ := setupTest(t)
 	ctx := context.Background()
 	_, err := service.UpdateGroup(ctx, 1, "", "Desc")
 	assert.Error(t, err)
@@ -785,7 +790,7 @@ func TestUpdateGroup_Validation(t *testing.T) {
 func TestEnrichCoinWithNumista_Complex(t *testing.T) {
 	coinID := uuid.New()
 	t.Run("Fallback to Value Match when Year Mismatches", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
+		service, mockRepo, _, _, _, _, _, mockNumistaClient, _ := setupTest(t)
 		ctx := context.Background()
 
 		// Coin: 2005, Value 1 (Unit)
@@ -823,7 +828,7 @@ func TestEnrichCoinWithNumista_Complex(t *testing.T) {
 
 	t.Run("Value Unit Conversion Match", func(t *testing.T) {
 		// Test 20 Cents vs 0.2
-		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
+		service, mockRepo, _, _, _, _, _, mockNumistaClient, _ := setupTest(t)
 		ctx := context.Background()
 
 		coin := &domain.Coin{ID: coinID, FaceValue: "20", Year: mustYear(2000)}
@@ -857,7 +862,7 @@ func (e *errReader) Read(p []byte) (n int, err error) {
 
 func TestAddCoin_EdgeCases(t *testing.T) {
 	t.Run("Reader Error Front", func(t *testing.T) {
-		service, _, _, _, _, _, _, _ := setupTest(t)
+		service, _, _, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		_, err := service.AddCoin(ctx, &errReader{}, "f.jpg", bytes.NewReader([]byte{}), "b.jpg", "", "", "", "", 0, "m", 0)
 		assert.Error(t, err)
@@ -865,7 +870,7 @@ func TestAddCoin_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Reader Error Back", func(t *testing.T) {
-		service, _, _, _, _, _, _, _ := setupTest(t)
+		service, _, _, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 		_, err := service.AddCoin(ctx, bytes.NewReader([]byte("f")), "f.jpg", &errReader{}, "b.jpg", "", "", "", "", 0, "m", 0)
 		assert.Error(t, err)
@@ -873,7 +878,7 @@ func TestAddCoin_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Original Image Metadata Error", func(t *testing.T) {
-		service, _, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, _ := setupTest(t)
+		service, _, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, _, _ := setupTest(t)
 		ctx := context.Background()
 
 		// 1. Sync Original Save - Use explicit filenames to differentiate
@@ -898,7 +903,7 @@ func TestAddCoin_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("Processed Image Metadata Error", func(t *testing.T) {
-		service, _, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, _ := setupTest(t)
+		service, _, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, _, _ := setupTest(t)
 		ctx := context.Background()
 
 		// 1. Sync Original Save
@@ -926,7 +931,7 @@ func TestAddCoin_EdgeCases(t *testing.T) {
 }
 
 func TestGetDashboardStats_Errors(t *testing.T) {
-	service, mockRepo, _, _, _, _, _, _ := setupTest(t)
+	service, mockRepo, _, _, _, _, _, _, mockPriceClient := setupTest(t)
 	ctx := context.Background()
 
 	t.Run("Count Error", func(t *testing.T) {
@@ -1036,6 +1041,7 @@ func TestGetDashboardStats_Errors(t *testing.T) {
 		mockRepo.EXPECT().GetHeaviestCoin(ctx).Return(&domain.Coin{}, nil)
 		mockRepo.EXPECT().GetSmallestCoin(ctx).Return(&domain.Coin{}, nil)
 		mockRepo.EXPECT().GetRandomCoin(ctx).Return(&domain.Coin{}, nil)
+		mockPriceClient.EXPECT().GetMetalPrices(ctx).Return(0.0, 0.0, nil)
 
 		stats, err := service.GetDashboardStats(ctx)
 		assert.NoError(t, err)
@@ -1044,7 +1050,7 @@ func TestGetDashboardStats_Errors(t *testing.T) {
 }
 
 func TestAddCoin_SaveError(t *testing.T) {
-	service, mockRepo, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, _ := setupTest(t)
+	service, mockRepo, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, _, _ := setupTest(t)
 	ctx := context.Background()
 
 	// 1. Sync Original Save
@@ -1071,7 +1077,7 @@ func TestAddCoin_SaveError(t *testing.T) {
 }
 
 func TestAddCoin_GroupCreateSuccess(t *testing.T) {
-	service, mockRepo, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, mockNumistaClient := setupTest(t)
+	service, mockRepo, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, mockNumistaClient, _ := setupTest(t)
 	ctx := context.Background()
 
 	// 1. Storage
@@ -1113,7 +1119,7 @@ func TestAddCoin_GroupCreateSuccess(t *testing.T) {
 func TestEnrichCoinWithNumista_Coverage(t *testing.T) {
 	coinID := uuid.New()
 	t.Run("Nil Result", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
+		service, mockRepo, _, _, _, _, _, mockNumistaClient, _ := setupTest(t)
 		ctx := context.Background()
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(&domain.Coin{ID: coinID}, nil)
 		mockNumistaClient.EXPECT().SearchTypes(ctx, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
@@ -1122,7 +1128,7 @@ func TestEnrichCoinWithNumista_Coverage(t *testing.T) {
 	})
 
 	t.Run("Count 0 Update Error", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
+		service, mockRepo, _, _, _, _, _, mockNumistaClient, _ := setupTest(t)
 		ctx := context.Background()
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(&domain.Coin{ID: coinID}, nil)
 		mockNumistaClient.EXPECT().SearchTypes(ctx, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&numista.TypeSearchResponse{Count: 0}, nil)
@@ -1134,7 +1140,7 @@ func TestEnrichCoinWithNumista_Coverage(t *testing.T) {
 }
 
 func TestUpdateCoin_RepoError(t *testing.T) {
-	service, mockRepo, _, _, _, _, _, _ := setupTest(t)
+	service, mockRepo, _, _, _, _, _, _, _ := setupTest(t)
 	ctx := context.Background()
 	id := uuid.New()
 	coin := &domain.Coin{ID: id}
@@ -1148,7 +1154,7 @@ func TestUpdateCoin_RepoError(t *testing.T) {
 }
 
 func TestUpdateGroup_RepoError(t *testing.T) {
-	service, _, mockGroupRepo, _, _, _, _, _ := setupTest(t)
+	service, _, mockGroupRepo, _, _, _, _, _, _ := setupTest(t)
 	ctx := context.Background()
 
 	// UpdateGroup does not call GetByID, it constructs group object and calls Update directly
@@ -1160,7 +1166,7 @@ func TestUpdateGroup_RepoError(t *testing.T) {
 }
 
 func TestRotateCoinImage_Error(t *testing.T) {
-	service, mockRepo, _, mockImageService, _, _, _, _ := setupTest(t)
+	service, mockRepo, _, mockImageService, _, _, _, _, _ := setupTest(t)
 	ctx := context.Background()
 	id := uuid.New()
 
@@ -1184,7 +1190,7 @@ func TestApplyNumistaCandidate_Flows(t *testing.T) {
 	numistaID := 123
 
 	t.Run("Success", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
+		service, mockRepo, _, _, _, _, _, mockNumistaClient, _ := setupTest(t)
 		ctx := context.Background()
 
 		coin := &domain.Coin{ID: coinID}
@@ -1199,7 +1205,7 @@ func TestApplyNumistaCandidate_Flows(t *testing.T) {
 	})
 
 	t.Run("GetByID Error", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, _ := setupTest(t)
+		service, mockRepo, _, _, _, _, _, _, _ := setupTest(t)
 		ctx := context.Background()
 
 		mockRepo.EXPECT().GetByID(ctx, coinID).Return(nil, errors.New("db error"))
@@ -1210,7 +1216,7 @@ func TestApplyNumistaCandidate_Flows(t *testing.T) {
 	})
 
 	t.Run("Numista Error", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
+		service, mockRepo, _, _, _, _, _, mockNumistaClient, _ := setupTest(t)
 		ctx := context.Background()
 
 		coin := &domain.Coin{ID: coinID}
@@ -1223,7 +1229,7 @@ func TestApplyNumistaCandidate_Flows(t *testing.T) {
 	})
 
 	t.Run("Update Error", func(t *testing.T) {
-		service, mockRepo, _, _, _, _, _, mockNumistaClient := setupTest(t)
+		service, mockRepo, _, _, _, _, _, mockNumistaClient, _ := setupTest(t)
 		ctx := context.Background()
 
 		coin := &domain.Coin{ID: coinID}
@@ -1295,7 +1301,7 @@ func TestAddCoin_ImageDetailedErrors(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			service, _, _, mockImageService, mockAIService, mockStorage, mockBgRemover, _ := setupTest(t)
+			service, _, _, mockImageService, mockAIService, mockStorage, mockBgRemover, _, _ := setupTest(t)
 			ctx := context.Background()
 
 			// Common AI mock
@@ -1315,7 +1321,7 @@ func TestAddCoin_GroupError(t *testing.T) {
 	backData := []byte("b")
 
 	t.Run("Group Creation Error", func(t *testing.T) {
-		service, mockRepo, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, _ := setupTest(t)
+		service, mockRepo, mockGroupRepo, mockImageService, mockAIService, mockStorage, mockBgRemover, _, _ := setupTest(t)
 		ctx := context.Background()
 
 		// Image/Storage Success
@@ -1349,5 +1355,31 @@ func TestAddCoin_GroupError(t *testing.T) {
 		_, err := service.AddCoin(ctx, bytes.NewReader(frontData), "f.jpg", bytes.NewReader(backData), "b.jpg", "NewGroup", "", "", "", 0, "m", 0)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "failed to create group")
+	})
+}
+
+func TestGetCoinStats(t *testing.T) {
+	service, mockRepo, _, _, _, _, _, _, _ := setupTest(t)
+	ctx := context.Background()
+	id := uuid.New()
+
+	t.Run("Success", func(t *testing.T) {
+		mockRepo.EXPECT().GetCoinStats(ctx, id).Return(&domain.CoinStats{
+			ValuePercentile:  0.8,
+			RarityPercentile: 0.9,
+		}, nil)
+
+		stats, err := service.GetCoinStats(ctx, id)
+		assert.NoError(t, err)
+		assert.NotNil(t, stats)
+		assert.Equal(t, 0.8, stats.ValuePercentile)
+	})
+
+	t.Run("Repo Error", func(t *testing.T) {
+		mockRepo.EXPECT().GetCoinStats(ctx, id).Return(nil, errors.New("db error"))
+
+		_, err := service.GetCoinStats(ctx, id)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "db error")
 	})
 }

@@ -139,6 +139,13 @@ type Coin struct {
 	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
 }
 
+type CoinGalleryImage struct {
+	ID        pgtype.UUID        `json:"id"`
+	CoinID    pgtype.UUID        `json:"coin_id"`
+	Path      string             `json:"path"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
 type CoinImage struct {
 	ID               pgtype.UUID        `json:"id"`
 	CoinID           pgtype.UUID        `json:"coin_id"`
@@ -171,4 +178,11 @@ type Group struct {
 	Name        string             `json:"name"`
 	Description pgtype.Text        `json:"description"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+}
+
+type GroupImage struct {
+	ID        pgtype.UUID        `json:"id"`
+	GroupID   int32              `json:"group_id"`
+	Path      string             `json:"path"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
