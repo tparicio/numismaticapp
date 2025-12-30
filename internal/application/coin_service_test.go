@@ -130,7 +130,7 @@ func TestGetCoin(t *testing.T) {
 }
 
 func TestGetDashboardStats(t *testing.T) {
-	service, mockRepo, _, _, _, _, _, _, _ := setupTest(t)
+	service, mockRepo, _, _, _, _, _, _, mockPriceClient := setupTest(t)
 	ctx := context.Background()
 
 	mockRepo.EXPECT().Count(ctx).Return(int64(10), nil)
@@ -157,6 +157,7 @@ func TestGetDashboardStats(t *testing.T) {
 	mockRepo.EXPECT().GetHeaviestCoin(ctx).Return(&domain.Coin{}, nil)
 	mockRepo.EXPECT().GetSmallestCoin(ctx).Return(&domain.Coin{}, nil)
 	mockRepo.EXPECT().GetRandomCoin(ctx).Return(&domain.Coin{}, nil)
+	mockPriceClient.EXPECT().GetMetalPrices(ctx).Return(50.0, 0.5, nil) // Gold 50, Silver 0.5
 
 	stats, err := service.GetDashboardStats(ctx)
 	assert.NoError(t, err)
@@ -643,7 +644,7 @@ func TestUpdateCoin_Grades(t *testing.T) {
 
 func TestGetDashboardStats_Century(t *testing.T) {
 	// Tests the fallback in toRoman for centuries > 21
-	service, mockRepo, _, _, _, _, _, _, _ := setupTest(t)
+	service, mockRepo, _, _, _, _, _, _, mockPriceClient := setupTest(t)
 	ctx := context.Background()
 
 	mockRepo.EXPECT().Count(ctx).Return(int64(1), nil)
@@ -662,6 +663,7 @@ func TestGetDashboardStats_Century(t *testing.T) {
 	mockRepo.EXPECT().GetHeaviestCoin(ctx).Return(&domain.Coin{}, nil)
 	mockRepo.EXPECT().GetSmallestCoin(ctx).Return(&domain.Coin{}, nil)
 	mockRepo.EXPECT().GetRandomCoin(ctx).Return(&domain.Coin{}, nil)
+	mockPriceClient.EXPECT().GetMetalPrices(ctx).Return(0.0, 0.0, nil)
 
 	// Inject a futuristic coin to trigger toRoman fallback (22nd century)
 	mockRepo.EXPECT().GetAllCoins(ctx).Return([]*domain.Coin{
@@ -929,7 +931,7 @@ func TestAddCoin_EdgeCases(t *testing.T) {
 }
 
 func TestGetDashboardStats_Errors(t *testing.T) {
-	service, mockRepo, _, _, _, _, _, _, _ := setupTest(t)
+	service, mockRepo, _, _, _, _, _, _, mockPriceClient := setupTest(t)
 	ctx := context.Background()
 
 	t.Run("Count Error", func(t *testing.T) {
@@ -1039,6 +1041,7 @@ func TestGetDashboardStats_Errors(t *testing.T) {
 		mockRepo.EXPECT().GetHeaviestCoin(ctx).Return(&domain.Coin{}, nil)
 		mockRepo.EXPECT().GetSmallestCoin(ctx).Return(&domain.Coin{}, nil)
 		mockRepo.EXPECT().GetRandomCoin(ctx).Return(&domain.Coin{}, nil)
+		mockPriceClient.EXPECT().GetMetalPrices(ctx).Return(0.0, 0.0, nil)
 
 		stats, err := service.GetDashboardStats(ctx)
 		assert.NoError(t, err)
@@ -1352,5 +1355,31 @@ func TestAddCoin_GroupError(t *testing.T) {
 		_, err := service.AddCoin(ctx, bytes.NewReader(frontData), "f.jpg", bytes.NewReader(backData), "b.jpg", "NewGroup", "", "", "", 0, "m", 0)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "failed to create group")
+	})
+}
+
+func TestGetCoinStats(t *testing.T) {
+	service, mockRepo, _, _, _, _, _, _, _ := setupTest(t)
+	ctx := context.Background()
+	id := uuid.New()
+
+	t.Run("Success", func(t *testing.T) {
+		mockRepo.EXPECT().GetCoinStats(ctx, id).Return(&domain.CoinStats{
+			ValuePercentile:  0.8,
+			RarityPercentile: 0.9,
+		}, nil)
+
+		stats, err := service.GetCoinStats(ctx, id)
+		assert.NoError(t, err)
+		assert.NotNil(t, stats)
+		assert.Equal(t, 0.8, stats.ValuePercentile)
+	})
+
+	t.Run("Repo Error", func(t *testing.T) {
+		mockRepo.EXPECT().GetCoinStats(ctx, id).Return(nil, errors.New("db error"))
+
+		_, err := service.GetCoinStats(ctx, id)
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "db error")
 	})
 }
