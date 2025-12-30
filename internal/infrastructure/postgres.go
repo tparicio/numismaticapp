@@ -410,6 +410,47 @@ func (r *PostgresCoinRepository) ListGalleryImages(ctx context.Context, coinID u
 	return images, nil
 }
 
+func (r *PostgresCoinRepository) GetCoinStats(ctx context.Context, id uuid.UUID) (*domain.CoinStats, error) {
+	// 1. Get Percentiles
+	percentiles, err := r.q.GetCoinPercentiles(ctx, pgtype.UUID{Bytes: id, Valid: true})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get coin percentiles: %w", err)
+	}
+
+	// 2. Get Year Distribution
+	yearRows, err := r.q.GetCollectionYearDistribution(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get year distribution: %w", err)
+	}
+	yearDist := make(map[int]int)
+	for _, row := range yearRows {
+		if row.Year.Valid {
+			yearDist[int(row.Year.Int32)] = int(row.Count)
+		}
+	}
+
+	// 3. Get Grade Distribution
+	gradeRows, err := r.q.GetCollectionGradeDistribution(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get grade distribution: %w", err)
+	}
+	gradeDist := make(map[string]int)
+	for _, row := range gradeRows {
+		if row.Grade.Valid {
+			gradeDist[row.Grade.String] = int(row.Count)
+		}
+	}
+
+	return &domain.CoinStats{
+		ValuePercentile:   percentiles.ValuePercentile,
+		RarityPercentile:  percentiles.RarityPercentile,
+		WeightPercentile:  percentiles.WeightPercentile,
+		SizePercentile:    percentiles.SizePercentile,
+		YearDistribution:  yearDist,
+		GradeDistribution: gradeDist,
+	}, nil
+}
+
 type PostgresGroupRepository struct {
 	q *db.Queries
 }

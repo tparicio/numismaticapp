@@ -633,3 +633,18 @@ func (h *CoinHandler) ListCoinGalleryImages(c *fiber.Ctx) error {
 	}
 	return c.JSON(images)
 }
+
+func (h *CoinHandler) GetCoinStats(c *fiber.Ctx) error {
+	idStr := c.Params("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid uuid"})
+	}
+
+	stats, err := h.service.GetCoinStats(c.Context(), id)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(stats)
+}

@@ -573,3 +573,18 @@ func (mr *MockCoinRepositoryMockRecorder) ListGalleryImages(ctx, coinID any) *go
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListGalleryImages", reflect.TypeOf((*MockCoinRepository)(nil).ListGalleryImages), ctx, coinID)
 }
+
+// GetCoinStats mocks base method.
+func (m *MockCoinRepository) GetCoinStats(ctx context.Context, id uuid.UUID) (*domain.CoinStats, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCoinStats", ctx, id)
+	ret0, _ := ret[0].(*domain.CoinStats)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCoinStats indicates an expected call of GetCoinStats.
+func (mr *MockCoinRepositoryMockRecorder) GetCoinStats(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCoinStats", reflect.TypeOf((*MockCoinRepository)(nil).GetCoinStats), ctx, id)
+}

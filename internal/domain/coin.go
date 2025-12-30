@@ -97,6 +97,15 @@ type CoinImage struct {
 	UpdatedAt        time.Time `json:"updated_at"`
 }
 
+type CoinStats struct {
+	ValuePercentile   float64        `json:"value_percentile"`
+	RarityPercentile  float64        `json:"rarity_percentile"`
+	WeightPercentile  float64        `json:"weight_percentile"`
+	SizePercentile    float64        `json:"size_percentile"`
+	YearDistribution  map[int]int    `json:"year_distribution"`
+	GradeDistribution map[string]int `json:"grade_distribution"`
+}
+
 // CoinFilter defines available filters for listing coins.
 type CoinFilter struct {
 	Limit     int
@@ -157,6 +166,8 @@ type CoinRepository interface {
 	AddGalleryImage(ctx context.Context, img CoinGalleryImage) error
 	RemoveGalleryImage(ctx context.Context, id uuid.UUID) error
 	ListGalleryImages(ctx context.Context, coinID uuid.UUID) ([]CoinGalleryImage, error)
+	// Stats
+	GetCoinStats(ctx context.Context, id uuid.UUID) (*CoinStats, error)
 }
 
 // CoinLink represents an external link associated with a coin.

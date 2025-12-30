@@ -277,6 +277,7 @@
                     <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'technical' }" @click="activeTab = 'technical'">Numista</a>
                     <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'links' }" @click="activeTab = 'links'">{{ $t('details.links.title') || 'Enlaces' }}</a>
                     <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'gallery' }" @click="activeTab = 'gallery'">{{ $t('details.tabs.gallery') }}</a>
+                    <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'stats' }" @click="activeTab = 'stats'">Estadísticas</a>
                     <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'notes' }" @click="activeTab = 'notes'">Notas</a>
                 </div>
             </div>
@@ -359,6 +360,45 @@
                                 <img :src="getImageUrl(img.path)" class="w-full h-full object-cover cursor-zoom-in transition-transform group-hover:scale-105" @click="openViewerForPath(img.path)">
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- TAB: STATISTICS -->
+                <div v-if="activeTab === 'stats'" class="space-y-8 animate-in fade-in duration-300">
+                    <div v-if="!coinStats" class="flex justify-center py-12">
+                         <span class="loading loading-spinner text-primary"></span>
+                    </div>
+                    <div v-else class="space-y-8">
+                         <!-- Radar Chart: Percentiles -->
+                         <div class="card bg-base-100 shadow-sm border border-base-200">
+                             <div class="card-body">
+                                 <h3 class="card-title text-sm uppercase opacity-70 mb-4">Comparativa (Percentiles)</h3>
+                                 <div class="h-64 relative flex justify-center">
+                                     <Radar :data="percentileChartData" :options="radarOptions" />
+                                 </div>
+                                 <p class="text-xs text-center opacity-50 mt-2">Comparación con el resto de su colección.</p>
+                             </div>
+                         </div>
+
+                         <!-- Year Distribution -->
+                         <div class="card bg-base-100 shadow-sm border border-base-200">
+                             <div class="card-body">
+                                 <h3 class="card-title text-sm uppercase opacity-70 mb-4">Distribución por Año</h3>
+                                 <div class="h-64 relative">
+                                     <Bar :data="yearDistributionData" :options="barOptions" />
+                                 </div>
+                             </div>
+                         </div>
+
+                         <!-- Grade Distribution -->
+                         <div class="card bg-base-100 shadow-sm border border-base-200">
+                             <div class="card-body">
+                                 <h3 class="card-title text-sm uppercase opacity-70 mb-4">Distribución por Estado</h3>
+                                 <div class="h-64 relative">
+                                     <Bar :data="gradeDistributionData" :options="barOptions" />
+                                 </div>
+                             </div>
+                         </div>
                     </div>
                 </div>
 
@@ -869,14 +909,16 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, reactive } from 'vue'
+import { ref, onMounted, computed, reactive, watch } from 'vue'
 import axios from 'axios'
 import { useRoute, useRouter } from 'vue-router'
-import { normalizeGrade } from '../utils/grades'
+import { normalizeGrade, GRADE_ORDER } from '../utils/grades'
 import ImageViewer from '../components/ImageViewer.vue'
 import GeminiConfig from '../components/GeminiConfig.vue'
 import { formatMintage } from '../utils/formatters'
 import { useI18n } from 'vue-i18n'
+import { Chart as ChartJS } from 'chart.js/auto'
+import { Bar, Radar } from 'vue-chartjs'
 
 const { t } = useI18n()
 
@@ -891,6 +933,135 @@ const viewerOpen = ref(false)
 const viewerImage = ref('')
 const activeImageSource = ref('processed') // processed, original
 const activeTab = ref('overview') // overview, technical, notes
+
+const updatingLink = ref(null)
+
+const coinStats = ref(null)
+
+const fetchStats = async () => {
+    if (!coin.value) return
+    try {
+        const res = await axios.get(`${API_URL}/coins/${coin.value.id}/stats`)
+        coinStats.value = res.data
+    } catch (e) {
+        console.error("Failed to fetch coin stats", e)
+    }
+}
+
+// Charts Data
+const percentileChartData = computed(() => {
+    if (!coinStats.value) return null
+    return {
+        labels: ['Valor', 'Rareza', 'Peso', 'Tamaño'],
+        datasets: [{
+            label: 'Percentil',
+            data: [
+                (coinStats.value.value_percentile || 0) * 100,
+                (coinStats.value.rarity_percentile || 0) * 100,
+                (coinStats.value.weight_percentile || 0) * 100,
+                (coinStats.value.size_percentile || 0) * 100
+            ],
+            backgroundColor: 'rgba(234, 179, 8, 0.2)',
+            borderColor: 'rgba(234, 179, 8, 1)',
+            pointBackgroundColor: 'rgba(234, 179, 8, 1)',
+            pointBorderColor: '#fff',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: 'rgba(234, 179, 8, 1)'
+        }]
+    }
+})
+
+const radarOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+        r: {
+            angleLines: {
+                color: 'rgba(128, 128, 128, 0.2)'
+            },
+            grid: {
+                color: 'rgba(128, 128, 128, 0.2)'
+            },
+            pointLabels: {
+                font: {
+                    size: 12
+                }
+            },
+            suggestedMin: 0,
+            suggestedMax: 100
+        }
+    },
+    plugins: {
+        legend: { display: false }
+    }
+}
+
+const yearDistributionData = computed(() => {
+    if (!coinStats.value || !coinStats.value.year_distribution) return null
+    
+    // Convert map to sorted arrays
+    const years = Object.keys(coinStats.value.year_distribution).map(Number).sort((a,b) => a-b)
+    // Filter to a reasonable range around the current coin if too many?
+    // For now show all, or maybe aggregate by decade if too many.
+    // Let's just show all for now.
+    
+    const relevantYears = years.filter(y => y > 0)
+    const labels = relevantYears.map(String)
+    const data = relevantYears.map(y => coinStats.value.year_distribution[y])
+    
+    const backgroundColors = relevantYears.map(y => y === coin.value.year ? 'rgba(234, 179, 8, 0.8)' : 'rgba(128, 128, 128, 0.2)')
+
+    return {
+        labels,
+        datasets: [{
+            label: 'Monedas',
+            data,
+            backgroundColor: backgroundColors,
+            borderRadius: 4
+        }]
+    }
+})
+
+const gradeDistributionData = computed(() => {
+    if (!coinStats.value || !coinStats.value.grade_distribution) return null
+
+    // Use predefined grade order for sorting
+    const labels = GRADE_ORDER.filter(g => coinStats.value.grade_distribution[g] !== undefined)
+    const data = labels.map(g => coinStats.value.grade_distribution[g])
+    
+    const currentGrade = coin.value.grade_code || coin.value.grade // Assuming grade_code or grade matches map keys
+    // Need to ensure coin.grade matches keys in GRADE_ORDER ("S/C" vs "SC" etc).
+    // The backend uses normalized keys probably.
+    
+    const backgroundColors = labels.map(g => g === currentGrade ? 'rgba(234, 179, 8, 0.8)' : 'rgba(128, 128, 128, 0.2)')
+
+    return {
+        labels,
+        datasets: [{
+            label: 'Monedas',
+            data,
+            backgroundColor: backgroundColors,
+            borderRadius: 4
+        }]
+    }
+})
+
+const barOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: { display: false }
+    },
+    scales: {
+        y: {
+            beginAtZero: true,
+            ticks: { precision: 0 }
+        },
+        x: {
+            grid: { display: false }
+        }
+    }
+}
 
 // Group State
 const groups = ref([])
@@ -1303,6 +1474,15 @@ onMounted(async () => {
         // I will just add fetchLinks() here.
         fetchLinks()
         fetchGroupImages()
+    }
+})
+
+watch(activeTab, (newTab) => {
+    if (newTab === 'links' && links.value.length === 0) {
+        fetchLinks()
+    }
+    if (newTab === 'stats' && !coinStats.value) {
+        fetchStats()
     }
 })
 // Numista Manual Selection

@@ -708,6 +708,10 @@ func (s *CoinService) GetCoin(ctx context.Context, id uuid.UUID) (*domain.Coin, 
 	return s.repo.GetByID(ctx, id)
 }
 
+func (s *CoinService) GetCoinStats(ctx context.Context, id uuid.UUID) (*domain.CoinStats, error) {
+	return s.repo.GetCoinStats(ctx, id)
+}
+
 func (s *CoinService) ListGroups(ctx context.Context) ([]*domain.Group, error) {
 	groups, err := s.groupRepo.List(ctx)
 	if err != nil {
