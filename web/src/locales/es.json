@@ -71,7 +71,10 @@
             "max_price": "Max €",
             "all_groups": "Todos los grupos",
             "all_grades": "Todos los estados",
-            "all_materials": "Todos los materiales"
+            "all_materials": "Todos los materiales",
+            "active": "Filtros activos",
+            "title": "Filtros",
+            "clear": "Limpiar Filtros"
         },
         "sort": {
             "label": "Ordenar por",
@@ -186,7 +189,11 @@
             "samples": "Muestras"
         },
         "tabs": {
-            "gallery": "Galería"
+            "gallery": "Galería",
+            "overview": "Resumen",
+            "numista": "Numista",
+            "stats": "Estadísticas",
+            "notes": "Notas"
         },
         "sections": {
             "details": "Detalles",
