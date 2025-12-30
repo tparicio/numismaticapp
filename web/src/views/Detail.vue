@@ -271,12 +271,14 @@
             </div>
 
             <!-- Tabs Navigation -->
-            <div role="tablist" class="tabs tabs-lifted tabs-lg">
-                <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'overview' }" @click="activeTab = 'overview'">Resumen</a>
-                <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'technical' }" @click="activeTab = 'technical'">Numista</a>
-                <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'links' }" @click="activeTab = 'links'">{{ $t('details.links.title') || 'Enlaces' }}</a>
-                <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'gallery' }" @click="activeTab = 'gallery'">{{ $t('details.tabs.gallery') }}</a>
-                <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'notes' }" @click="activeTab = 'notes'">Notas</a>
+            <div class="overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0 scrollbar-hide">
+                <div role="tablist" class="tabs tabs-lifted tabs-md lg:tabs-lg min-w-max mx-auto lg:mx-0">
+                    <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'overview' }" @click="activeTab = 'overview'">Resumen</a>
+                    <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'technical' }" @click="activeTab = 'technical'">Numista</a>
+                    <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'links' }" @click="activeTab = 'links'">{{ $t('details.links.title') || 'Enlaces' }}</a>
+                    <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'gallery' }" @click="activeTab = 'gallery'">{{ $t('details.tabs.gallery') }}</a>
+                    <a role="tab" class="tab" :class="{ 'tab-active font-bold': activeTab === 'notes' }" @click="activeTab = 'notes'">Notas</a>
+                </div>
             </div>
 
             <!-- Tab Content Area -->
@@ -324,7 +326,7 @@
                         </div>
                     </div>
 
-                    <div v-if="!coin.gallery_images || coin.gallery_images.length === 0" class="text-center py-16 bg-base-200/50 rounded-xl border border-dashed border-base-300 flex flex-col items-center justify-center">
+                    <div v-if="(!coin.gallery_images || coin.gallery_images.length === 0) && groupImages.length === 0" class="text-center py-16 bg-base-200/50 rounded-xl border border-dashed border-base-300 flex flex-col items-center justify-center">
                          <div class="mb-4 text-base-content/20 w-16 h-16 flex items-center justify-center bg-base-200 rounded-full">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
                          </div>
@@ -335,13 +337,26 @@
                          </button>
                     </div>
 
-                    <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    <div v-if="coin.gallery_images && coin.gallery_images.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                         <div v-for="img in coin.gallery_images" :key="img.id" class="relative group aspect-square bg-base-200 rounded-xl overflow-hidden shadow-sm border border-base-300">
                             <img :src="getImageUrl(img.path)" class="w-full h-full object-cover cursor-zoom-in transition-transform group-hover:scale-105" @click="openViewerForPath(img.path)">
                             <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-start justify-end p-2 pointer-events-none">
                                 <button @click.stop="deleteGalleryImage(img.id)" class="btn btn-xs btn-circle btn-error pointer-events-auto" :class="{'loading': deletingImageId === img.id}">
                                     <svg v-if="deletingImageId !== img.id" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Group Images Section -->
+                    <div v-if="groupImages.length > 0" class="pt-6 border-t border-base-200">
+                        <h4 class="font-bold text-sm mb-3 opacity-70 flex items-center gap-2 uppercase tracking-wide">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" /></svg>
+                            Imágenes del Grupo ({{ getGroupName(coin.group_id) }})
+                        </h4>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                            <div v-for="img in groupImages" :key="img.id" class="relative group aspect-square bg-base-200 rounded-xl overflow-hidden shadow-sm border border-base-300">
+                                <img :src="getImageUrl(img.path)" class="w-full h-full object-cover cursor-zoom-in transition-transform group-hover:scale-105" @click="openViewerForPath(img.path)">
                             </div>
                         </div>
                     </div>
@@ -879,6 +894,17 @@ const activeTab = ref('overview') // overview, technical, notes
 
 // Group State
 const groups = ref([])
+const groupImages = ref([])
+
+const fetchGroupImages = async () => {
+    if (!coin.value || !coin.value.group_id) return
+    try {
+        const res = await axios.get(`${API_URL}/groups/${coin.value.group_id}/images`)
+        groupImages.value = res.data
+    } catch (e) {
+        console.error("Failed to fetch group images", e)
+    }
+}
 
 const fetchGroups = async () => {
     try {
@@ -1276,6 +1302,7 @@ onMounted(async () => {
         // Ah, numistaCount is computed.
         // I will just add fetchLinks() here.
         fetchLinks()
+        fetchGroupImages()
     }
 })
 // Numista Manual Selection
